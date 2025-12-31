@@ -172,11 +172,26 @@
         const profile = await getCurrentUserProfile();
         if (profile) {
           // Bloquer la redirection si lauréat non approuvé
-          if (profile.role === 'student' && profile.niveau === 'Lauréat' && !profile.isApproved) {
+          if (profile.role === 'alumni' && !profile.isApproved) {
+            await auth.signOut();
+            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
             return;
           }
           redirectByRole(profile.role);
         }
+      }
+    });
+
+    // Afficher les erreurs passées en URL (ex: après redirection forcée de auth.js)
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      if (error === 'unverified') {
+        showError('auth-message', 'Votre email n\'est pas encore vérifié. Veuillez consulter vos spams.');
+      } else if (error === 'suspended') {
+        showError('auth-message', 'Désolé, votre compte a été suspendu par l\'administrateur.');
+      } else if (error === 'unapproved') {
+        showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
       }
     });
 
@@ -213,13 +228,6 @@
         if (result.error === 'email-not-verified') {
           showError('auth-message', result.message);
         } else {
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get('error') === 'unverified') {
-            showError('auth-message', 'Votre email n\'est pas encore vérifié. Veuillez consulter vos spams.');
-          }
-          if (urlParams.get('error') === 'suspended') {
-            showError('auth-message', 'Désolé, votre compte a été suspendu par l\'administrateur. Contactez le délégué pour plus d\'informations.');
-          }
           showError('auth-message', formatFirebaseError(result.error));
         }
       }

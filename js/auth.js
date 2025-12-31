@@ -119,6 +119,14 @@ async function checkAuthAndRedirect() {
                 return;
             }
 
+            // Si c'est un lauréat non approuvé
+            if (profile && profile.role === 'alumni' && !profile.isApproved) {
+                await auth.signOut();
+                window.location.href = 'index.html?error=unapproved';
+                resolve(null);
+                return;
+            }
+
             resolve(profile);
         });
     });

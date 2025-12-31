@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Afficher les infos du lauréat
 function displayAlumniInfo() {
     document.getElementById('welcome-name').textContent = `Bonjour, ${currentUser.fullName}`;
+    if (document.getElementById('user-display-name')) {
+        document.getElementById('user-display-name').textContent = currentUser.fullName;
+    }
 
     // Remplir la vue profil
     document.getElementById('profile-name').value = currentUser.fullName;
@@ -38,11 +41,13 @@ function showAlumniView(view) {
         if (el) el.classList.add('hidden');
     });
 
-    // Mettre à jour l'état actif dans la sidebar
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.getAttribute('onclick').includes(view)) {
-            item.classList.add('active');
+    // Mettre à jour l'état actif des onglets
+    document.querySelectorAll('.nav-tab').forEach(item => {
+        item.classList.remove('btn-primary');
+        item.classList.add('btn-secondary');
+        if (item.getAttribute('onclick').includes(`'${view}'`)) {
+            item.classList.remove('btn-secondary');
+            item.classList.add('btn-primary');
         }
     });
 
