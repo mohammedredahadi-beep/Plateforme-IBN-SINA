@@ -7,6 +7,9 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
+        // Envoyer l'email de vérification
+        await user.sendEmailVerification();
+
         // Créer le profil utilisateur dans Firestore
         await usersRef.doc(user.uid).set({
             uid: user.uid,
@@ -19,7 +22,10 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        return { success: true, user: user };
+        // Déconnexion immédiate après inscription pour forcer la vérification
+        await auth.signOut();
+
+        return { success: true, user: user, message: "Un email de vérification a été envoyé. Veuillez vérifier votre boîte de réception avant de vous connecter." };
     } catch (error) {
         console.error('Erreur lors de l\'inscription:', error);
         return { success: false, error: error.message };
@@ -30,10 +36,19 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
 async function login(email, password) {
     try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        return { success: true, user: userCredential.user };
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+            // Optionnel : renvoyer l'email si non vérifié
+            // await user.sendEmailVerification(); 
+            await auth.signOut();
+            return { success: false, error: 'email-not-verified', message: 'Votre adresse email n\'est pas encore vérifiée. Veuillez consulter vos emails.' };
+        }
+
+        return { success: true, user: user };
     } catch (error) {
         console.error('Erreur lors de la connexion:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.code || error.message };
     }
 }
 
@@ -70,6 +85,14 @@ async function checkAuthAndRedirect() {
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
+                resolve(null);
+                return;
+            }
+
+            // Si l'email n'est pas vérifié, on déconnecte et redirige
+            if (!user.emailVerified) {
+                await auth.signOut();
+                window.location.href = 'index.html?error=unverified';
                 resolve(null);
                 return;
             }

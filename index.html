@@ -159,7 +159,11 @@
           setTimeout(() => redirectByRole(profile.role), 1000);
         }
       } else {
-        showError('auth-message', formatFirebaseError(result.error));
+        if (result.error === 'email-not-verified') {
+          showError('auth-message', result.message);
+        } else {
+          showError('auth-message', formatFirebaseError(result.error));
+        }
       }
     });
 
@@ -192,8 +196,8 @@
       document.getElementById('signup-loading').classList.add('hidden');
 
       if (result.success) {
-        showSuccess('auth-message', 'Inscription réussie ! Redirection...');
-        setTimeout(() => redirectByRole('student'), 1000);
+        showSuccess('auth-message', result.message || 'Inscription réussie ! Veuillez vérifier votre email.');
+        setTimeout(() => switchTab('login'), 3000);
       } else {
         showError('auth-message', formatFirebaseError(result.error));
       }
