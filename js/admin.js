@@ -67,10 +67,10 @@ async function unsuspendUser(userId) {
 // Charger les logs
 async function loadLogs() {
     const container = document.getElementById('logs-list');
+    if (!container) return;
     container.innerHTML = '<div class="text-center"><p>Chargement du journal...</p></div>';
 
     try {
-        // Supprimer l'orderBy pour éviter l'erreur d'index Firestore
         const snapshot = await logsRef.limit(100).get();
 
         if (snapshot.empty) {
@@ -79,12 +79,15 @@ async function loadLogs() {
         }
 
         let logs = [];
-        snapshot.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            logs.push({ id: doc.id, ...data });
+        });
 
-        // Tri côté client par timestamp descendant
+        // Tri côté client par date
         logs.sort((a, b) => {
-            const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
-            const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+            const timeA = a.timestamp ? (a.timestamp.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp).getTime()) : 0;
+            const timeB = b.timestamp ? (b.timestamp.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp).getTime()) : 0;
             return timeB - timeA;
         });
 
@@ -92,9 +95,17 @@ async function loadLogs() {
         html += '<thead><tr><th>Admin</th><th>Action</th><th>Cible</th><th>Détails</th><th>Date</th></tr></thead><tbody>';
 
         logs.forEach(log => {
-            const date = log.timestamp ? new Date(log.timestamp.toDate()).toLocaleString('fr-FR') : '-';
+            let dateStr = '-';
+            if (log.timestamp) {
+                try {
+                    const d = log.timestamp.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
+                    dateStr = d.toLocaleString('fr-FR');
+                } catch (e) {
+                    dateStr = 'Date invalide';
+                }
+            }
 
-            let actionBadge = `<span class="badge" style="background: #e9ecef; color: #495057;">${log.actionType}</span>`;
+            let actionBadge = `<span class="badge" style="background: #e9ecef; color: #495057;">${log.actionType || 'INCONNUE'}</span>`;
             if (log.actionType && log.actionType.includes('SUSPEND')) actionBadge = `<span class="badge badge-rejected">${log.actionType}</span>`;
             if (log.actionType && (log.actionType.includes('PROMOTE') || log.actionType.includes('ADD') || log.actionType.includes('APPROVE'))) actionBadge = `<span class="badge badge-approved">${log.actionType}</span>`;
 
@@ -104,7 +115,7 @@ async function loadLogs() {
                     <td>${actionBadge}</td>
                     <td style="font-family: monospace; font-size: 0.8rem;">${log.targetId || '-'}</td>
                     <td><small>${JSON.stringify(log.details || {})}</small></td>
-                    <td>${date}</td>
+                    <td>${dateStr}</td>
                 </tr>
             `;
         });
@@ -114,7 +125,7 @@ async function loadLogs() {
 
     } catch (error) {
         console.error('Erreur logs:', error);
-        container.innerHTML = '<p class="text-error">Erreur de chargement des logs (Vérifiez les index Firestore).</p>';
+        container.innerHTML = `<div class="card text-center"><p class="text-error">Erreur de chargement : ${error.message}</p></div>`;
     }
 }
 
@@ -474,35 +485,59 @@ async function deleteEvent(id) {
 // Charger les alertes support
 async function loadSupportAlerts() {
     const container = document.getElementById('support-list');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center"><p>Chargement des alertes...</p></div>';
+
     try {
-        const snapshot = await db.collection('support_alerts').orderBy('timestamp', 'desc').get();
+        // Retrait de l'orderBy pour éviter l'erreur d'index Firestore
+        const snapshot = await db.collection('support_alerts').get();
+
         if (snapshot.empty) {
             container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucune alerte support.</p></div>';
             return;
         }
 
-        let html = ''; // No table container, just cards
-
+        let alerts = [];
         snapshot.forEach(doc => {
-            const alert = doc.data();
-            const date = alert.timestamp ? new Date(alert.timestamp.toDate()).toLocaleString('fr-FR') : 'N/A';
+            alerts.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Tri côté client par timestamp descendant
+        alerts.sort((a, b) => {
+            const timeA = a.timestamp ? (a.timestamp.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp).getTime()) : 0;
+            const timeB = b.timestamp ? (b.timestamp.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp).getTime()) : 0;
+            return timeB - timeA;
+        });
+
+        let html = '';
+
+        alerts.forEach(alert => {
+            let dateStr = 'N/A';
+            if (alert.timestamp) {
+                try {
+                    const d = alert.timestamp.toDate ? alert.timestamp.toDate() : new Date(alert.timestamp);
+                    dateStr = d.toLocaleString('fr-FR');
+                } catch (e) {
+                    dateStr = 'Date invalide';
+                }
+            }
 
             const dropdownActions = [];
             if (alert.type === 'MENTOR_REQUEST') {
-                dropdownActions.push({ label: 'Approuver le Mentor', icon: '🎓', onclick: `approveMentor('${alert.userId}', '${doc.id}')` });
+                dropdownActions.push({ label: 'Approuver le Mentor', icon: '🎓', onclick: `approveMentor('${alert.userId}', '${alert.id}')` });
             }
-            dropdownActions.push({ label: 'Marquer Résolu', icon: '✓', onclick: `resolveAlert('${doc.id}')` });
-            dropdownActions.push({ label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteAlert('${doc.id}')` });
+            dropdownActions.push({ label: 'Marquer Résolu', icon: '✓', onclick: `resolveAlert('${alert.id}')` });
+            dropdownActions.push({ label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteAlert('${alert.id}')` });
 
             html += `
-                <div class="card fade-in" style="border-left: 4px solid var(--danger-color);">
+                <div class="card fade-in" style="border-left: 4px solid var(--danger-color); margin-bottom: 15px;">
                     <div class="flex" style="justify-content: space-between; align-items: start;">
                         <div>
                             <div class="flex" style="gap: 8px; align-items: center; margin-bottom: 8px;">
-                                <span class="badge badge-rejected">${alert.type}</span>
-                                <small style="color: var(--text-secondary);">${date}</small>
+                                <span class="badge badge-rejected">${alert.type || 'SUPPORT'}</span>
+                                <small style="color: var(--text-secondary);">${dateStr}</small>
                             </div>
-                            <h4 style="font-weight: 600; margin-bottom: 5px;">${alert.userName}</h4>
+                            <h4 style="font-weight: 600; margin-bottom: 5px;">${alert.userName || 'Utilisateur inconnu'}</h4>
                             <p style="font-size: 0.9rem; color: var(--text-main); background: var(--bg-tertiary); padding: 10px; border-radius: 6px; margin-top: 5px;">
                                 ${alert.message}
                             </p>
@@ -516,7 +551,7 @@ async function loadSupportAlerts() {
         container.innerHTML = html;
     } catch (error) {
         console.error('Erreur logs support:', error);
-        container.innerHTML = '<p class="text-error">Erreur lors du chargement des alertes.</p>';
+        container.innerHTML = `<div class="card text-center"><p class="text-error">Erreur de chargement : ${error.message}</p></div>`;
     }
 }
 
@@ -811,8 +846,7 @@ async function displayPendingAlumni() {
         container.innerHTML = html;
 
     } catch (error) {
-        console.error('Erreur lors du chargement des lauréats:', error);
-        container.innerHTML = '<p class="text-error">Erreur de chargement (Vérifiez les index Firestore).</p>';
+        container.innerHTML = `<div class="card text-center"><p class="text-error">Erreur de chargement : ${error.message}</p></div>`;
     }
 }
 
