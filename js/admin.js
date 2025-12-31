@@ -230,7 +230,7 @@ async function displayAllRequests() {
     }
 
     let html = '<div class="table-container"><table class="table">';
-    html += '<thead><tr><th>Étudiant</th><th>Filière</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
+    html += '<thead><tr><th>Étudiant</th><th>Filière</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
 
     for (const request of allRequests) {
         let filiereName = 'N/A';
@@ -244,12 +244,20 @@ async function displayAllRequests() {
 
         const date = request.createdAt ? new Date(request.createdAt.toDate()).toLocaleDateString('fr-FR') : 'N/A';
 
+        const actions = request.status === 'pending'
+            ? `<div class="flex gap-1">
+                <button class="btn btn-success btn-small" onclick="adminApproveRequest('${request.id}')" title="Approuver">✓</button>
+                <button class="btn btn-danger btn-small" onclick="adminRejectRequest('${request.id}')" title="Rejeter">✗</button>
+               </div>`
+            : '-';
+
         html += `
             <tr>
                 <td>${request.userName}</td>
                 <td>${filiereName}</td>
                 <td>${statusBadge}</td>
                 <td>${date}</td>
+                <td>${actions}</td>
             </tr>
         `;
     }
@@ -405,5 +413,58 @@ async function approveAlumni(userId) {
     } catch (error) {
         console.error('Erreur lors de l\'approbation:', error);
         alert('Erreur lors de l\'approbation.');
+    }
+}
+
+/**
+ * OVERRIDE ADMIN : VALIDATION DES DEMANDES ÉTUDIANTS
+ */
+
+// Approuver une demande étudiant (Override Admin)
+async function adminApproveRequest(requestId) {
+    if (!confirm('Voulez-vous vraiment approuver cette demande au nom du délégué ?')) return;
+
+    try {
+        const pin = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 48);
+
+        await requestsRef.doc(requestId).update({
+            status: 'approved',
+            verificationPin: pin,
+            pinExpiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
+            isVerified: false,
+            processedBy: auth.currentUser.uid, // Marqué comme traité par l'admin
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('admin-message', `Demande approuvée (Admin) ! PIN : ${pin}`);
+        loadAllRequests(); // Recharger les données
+    } catch (error) {
+        console.error('Erreur Admin Approbation:', error);
+        showError('admin-message', 'Erreur lors de l\'approbation Admin.');
+    }
+}
+
+// Rejeter une demande étudiant (Override Admin)
+async function adminRejectRequest(requestId) {
+    const reason = prompt('Raison du rejet par l\'administrateur :');
+    if (reason === null) return;
+
+    try {
+        await requestsRef.doc(requestId).update({
+            status: 'rejected',
+            delegateComment: `[ADMIN] ${reason || 'Refusé par l\'administrateur.'}`,
+            processedBy: auth.currentUser.uid,
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('admin-message', 'Demande rejetée par l\'administrateur.');
+        loadAllRequests();
+    } catch (error) {
+        console.error('Erreur Admin Rejet:', error);
+        showError('admin-message', 'Erreur lors du rejet Admin.');
     }
 }

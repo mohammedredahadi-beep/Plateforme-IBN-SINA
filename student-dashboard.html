@@ -113,25 +113,32 @@
             </button>
 
             <div id="chatbot-window" class="card hidden"
-                style="position: absolute; bottom: 70px; right: 0; width: 300px; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: 400px;">
-                <div
-                    style="background: var(--primary-color); color: white; padding: 15px; font-weight: 600; display: flex; justify-content: space-between;">
-                    <span>Assistant Ibn Sina</span>
-                    <span onclick="toggleChatbot()" style="cursor: pointer;">✕</span>
-                </div>
-                <div id="chatbot-messages"
-                    style="flex: 1; padding: 15px; overflow-y: auto; font-size: 0.9rem; background: var(--bg-primary); max-height: 250px;">
-                    <div
-                        style="background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                        Bonjour ! Une question sur les filières ? Je suis là pour vous aider.
+                style="position: absolute; bottom: 70px; right: 0; width: 320px; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: 450px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); box-shadow: var(--glass-shadow); transition: all 0.3s ease;">
+                <div style="background: var(--primary-color); color: white; padding: 12px 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer;"
+                    onclick="minimizeChatbot()">
+                    <span style="display: flex; align-items: center; gap: 8px;">🤖 Assistant Ibn Sina</span>
+                    <div style="display: flex; gap: 12px; font-size: 1.2rem;">
+                        <span title="Réduire" style="cursor: pointer; line-height: 1;">−</span>
+                        <span onclick="toggleChatbot(); event.stopPropagation();" title="Fermer"
+                            style="cursor: pointer; line-height: 1;">✕</span>
                     </div>
                 </div>
-                <div
-                    style="padding: 10px; background: white; border-top: 1px solid var(--border-color); display: flex; gap: 5px;">
-                    <input type="text" id="chatbot-input" placeholder="Posez votre question..."
-                        style="flex: 1; border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 10px; font-size: 0.85rem;">
-                    <button onclick="handleChatbotSend()" class="btn btn-primary btn-small"
-                        style="padding: 5px 10px;">➔</button>
+                <div id="chatbot-body" style="display: flex; flex-direction: column; height: 100%;">
+                    <div id="chatbot-messages"
+                        style="flex: 1; padding: 15px; overflow-y: auto; font-size: 0.9rem; background: var(--bg-primary); max-height: 250px;">
+                        <div
+                            style="background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #333;">
+                            Bonjour ! Une question sur les filières, votre PIN ou les inscriptions ? Je suis là pour
+                            vous aider.
+                        </div>
+                    </div>
+                    <div id="chatbot-input-area"
+                        style="padding: 10px; background: rgba(255,255,255,0.8); border-top: 1px solid var(--border-color); display: flex; gap: 5px;">
+                        <input type="text" id="chatbot-input" placeholder="Posez votre question..."
+                            style="flex: 1; border: 1px solid var(--border-color); border-radius: 5px; padding: 8px 12px; font-size: 0.85rem; background: white;">
+                        <button onclick="handleChatbotSend()" class="btn btn-primary btn-small"
+                            style="padding: 5px 12px; border-radius: 5px;">➔</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -235,6 +242,19 @@
 
         function toggleChatbot() {
             chatbotWindow.classList.toggle('hidden');
+            // Réinitialiser l'état réduit si on ferme/ouvre complètement
+            document.getElementById('chatbot-body').classList.remove('hidden');
+            chatbotWindow.style.height = '';
+        }
+
+        function minimizeChatbot() {
+            const body = document.getElementById('chatbot-body');
+            body.classList.toggle('hidden');
+            if (body.classList.contains('hidden')) {
+                chatbotWindow.style.height = 'auto';
+            } else {
+                chatbotWindow.style.height = '';
+            }
         }
 
         async function handleChatbotSend() {

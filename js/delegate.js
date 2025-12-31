@@ -206,22 +206,29 @@ async function loadStats() {
     document.getElementById('stat-rejected').textContent = rejected;
 }
 
-// Approuver une demande
+// Approuver une demande avec génération de PIN sécurisé
 async function approveRequest(requestId) {
-    const comment = prompt('Commentaire pour l\'étudiant (optionnel):');
-    const whatsappLink = prompt('Lien du groupe WhatsApp (optionnel):');
+    if (!confirm('Voulez-vous vraiment approuver cette demande ?')) return;
 
     try {
+        // Générer un code PIN unique de 6 caractères
+        const pin = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        // Définir l'expiration (48 heures à partir de maintenant)
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 48);
+
         await requestsRef.doc(requestId).update({
             status: 'approved',
-            delegateComment: comment || '',
-            whatsappLink: whatsappLink || '',
+            verificationPin: pin,
+            pinExpiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
+            isVerified: false,
             processedBy: auth.currentUser.uid,
             processedAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showSuccess('delegate-message', 'Demande approuvée avec succès !');
+        showSuccess('delegate-message', `Demande approuvée ! PIN généré : ${pin}`);
     } catch (error) {
         console.error('Erreur lors de l\'approbation:', error);
         showError('delegate-message', 'Erreur lors de l\'approbation de la demande.');
