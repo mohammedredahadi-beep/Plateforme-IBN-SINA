@@ -60,13 +60,18 @@
 
         <div class="form-group">
           <label class="form-label" for="signup-niveau">Niveau / Statut</label>
-          <select id="signup-niveau" class="form-select" required>
+          <select id="signup-niveau" class="form-select" required onchange="togglePromoField(this.value)">
             <option value="">-- Sélectionnez --</option>
             <option value="TC">Tronc Commun (TC)</option>
             <option value="1BAC">1ère Année Bac (1BAC)</option>
             <option value="2BAC">2ème Année Bac (2BAC)</option>
             <option value="Lauréat">Lauréat (Diplômé)</option>
           </select>
+        </div>
+
+        <div id="promo-group" class="form-group hidden">
+          <label class="form-label" for="signup-promo">Année de Promotion (ex: 2022)</label>
+          <input type="number" id="signup-promo" class="form-input" placeholder="2024" min="1990" max="2030">
         </div>
 
         <div class="form-group">
@@ -125,11 +130,27 @@
       document.getElementById('auth-message').classList.add('hidden');
     }
 
+    // Basculer l'affichage du champ Promo
+    function togglePromoField(val) {
+      const promoGroup = document.getElementById('promo-group');
+      if (val === 'Lauréat') {
+        promoGroup.classList.remove('hidden');
+        document.getElementById('signup-promo').required = true;
+      } else {
+        promoGroup.classList.add('hidden');
+        document.getElementById('signup-promo').required = false;
+      }
+    }
+
     // Vérifier si l'utilisateur est déjà connecté
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         const profile = await getCurrentUserProfile();
         if (profile) {
+          // Bloquer la redirection si lauréat non approuvé
+          if (profile.role === 'student' && profile.niveau === 'Lauréat' && !profile.isApproved) {
+            return;
+          }
           redirectByRole(profile.role);
         }
       }
@@ -156,6 +177,12 @@
         showSuccess('auth-message', 'Connexion réussie ! Redirection...');
         const profile = await getCurrentUserProfile();
         if (profile) {
+          // Vérification spécifique pour les lauréats
+          if (profile.role === 'student' && profile.niveau === 'Lauréat' && !profile.isApproved) {
+            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
+            await auth.signOut();
+            return;
+          }
           setTimeout(() => redirectByRole(profile.role), 1000);
         }
       } else {
@@ -174,6 +201,7 @@
       const name = document.getElementById('signup-name').value;
       const phone = document.getElementById('signup-phone').value;
       const niveau = document.getElementById('signup-niveau').value;
+      const promo = document.getElementById('signup-promo').value;
       const email = document.getElementById('signup-email').value;
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
@@ -188,16 +216,20 @@
       document.getElementById('signup-btn-text').classList.add('hidden');
       document.getElementById('signup-loading').classList.remove('hidden');
 
-      // Passer l'objet avec le niveau à la fonction signup
-      const result = await signup(email, password, name, phone, 'student', niveau);
+      // Passer l'objet avec le niveau et la promo à la fonction signup
+      const result = await signup(email, password, name, phone, 'student', niveau, promo);
 
       // Masquer le loading
       document.getElementById('signup-btn-text').classList.remove('hidden');
       document.getElementById('signup-loading').classList.add('hidden');
 
       if (result.success) {
-        showSuccess('auth-message', result.message || 'Inscription réussie ! Veuillez vérifier votre email.');
-        setTimeout(() => switchTab('login'), 3000);
+        let msg = result.message || 'Inscription réussie ! Veuillez vérifier votre email.';
+        if (niveau === 'Lauréat') {
+          msg += " Note: Votre compte nécessite une validation finale par l'admin.";
+        }
+        showSuccess('auth-message', msg);
+        setTimeout(() => switchTab('login'), 5000);
       } else {
         showError('auth-message', formatFirebaseError(result.error));
       }

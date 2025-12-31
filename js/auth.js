@@ -1,7 +1,7 @@
 // Gestion de l'authentification
 
 // Fonction d'inscription
-async function signup(email, password, fullName, phone, role = 'student', niveau = null) {
+async function signup(email, password, fullName, phone, role = 'student', niveau = null, promo = null) {
     try {
         // Créer l'utilisateur avec Firebase Auth
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
@@ -10,6 +10,10 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         // Envoyer l'email de vérification
         await user.sendEmailVerification();
 
+        // Par défaut, un étudiant est "approuvé" immédiatement pour accéder au dashboard
+        // Mais un LAURÉAT doit attendre l'approbation de l'admin
+        const isApproved = (niveau === 'Lauréat') ? false : true;
+
         // Créer le profil utilisateur dans Firestore
         await usersRef.doc(user.uid).set({
             uid: user.uid,
@@ -17,7 +21,9 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
             fullName: fullName,
             phone: phone,
             role: role,
-            niveau: niveau, // Ajout du niveau lors de l'inscription
+            niveau: niveau,
+            promo: promo, // Année de promotion
+            isApproved: isApproved, // Flag d'approbation
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -25,7 +31,12 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         // Déconnexion immédiate après inscription pour forcer la vérification
         await auth.signOut();
 
-        return { success: true, user: user, message: "Un email de vérification a été envoyé. Veuillez vérifier votre boîte de réception avant de vous connecter." };
+        let message = "Un email de vérification a été envoyé. Veuillez vérifier votre boîte de réception avant de vous connecter.";
+        if (niveau === 'Lauréat') {
+            message += " En tant que Lauréat, votre compte devra aussi être validé par un administrateur.";
+        }
+
+        return { success: true, user: user, message: message };
     } catch (error) {
         console.error('Erreur lors de l\'inscription:', error);
         return { success: false, error: error.message };

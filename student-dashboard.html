@@ -136,28 +136,60 @@
             </div>
         </div>
 
-        <!-- Espace Lauréat (Caché par défaut) -->
+        <!-- Espace Lauréat (Section Alumni Premium) -->
         <div id="laureat-view" class="hidden">
-            <div class="card"
-                style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), rgba(var(--secondary-rgb), 0.1)); border: 1px solid var(--primary-color);">
+            <div class="card fade-in"
+                style="background: var(--glass-bg); border: 2px solid var(--primary-color); position: relative; overflow: hidden; margin-bottom: var(--spacing-lg);">
+                <div
+                    style="position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.05; transform: rotate(15deg);">
+                    🎓</div>
                 <div class="card-header">
-                    <h2 class="card-title">🎓 Espace Lauréat & Mentorat</h2>
-                    <p class="card-subtitle">Partagez votre expérience avec la nouvelle génération</p>
+                    <h2 class="card-title"
+                        style="color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+                        <span>💎 Espace Lauréat Ibn Sina</span>
+                    </h2>
+                    <p class="card-subtitle">Bienvenue dans votre espace exclusif, cher ancien.</p>
                 </div>
-                <div class="grid grid-2" style="margin-top: var(--spacing-md);">
-                    <div class="card" style="background: white;">
-                        <h4 style="font-weight: 600; margin-bottom: 5px;">🤝 Devenir Mentor</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Accompagnez un étudiant dans son
-                            orientation ou ses projets.</p>
-                        <button class="btn btn-primary btn-small" style="margin-top: 10px;"
-                            onclick="joinMentorship()">Proposer mon aide</button>
+
+                <div class="grid grid-3" style="margin-top: var(--spacing-md); gap: 15px;">
+                    <div class="card"
+                        style="padding: 15px; background: rgba(var(--primary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                        onclick="joinMentorship()">
+                        <div style="font-size: 1.5rem; margin-bottom: 10px;">🤝</div>
+                        <h4 style="font-weight: 600; font-size: 0.95rem;">Devenir Mentor</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Accompagnez les nouveaux étudiants.
+                        </p>
                     </div>
-                    <div class="card" style="background: white;">
-                        <h4 style="font-weight: 600; margin-bottom: 5px;">📚 Partager des Ressources</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Anciens examens, cours ou conseils
-                            de carrière.</p>
-                        <button class="btn btn-secondary btn-small" style="margin-top: 10px;"
-                            onclick="shareResources()">Publier une ressource</button>
+                    <div class="card"
+                        style="padding: 15px; background: rgba(var(--secondary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                        onclick="shareResources()">
+                        <div style="font-size: 1.5rem; margin-bottom: 10px;">📚</div>
+                        <h4 style="font-weight: 600; font-size: 0.95rem;">Ressources</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Partagez vos outils & conseils.</p>
+                    </div>
+                    <div class="card"
+                        style="padding: 15px; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                        onclick="window.open('https://linkedin.com', '_blank')">
+                        <div style="font-size: 1.5rem; margin-bottom: 10px;">�</div>
+                        <h4 style="font-weight: 600; font-size: 0.95rem;">Opportunités</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Publiez ou trouvez une offre.</p>
+                    </div>
+                </div>
+
+                <hr
+                    style="margin: var(--spacing-lg) 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
+
+                <!-- Réseau de ma Promotion -->
+                <div id="promo-network-section">
+                    <h3
+                        style="font-size: 1.1rem; font-weight: 600; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: 8px;">
+                        <span>👥 Réseau de ma Promotion</span>
+                        <span id="my-promo-badge" class="badge badge-approved" style="font-size: 0.7rem;"></span>
+                    </h3>
+                    <div id="promo-users-list" class="grid grid-3" style="gap: 15px;">
+                        <div class="card text-center" style="grid-column: span 3;">
+                            <p style="color: var(--text-secondary);">Chargement des contacts...</p>
+                        </div>
                     </div>
                 </div>
             </div>

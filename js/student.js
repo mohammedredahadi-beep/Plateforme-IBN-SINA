@@ -23,6 +23,12 @@ async function initStudentDashboard() {
 
     // Charger les demandes de l'utilisateur
     await loadUserRequests();
+
+    // Affichage automatique de l'espace lauréat si le profil le confirme
+    if (currentUser.niveau === 'Lauréat') {
+        toggleLauratView('Lauréat');
+        loadPromoNetwork();
+    }
 }
 
 function initTheme() {
@@ -269,5 +275,58 @@ function shareResources() {
     const link = prompt("Veuillez coller le lien vers votre ressource (Google Drive, LinkedIn, etc.) :");
     if (link) {
         alert("Ressource reçue ! Elle sera validée avant d'être partagée avec les étudiants.");
+    }
+}
+
+/**
+ * Réseautage par Promotion
+ */
+async function loadPromoNetwork() {
+    const container = document.getElementById('promo-users-list');
+    const badge = document.getElementById('my-promo-badge');
+
+    if (!currentUser.promo) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">Promotion non renseignée.</p>';
+        return;
+    }
+
+    if (badge) badge.textContent = `Promo ${currentUser.promo}`;
+
+    try {
+        const snapshot = await usersRef
+            .where('niveau', '==', 'Lauréat')
+            .where('promo', '==', currentUser.promo)
+            .where('isApproved', '==', true)
+            .get();
+
+        if (snapshot.size <= 1) {
+            container.innerHTML = `
+                <div class="card text-center" style="grid-column: span 3;">
+                    <p style="color: var(--text-secondary);">Vous êtes le seul lauréat de votre promotion inscrit pour le moment.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            if (user.uid === currentUser.uid) return; // Ne pas s'afficher soi-même
+
+            html += `
+                <div class="card fade-in" style="padding: 15px; border: 1px solid var(--border-color); background: white;">
+                    <div style="font-weight: 600; margin-bottom: 5px; color: var(--text-main);">${user.fullName}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">${user.email}</div>
+                    <a href="mailto:${user.email}" class="btn btn-secondary btn-small" style="width: 100%; text-align: center; display: block;">
+                        ✉️ Contacter
+                    </a>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Erreur réseau promo:', error);
+        container.innerHTML = '<p class="text-error">Erreur de chargement du réseau.</p>';
     }
 }

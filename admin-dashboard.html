@@ -61,6 +61,9 @@
                 <button class="btn btn-secondary" onclick="showAdminView('requests')">
                     📋 Toutes les demandes
                 </button>
+                <button class="btn btn-warning" onclick="showAdminView('alumni')">
+                    🎓 Valider Lauréats
+                </button>
             </div>
         </div>
 
@@ -114,6 +117,13 @@
             <div class="card" style="margin-bottom: var(--spacing-md);">
                 <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Liste des utilisateurs</h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem;">Gérez les rôles et permissions</p>
+                <div
+                    style="margin-top: var(--spacing-md); display: flex; gap: 10px; align-items: center; background: var(--bg-tertiary); padding: 10px; border-radius: 8px;">
+                    <span style="font-size: 1.1rem;">🔍</span>
+                    <input type="text" id="user-search" class="form-input"
+                        placeholder="Rechercher par nom, email ou classe (ex: 2BAC)..." oninput="displayUsers()"
+                        style="margin-bottom: 0; flex: 1; border: none; background: transparent;">
+                </div>
             </div>
 
             <div id="users-list">
@@ -146,6 +156,21 @@
             <div id="requests-all-list">
                 <div class="card text-center">
                     <p style="color: var(--text-secondary);">Chargement...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue Validation Lauréats -->
+        <div id="alumni-view" class="hidden">
+            <div class="card" style="margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Approbation des Lauréats</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Validez les comptes des anciens pour leur
+                    donner accès au réseau.</p>
+            </div>
+
+            <div id="alumni-pending-list">
+                <div class="card text-center">
+                    <p style="color: var(--text-secondary);">Chargement des lauréats en attente...</p>
                 </div>
             </div>
         </div>

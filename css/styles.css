@@ -586,8 +586,22 @@ body {
         grid-template-columns: 1fr;
     }
 
+    /* Optimisation des tableaux pour mobile */
     .table-container {
-        font-size: 0.875rem;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+    }
+
+    .table {
+        min-width: 450px;
+    }
+
+    .badge {
+        padding: 2px 6px;
+        font-size: 0.7rem;
     }
 }
 

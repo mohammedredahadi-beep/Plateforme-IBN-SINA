@@ -135,44 +135,82 @@ function displayStats() {
 
 // Basculer entre les vues
 function showAdminView(view) {
-    document.getElementById('filieres-view').classList.add('hidden');
-    document.getElementById('users-view').classList.add('hidden');
-    document.getElementById('requests-view').classList.add('hidden');
+    const filieresView = document.getElementById('filieres-view');
+    const usersView = document.getElementById('users-view'); // Renamed from 'delegatesView' to 'usersView' to match existing ID
+    const requestsView = document.getElementById('requests-view');
+    const alumniView = document.getElementById('alumni-view'); // Assuming this ID exists in the HTML
 
-    if (view === 'filieres') {
-        document.getElementById('filieres-view').classList.remove('hidden');
-    } else if (view === 'users') {
-        document.getElementById('users-view').classList.remove('hidden');
+    filieresView.classList.add('hidden');
+    usersView.classList.add('hidden'); // Use usersView
+    requestsView.classList.add('hidden');
+    alumniView.classList.add('hidden');
+
+    if (view === 'filieres') filieresView.classList.remove('hidden');
+    if (view === 'users') { // Changed from 'delegates' to 'users'
+        usersView.classList.remove('hidden');
         displayUsers();
-    } else {
-        document.getElementById('requests-view').classList.remove('hidden');
+    }
+    if (view === 'requests') {
+        requestsView.classList.remove('hidden');
         displayAllRequests();
+    }
+    if (view === 'alumni') {
+        alumniView.classList.remove('hidden');
+        displayPendingAlumni(); // This function needs to be implemented elsewhere
     }
 }
 
 // Afficher tous les utilisateurs
+// Afficher tous les utilisateurs avec recherche
 function displayUsers() {
     const container = document.getElementById('users-list');
+    const searchTerm = document.getElementById('user-search') ? document.getElementById('user-search').value.toLowerCase().trim() : '';
 
-    const students = allUsers.filter(u => u.role === 'student');
-    const delegates = allUsers.filter(u => u.role === 'delegate');
+    // Filtrer les utilisateurs selon la recherche
+    const filteredUsers = allUsers.filter(user => {
+        const matchesName = user.fullName && user.fullName.toLowerCase().includes(searchTerm);
+        const matchesEmail = user.email && user.email.toLowerCase().includes(searchTerm);
+        const matchesNiveau = user.niveau && user.niveau.toLowerCase().includes(searchTerm);
+        const matchesPromo = user.promo && user.promo.toString().includes(searchTerm);
+
+        return matchesName || matchesEmail || matchesNiveau || matchesPromo;
+    });
+
+    if (filteredUsers.length === 0) {
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucun utilisateur trouvé.</p></div>';
+        return;
+    }
 
     let html = '<div class="table-container"><table class="table">';
-    html += '<thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Rôle</th><th>Actions</th></tr></thead><tbody>';
+    html += '<thead><tr><th>Nom</th><th>Email</th><th>Classe / Promo</th><th>Rôle</th><th>Actions</th></tr></thead><tbody>';
 
-    [...delegates, ...students].forEach(user => {
+    // Trier par rôle (délégués d'abord) puis par nom
+    filteredUsers.sort((a, b) => {
+        if (a.role === 'delegate' && b.role !== 'delegate') return -1;
+        if (a.role !== 'delegate' && b.role === 'delegate') return 1;
+        return a.fullName.localeCompare(b.fullName);
+    });
+
+    filteredUsers.forEach(user => {
         const roleBadge = user.role === 'delegate'
             ? '<span class="badge badge-approved">Délégué</span>'
-            : '<span class="badge badge-pending">Étudiant</span>';
+            : user.role === 'admin'
+                ? '<span class="badge badge-rejected">Admin</span>'
+                : '<span class="badge badge-pending">Étudiant</span>';
+
+        const displayNiveau = user.niveau === 'Lauréat'
+            ? `🎓 Lauréat (${user.promo || '?'})`
+            : user.niveau || 'N/A';
 
         html += `
-            <tr>
-                <td>${user.fullName}</td>
-                <td>${user.email}</td>
-                <td>${user.phone || 'N/A'}</td>
+            <tr class="fade-in">
+                <td><strong>${user.fullName}</strong></td>
+                <td style="font-size: 0.85rem;">${user.email}</td>
+                <td><span class="badge" style="background: rgba(0,0,0,0.05); color: var(--text-main);">${displayNiveau}</span></td>
                 <td>${roleBadge}</td>
                 <td>
-                    ${user.role === 'student' ? `<button class="btn btn-success btn-small" onclick="promoteToDelegate('${user.uid}')">Promouvoir</button>` : ''}
+                    ${user.role === 'student' ? `<button class="btn btn-primary btn-small" onclick="promoteToDelegate('${user.uid}')">Promouvoir</button>` : ''}
+                    ${user.niveau === 'Lauréat' && !user.isApproved ? `<button class="btn btn-warning btn-small" onclick="approveAlumni('${user.uid}')">Valider</button>` : ''}
                 </td>
             </tr>
         `;
@@ -298,5 +336,74 @@ async function deleteFiliere(filiereId) {
     } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         showError('admin-message', 'Erreur lors de la suppression de la filière.');
+    }
+}
+
+/**
+ * PHASE 11: GESTION DES LAURÉATS
+ */
+
+// Afficher les lauréats en attente
+async function displayPendingAlumni() {
+    const container = document.getElementById('alumni-pending-list');
+    if (!container) return;
+
+    try {
+        const snapshot = await usersRef
+            .where('niveau', '==', 'Lauréat')
+            .where('isApproved', '==', false)
+            .get();
+
+        if (snapshot.empty) {
+            container.innerHTML = `
+                <div class="card text-center">
+                    <p style="color: var(--text-secondary);">Aucun lauréat en attente d'approbation.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            html += `
+                <div class="card fade-in" style="margin-bottom: 15px; border-left: 4px solid var(--accent-color);">
+                    <div class="flex" style="justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="font-weight: 600;">🎓 ${user.fullName}</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                                <strong>Promo ${user.promo || 'N/A'}</strong> | ${user.email}
+                            </p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="btn btn-primary btn-small" onclick="approveAlumni('${doc.id}')">
+                                Approuver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Erreur lors du chargement des lauréats:', error);
+        container.innerHTML = '<p class="text-error">Erreur de chargement.</p>';
+    }
+}
+
+// Approuver un lauréat
+async function approveAlumni(userId) {
+    try {
+        await usersRef.doc(userId).update({
+            isApproved: true,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Compte Lauréat approuvé ! Il peut désormais se connecter.');
+        displayPendingAlumni();
+        // Optionnel: envoyer un mail automatique ici via Cloud Functions
+    } catch (error) {
+        console.error('Erreur lors de l\'approbation:', error);
+        alert('Erreur lors de l\'approbation.');
     }
 }
