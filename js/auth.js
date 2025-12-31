@@ -13,6 +13,7 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         // Par défaut, un étudiant est "approuvé" immédiatement pour accéder au dashboard
         // Mais un LAURÉAT doit attendre l'approbation de l'admin
         const isApproved = (niveau === 'Lauréat') ? false : true;
+        const finalRole = (niveau === 'Lauréat') ? 'alumni' : role;
 
         // Créer le profil utilisateur dans Firestore
         await usersRef.doc(user.uid).set({
@@ -20,7 +21,7 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
             email: email,
             fullName: fullName,
             phone: phone,
-            role: role,
+            role: finalRole,
             niveau: niveau,
             promo: promo, // Année de promotion
             isApproved: isApproved, // Flag d'approbation
@@ -128,6 +129,9 @@ function redirectByRole(role) {
     switch (role) {
         case 'student':
             window.location.href = 'student-dashboard.html';
+            break;
+        case 'alumni':
+            window.location.href = 'alumni-dashboard.html';
             break;
         case 'delegate':
             window.location.href = 'delegate-dashboard.html';

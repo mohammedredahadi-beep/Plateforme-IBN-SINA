@@ -34,12 +34,9 @@ async function analyzeMotivation(motivation) {
 async function getChatbotResponse(message, userProfile, onCallback) {
     const text = message.toLowerCase();
 
-    // 1. Commande spéciale /verify
+    // 1. Commande spéciale désactivée (Le PIN n'est plus requis)
     if (text.startsWith('/verify ')) {
-        const pin = message.split(' ')[1]?.toUpperCase();
-        if (!pin) return onCallback("Veuillez fournir un code PIN. Exemple: /verify A1B2C3");
-        const res = await verifyPinAndGetLink(pin);
-        return onCallback(res);
+        return onCallback("Le système de code PIN a été désactivé. Si votre demande est approuvée, le lien WhatsApp s'affiche directement sur votre tableau de bord.");
     }
 
     // 2. Dictionnaire de mots-clés
@@ -58,11 +55,11 @@ async function getChatbotResponse(message, userProfile, onCallback) {
         },
         {
             keys: ["pin", "code", "quand", "reçu"],
-            response: "Votre code PIN est généré automatiquement dès qu'un délégué approuve votre demande. Il s'affichera sur votre tableau de bord et sera valable 48h."
+            response: "Le système de code PIN a été supprimé. Désormais, dès qu'un délégué approuve votre demande, le lien vers le groupe WhatsApp apparaîtra directement sur votre tableau de bord."
         },
         {
             keys: ["whatsapp", "groupe", "rejoindre", "lien"],
-            response: "Pour rejoindre un groupe, suivez ces étapes : 1. Faites une demande. 2. Attendez l'approbation. 3. Utilisez le PIN avec la commande /verify ici-même."
+            response: "Pour rejoindre un groupe : 1. Faites une demande dans l'onglet 'Groupes WhatsApp'. 2. Attendez l'approbation d'un délégué. 3. Le lien apparaîtra automatiquement sur votre tableau de bord une fois approuvé."
         },
         {
             keys: ["spam", "email", "mail", "vérification"],
@@ -114,30 +111,5 @@ async function alertAdmin(message, userProfile) {
 }
 
 /**
- * Logique interne de vérification du PIN (Conservée telle quelle)
+ * Fonction de vérification retirée car obsolète
  */
-async function verifyPinAndGetLink(pin) {
-    try {
-        const snapshot = await requestsRef.where('verificationPin', '==', pin).get();
-        if (snapshot.empty) return "❌ Code PIN invalide. Vérifiez le code sur votre tableau de bord.";
-
-        const requestDoc = snapshot.docs[0];
-        const requestData = requestDoc.data();
-        const now = new Date();
-        const expiresAt = requestData.pinExpiresAt.toDate();
-
-        if (now > expiresAt) return "⏰ Ce code PIN a expiré (validité 48h). Contactez votre délégué.";
-
-        const filiereDoc = await filieresRef.doc(requestData.filiereId).get();
-        if (!filiereDoc.exists) return "❌ Erreur : Filière introuvable.";
-
-        const whatsappLink = filiereDoc.data().whatsappLink;
-        if (!whatsappLink) return "ℹ️ PIN valide ! Mais le délégué n'a pas encore configuré le lien WhatsApp de ce groupe.";
-
-        await requestDoc.ref.update({ isVerified: true });
-        return `✅ Code valide ! Voici votre lien : \n\n ${whatsappLink}`;
-    } catch (error) {
-        console.error("Erreur PIN:", error);
-        return "Une erreur est survenue lors de la vérification.";
-    }
-}

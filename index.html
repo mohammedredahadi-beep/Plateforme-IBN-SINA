@@ -20,7 +20,7 @@
       </div>
 
       <!-- Onglets -->
-      <div class="auth-tabs">
+      <div id="auth-tabs-container" class="auth-tabs">
         <button class="auth-tab active" onclick="switchTab('login')">Connexion</button>
         <button class="auth-tab" onclick="switchTab('signup')">Inscription</button>
       </div>
@@ -94,6 +94,30 @@
           <span id="signup-loading" class="loading hidden"></span>
         </button>
       </form>
+
+      <!-- Message de succès après inscription -->
+      <div id="signup-success" class="hidden text-center" style="padding: 10px 0;">
+        <div style="font-size: 3.5rem; margin-bottom: 20px;">📧</div>
+        <h3 style="font-weight: 700; margin-bottom: 15px; color: var(--success-color); font-size: 1.4rem;">Vérifiez
+          votre boîte mail</h3>
+        <p id="success-msg-content"
+          style="color: var(--text-primary); line-height: 1.6; margin-bottom: 25px; font-weight: 500;">
+          <!-- Message dynamique -->
+        </p>
+
+        <div
+          style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--accent-color); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 25px; text-align: left; font-size: 0.9rem;">
+          <strong style="display: block; margin-bottom: 5px; color: var(--accent-color);">⚠️ Action requise :</strong>
+          Pas de mail ? Vérifiez votre dossier <strong>Courrier indésirable (SPAM)</strong>. <br><br>
+          Si vous le trouvez là-bas, cliquez sur <strong>"Non-spam"</strong> pour pouvoir cliquer sur le lien de
+          validation et recevoir nos futurs messages.
+        </div>
+
+        <button class="btn btn-secondary" onclick="location.reload()"
+          style="width: 100%; border: 1px solid var(--border-color);">
+          Retour à la connexion
+        </button>
+      </div>
     </div>
   </div>
 
@@ -178,7 +202,7 @@
         const profile = await getCurrentUserProfile();
         if (profile) {
           // Vérification spécifique pour les lauréats
-          if (profile.role === 'student' && profile.niveau === 'Lauréat' && !profile.isApproved) {
+          if (profile.role === 'alumni' && !profile.isApproved) {
             showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
             await auth.signOut();
             return;
@@ -231,12 +255,19 @@
       document.getElementById('signup-loading').classList.add('hidden');
 
       if (result.success) {
-        let msg = result.message || 'Inscription réussie ! Veuillez vérifier votre email.';
+        // Masquer les onglets et le formulaire
+        document.getElementById('auth-tabs-container').classList.add('hidden');
+        document.getElementById('signup-form').classList.remove('active');
+        document.getElementById('auth-message').classList.add('hidden');
+
+        // Afficher l'écran de succès
+        let msg = result.message || 'Votre compte a été créé avec succès !';
         if (niveau === 'Lauréat') {
-          msg += " Note: Votre compte nécessite une validation finale par l'admin.";
+          msg += " <br><br><strong>Note importante :</strong> En tant que Lauréat, votre accès sera activé après validation manuelle de l'administrateur.";
         }
-        showSuccess('auth-message', msg);
-        setTimeout(() => switchTab('login'), 5000);
+
+        document.getElementById('success-msg-content').innerHTML = msg;
+        document.getElementById('signup-success').classList.remove('hidden');
       } else {
         showError('auth-message', formatFirebaseError(result.error));
       }

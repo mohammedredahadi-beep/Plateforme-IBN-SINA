@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Lauréat - Ibn Sina</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="bg-primary">
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">IS</div>
+                <h2 style="font-size: 1.2rem; font-weight: 700;">Ibn Sina</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="showAlumniView('dashboard')">
+                    <span>🏠</span> Tableau de Bord
+                </a>
+                <a href="#" class="nav-item" onclick="showAlumniView('events')">
+                    <span>📅</span> Événements à venir
+                </a>
+                <a href="#" class="nav-item" onclick="showAlumniView('mentor')">
+                    <span>🤝</span> Devenir Mentor
+                </a>
+                <a href="#" class="nav-item" onclick="showAlumniView('profile')">
+                    <span>👤</span> Mon Profil
+                </a>
+            </nav>
+
+            <div style="margin-top: auto; padding: var(--spacing-md);">
+                <button class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="logout()">
+                    Déconnexion
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div>
+                    <h1 id="welcome-name">Bonjour, Lauréat</h1>
+                    <p class="card-subtitle">Espace dédié aux anciens d'Ibn Sina</p>
+                </div>
+                <div id="alumni-badge" class="badge badge-approved">Lauréat Actif</div>
+            </header>
+
+            <div id="alumni-message" class="hidden"></div>
+
+            <!-- Vue Tableau de Bord -->
+            <div id="dashboard-view">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-sm);">Félicitations !</h3>
+                        <p style="color: var(--text-secondary); line-height: 1.6;">
+                            Votre compte Lauréat a été approuvé. Vous faites désormais partie du réseau professionnel
+                            Ibn Sina.
+                            Votre expérience est précieuse pour nos étudiants actuels.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-sm);">Derniers Événements</h3>
+                        <div id="events-preview-list">
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Chargement des événements...</p>
+                        </div>
+                        <button class="btn btn-secondary btn-small mt-2" onclick="showAlumniView('events')">Voir
+                            tout</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: var(--spacing-lg);">
+                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-md);">🌟 Le Mentorat</h3>
+                    <div class="flex" style="align-items: center; gap: var(--spacing-lg);">
+                        <div style="flex: 1;">
+                            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                                Devenez un mentor et guidez les futurs diplômés d'Ibn Sina. Partagez votre parcours,
+                                donnez des conseils de carrière et aidez-les à s'insérer dans le monde professionnel.
+                            </p>
+                            <button id="btn-mentor-request" class="btn btn-primary" onclick="requestMentorRole()">
+                                Envoyer une demande de mentorat
+                            </button>
+                        </div>
+                        <div style="font-size: 5rem; opacity: 0.1;">🎓</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Événements -->
+            <div id="events-view" class="hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <h3 style="font-weight: 600;">Calendrier des événements</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Rencontres, webinaires et conférences.
+                    </p>
+                </div>
+                <div id="events-list" class="grid grid-2">
+                    <!-- Injecté par JS -->
+                </div>
+            </div>
+
+            <!-- Vue Mentor -->
+            <div id="mentor-view" class="hidden text-center">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🤝</div>
+                    <h2 style="font-weight: 700; margin-bottom: 15px;">Programme de Mentorat</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                        Pour devenir mentor officiel, nous avons besoin de valider votre profil professionnel.
+                        Une fois approuvé, les étudiants pourront solliciter vos conseils via la plateforme.
+                    </p>
+                    <div id="mentor-status-box" class="card"
+                        style="background: var(--bg-tertiary); margin-bottom: 20px;">
+                        <p id="mentor-status-text" style="font-weight: 600;">Statut : Non demandée</p>
+                    </div>
+                    <button id="btn-mentor-action" class="btn btn-primary" style="width: 100%;"
+                        onclick="requestMentorRole()">
+                        Postuler pour devenir Mentor
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vue Profil -->
+            <div id="profile-view" class="hidden">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-md);">Mon Profil Lauréat</h3>
+                    <div class="form-group">
+                        <label class="form-label">Nom Complet</label>
+                        <input type="text" id="profile-name" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="text" id="profile-email" class="form-input" readonly>
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Promotion</label>
+                            <input type="text" id="profile-promo" class="form-input" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Téléphone</label>
+                            <input type="text" id="profile-phone" class="form-input" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Chatbot Widget -->
+    <div style="position: fixed; bottom: 25px; right: 25px; z-index: 1000;">
+        <button id="chatbot-toggle" class="chatbot-toggle" title="Besoin d'aide ?">
+            <span>🤖</span>
+        </button>
+
+        <div id="chatbot-window" class="chatbot-window hidden">
+            <div class="chatbot-header">
+                <div class="flex" style="align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2rem;">🤖</span>
+                    <div style="line-height: 1.2;">
+                        <strong style="display: block; font-size: 0.9rem;">Assistant Lauréat</strong>
+                        <small style="font-size: 0.7rem; opacity: 0.8;">IA Connectée</small>
+                    </div>
+                </div>
+                <div class="flex gap-1">
+                    <button class="chatbot-control" onclick="minimizeChatbot()">−</button>
+                    <button class="chatbot-control" onclick="toggleChatbot()">✕</button>
+                </div>
+            </div>
+            <div id="chatbot-body">
+                <div id="chatbot-messages" class="chatbot-messages">
+                    <div class="message-bubble message-ai"
+                        style="font-size: 0.8rem; background: transparent; box-shadow: none; border: 1px dashed var(--border-color);">
+                        👋 Bonjour cher Lauréat ! Comment puis-je vous accompagner dans votre réseau aujourd'hui ?
+                    </div>
+                </div>
+                <div class="chatbot-input-container">
+                    <input type="text" id="chatbot-input" placeholder="Posez une question..." autocomplete="off">
+                    <button onclick="handleChatbotSend()">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/alumni.js"></script>
+
+    <script>
+        const chatbotToggle = document.getElementById('chatbot-toggle');
+        const chatbotWindow = document.getElementById('chatbot-window');
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+
+        chatbotToggle.addEventListener('click', toggleChatbot);
+
+        function toggleChatbot() { chatbotWindow.classList.toggle('hidden'); }
+        function minimizeChatbot() {
+            const body = document.getElementById('chatbot-body');
+            body.classList.toggle('hidden');
+            chatbotWindow.style.height = body.classList.contains('hidden') ? '48px' : '500px';
+        }
+
+        async function handleChatbotSend() {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+            appendMessage('user', message);
+            chatbotInput.value = '';
+            const aiMsgId = 'ai-stream-' + Date.now();
+            appendMessage('ai', '', aiMsgId);
+            const aiContainer = document.getElementById(aiMsgId);
+            aiContainer.innerHTML = '<span class="loading-dots">Réflexion...</span>';
+            let isFirstChunk = true;
+            try {
+                await getChatbotResponse(message, currentUser, (chunk, isAppend) => {
+                    if (isFirstChunk) { aiContainer.textContent = ''; isFirstChunk = false; }
+                    if (isAppend) aiContainer.textContent += chunk; else aiContainer.textContent = chunk;
+                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                });
+            } catch (err) { aiContainer.textContent = "Erreur : " + err.message; }
+        }
+
+        function appendMessage(sender, text, id = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message-bubble ${sender === 'user' ? 'message-user' : 'message-ai'}`;
+            if (id) msgDiv.id = id;
+            msgDiv.textContent = text;
+            chatbotMessages.appendChild(msgDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        chatbotInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatbotSend(); });
+    </script>
+</body>
+
+</html>

@@ -180,12 +180,10 @@
             </div>
         </div>
         <div id="chatbot-body">
-            <div id="chatbot-messages" class="chatbot-messages"
-                style="flex: 1; padding: 15px; overflow-y: auto; background: var(--bg-tertiary); display: flex; flex-direction: column;">
-                <div class="card"
-                    style="padding: 10px; margin-bottom: 15px; font-size: 0.8rem; background: var(--bg-tertiary); border: none; box-shadow: none;">
-                    👋 Bonjour Délégué ! Je suis votre assistant. Je peux vous aider à analyser les motivations ou gérer
-                    les erreurs courantes.
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="message-bubble message-ai"
+                    style="font-size: 0.8rem; background: transparent; box-shadow: none; border: 1px dashed var(--border-color);">
+                    👋 Bonjour Délégué ! Je suis votre assistant. Comment puis-je vous aider aujourd'hui ?
                 </div>
             </div>
             <div class="chatbot-input-container">
@@ -195,110 +193,6 @@
         </div>
     </div>
 
-    <style>
-        .chatbot-toggle {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            transition: 0.3s;
-        }
-
-        .chatbot-window {
-            position: fixed;
-            bottom: 95px;
-            right: 25px;
-            width: 320px;
-            height: 450px;
-            background: var(--bg-secondary);
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: 0.3s;
-        }
-
-        .chatbot-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .chatbot-input-container {
-            padding: 10px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 5px;
-        }
-
-        .chatbot-input-container input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            outline: none;
-            font-size: 0.9rem;
-        }
-
-        .chatbot-input-container button {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chatbot-control {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            width: 25px;
-            height: 25px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .loading-dots {
-            animation: blink 1.4s infinite both;
-        }
-
-        @keyframes blink {
-            0% {
-                opacity: .2;
-            }
-
-            20% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: .2;
-            }
-        }
-    </style>
 
     <script>
         // Initialiser le tableau de bord au chargement de la page
@@ -340,23 +234,8 @@
 
         function appendMessage(sender, text, id = null) {
             const msgDiv = document.createElement('div');
-            msgDiv.style.padding = '8px 12px';
-            msgDiv.style.borderRadius = '12px';
-            msgDiv.style.marginBottom = '10px';
-            msgDiv.style.fontSize = '0.85rem';
-            msgDiv.style.maxWidth = '85%';
-            if (sender === 'user') {
-                msgDiv.style.background = 'var(--primary-color)';
-                msgDiv.style.color = 'white';
-                msgDiv.style.marginLeft = 'auto';
-                msgDiv.style.borderBottomRightRadius = '2px';
-            } else {
-                msgDiv.style.background = 'white';
-                msgDiv.style.marginRight = 'auto';
-                msgDiv.style.borderBottomLeftRadius = '2px';
-                msgDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-                if (id) msgDiv.id = id;
-            }
+            msgDiv.className = `message-bubble ${sender === 'user' ? 'message-user' : 'message-ai'}`;
+            if (id) msgDiv.id = id;
             msgDiv.textContent = text;
             chatbotMessages.appendChild(msgDiv);
             chatbotMessages.scrollTop = chatbotMessages.scrollHeight;

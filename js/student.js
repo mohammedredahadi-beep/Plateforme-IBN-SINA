@@ -130,20 +130,31 @@ function displayUserRequests() {
         const statusBadge = getStatusBadge(request.status);
         const createdDate = request.createdAt ? new Date(request.createdAt.toDate()).toLocaleDateString('fr-FR') : 'Date inconnue';
 
-        // Logique PIN (Phase 8)
-        let pinInfo = '';
-        if (request.status === 'approved' && request.verificationPin) {
-            const isVerified = request.isVerified ? '✓ Vérifié' : '';
-            pinInfo = `
-                <div style="margin-top: 15px; padding: 15px; background: rgba(0, 123, 255, 0.05); border-radius: 10px; border: 1px dashed var(--primary-color);">
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">VOTRE CODE D'ACCÈS :</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color); letter-spacing: 2px;">${request.verificationPin}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px;">
-                        ⚠️ Valide 48h. Utilisez "/verify ${request.verificationPin}" dans le Chatbot ci-dessous.
-                        <span style="display: block; color: var(--success-color); font-weight: 600; margin-top: 4px;">${isVerified}</span>
+        // Nouveau système : Affichage direct du lien WhatsApp si approuvé
+        let linkInfo = '';
+        if (request.status === 'approved') {
+            const whatsappLink = found ? found.whatsappLink : null;
+            if (whatsappLink) {
+                linkInfo = `
+                    <div style="margin-top: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; border: 2px solid var(--success-color); text-align: center;">
+                        <p style="font-weight: 700; color: var(--success-color); margin-bottom: 10px;">✅ Demande Approuvée !</p>
+                        <a href="${whatsappLink}" target="_blank" class="btn btn-success" style="width: 100%; justify-content: center; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                            <span>📱 Rejoindre le groupe WhatsApp</span>
+                        </a>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px;">
+                            Cliquez sur le bouton ci-dessus pour rejoindre votre classe.
+                        </p>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                linkInfo = `
+                    <div style="margin-top: 15px; padding: 15px; background: rgba(0, 0, 0, 0.05); border-radius: 10px; text-align: center;">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                            ℹ️ Demande approuvée, mais le lien WhatsApp n'a pas encore été configuré par le délégué.
+                        </p>
+                    </div>
+                `;
+            }
         }
 
         html += `
@@ -167,7 +178,7 @@ function displayUserRequests() {
                     </div>
                 ` : ''}
                 
-                ${pinInfo}
+                ${linkInfo}
             </div>
         `;
     }

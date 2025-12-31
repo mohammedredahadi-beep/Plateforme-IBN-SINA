@@ -70,31 +70,40 @@ async function loadLogs() {
     container.innerHTML = '<div class="text-center"><p>Chargement du journal...</p></div>';
 
     try {
-        const snapshot = await logsRef.orderBy('timestamp', 'desc').limit(50).get();
+        // Supprimer l'orderBy pour éviter l'erreur d'index Firestore
+        const snapshot = await logsRef.limit(100).get();
 
         if (snapshot.empty) {
             container.innerHTML = '<div class="card text-center"><p>Aucune action enregistrée.</p></div>';
             return;
         }
 
+        let logs = [];
+        snapshot.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+
+        // Tri côté client par timestamp descendant
+        logs.sort((a, b) => {
+            const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+            const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+            return timeB - timeA;
+        });
+
         let html = '<div class="table-container"><table class="table">';
         html += '<thead><tr><th>Admin</th><th>Action</th><th>Cible</th><th>Détails</th><th>Date</th></tr></thead><tbody>';
 
-        snapshot.forEach(doc => {
-            const log = doc.data();
+        logs.forEach(log => {
             const date = log.timestamp ? new Date(log.timestamp.toDate()).toLocaleString('fr-FR') : '-';
 
-            // Formatage de l'action
             let actionBadge = `<span class="badge" style="background: #e9ecef; color: #495057;">${log.actionType}</span>`;
-            if (log.actionType.includes('SUSPEND')) actionBadge = `<span class="badge badge-rejected">${log.actionType}</span>`;
-            if (log.actionType.includes('PROMOTE') || log.actionType.includes('ADD')) actionBadge = `<span class="badge badge-approved">${log.actionType}</span>`;
+            if (log.actionType && log.actionType.includes('SUSPEND')) actionBadge = `<span class="badge badge-rejected">${log.actionType}</span>`;
+            if (log.actionType && (log.actionType.includes('PROMOTE') || log.actionType.includes('ADD') || log.actionType.includes('APPROVE'))) actionBadge = `<span class="badge badge-approved">${log.actionType}</span>`;
 
             html += `
                 <tr>
-                    <td><strong>${log.adminName}</strong></td>
+                    <td><strong>${log.adminName || 'Admin'}</strong></td>
                     <td>${actionBadge}</td>
-                    <td style="font-family: monospace; font-size: 0.8rem;">${log.targetId}</td>
-                    <td><small>${JSON.stringify(log.details)}</small></td>
+                    <td style="font-family: monospace; font-size: 0.8rem;">${log.targetId || '-'}</td>
+                    <td><small>${JSON.stringify(log.details || {})}</small></td>
                     <td>${date}</td>
                 </tr>
             `;
@@ -105,7 +114,7 @@ async function loadLogs() {
 
     } catch (error) {
         console.error('Erreur logs:', error);
-        container.innerHTML = '<p class="text-error">Erreur de chargement des logs.</p>';
+        container.innerHTML = '<p class="text-error">Erreur de chargement des logs (Vérifiez les index Firestore).</p>';
     }
 }
 
@@ -358,6 +367,84 @@ function showAdminView(view) {
         if (supportView) supportView.classList.remove('hidden');
         loadSupportAlerts();
     }
+    if (view === 'events') {
+        const adminEventsView = document.getElementById('events-view');
+        if (adminEventsView) adminEventsView.classList.remove('hidden');
+        loadAdminEvents();
+    }
+}
+
+// Ajouter un événement
+async function addEvent(e) {
+    e.preventDefault();
+    const title = document.getElementById('event-title').value;
+    const dateInput = document.getElementById('event-date').value;
+    const type = document.getElementById('event-type').value;
+    const link = document.getElementById('event-link').value;
+    const description = document.getElementById('event-desc').value;
+
+    try {
+        await db.collection('events').add({
+            title,
+            date: firebase.firestore.Timestamp.fromDate(new Date(dateInput)),
+            type,
+            link: link || null,
+            description,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('admin-message', 'Événement publié avec succès !');
+        document.getElementById('event-form').reset();
+        loadAdminEvents();
+    } catch (error) {
+        console.error('Erreur création événement:', error);
+        showError('admin-message', 'Erreur lors de la publication.');
+    }
+}
+
+// Charger les événements (Admin)
+async function loadAdminEvents() {
+    const container = document.getElementById('admin-events-list');
+    try {
+        const snapshot = await db.collection('events').orderBy('date', 'desc').get();
+        if (snapshot.empty) {
+            container.innerHTML = '<p class="text-center" style="color: var(--text-secondary);">Aucun événement créé.</p>';
+            return;
+        }
+
+        let html = '<div class="table-container"><table class="table">';
+        html += '<thead><tr><th>Titre</th><th>Date</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
+
+        snapshot.forEach(doc => {
+            const ev = doc.data();
+            const date = ev.date ? new Date(ev.date.toDate()).toLocaleString('fr-FR') : 'N/A';
+            html += `
+                <tr>
+                    <td><strong>${ev.title}</strong></td>
+                    <td>${date}</td>
+                    <td><span class="badge">${ev.type}</span></td>
+                    <td>
+                        <button class="btn btn-danger btn-small" onclick="deleteEvent('${doc.id}')">Supprimer</button>
+                    </td>
+                </tr>
+            `;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Erreur chargement événements admin:', error);
+    }
+}
+
+// Supprimer un événement
+async function deleteEvent(id) {
+    if (!confirm('Supprimer cet événement ?')) return;
+    try {
+        await db.collection('events').doc(id).delete();
+        loadAdminEvents();
+    } catch (error) {
+        alert('Erreur suppression.');
+    }
 }
 
 // Charger les alertes support
@@ -378,16 +465,26 @@ async function loadSupportAlerts() {
             const date = alert.timestamp ? new Date(alert.timestamp.toDate()).toLocaleString('fr-FR') : 'N/A';
             const statusBadge = alert.status === 'new' ? '<span class="badge badge-rejected">Nouveau</span>' : '<span class="badge badge-approved">Traité</span>';
 
+            const isMentorRequest = alert.type === 'MENTOR_REQUEST';
+
             html += `
                 <tr>
-                    <td><strong>${alert.userName}</strong><br><small>${alert.userRole}</small></td>
+                    <td>
+                        <strong>${alert.userName}</strong><br>
+                        <small>${alert.userRole}</small>
+                        ${isMentorRequest ? '<br><span class="badge" style="background: var(--primary-color); color: white; border: none;">DEMANDE MENTOR</span>' : ''}
+                    </td>
                     <td><p style="max-width: 300px; white-space: normal;">${alert.message}</p></td>
                     <td style="font-size: 0.8rem;">${date}</td>
                     <td>${statusBadge}</td>
                     <td>
-                        <div class="flex gap-1">
-                            ${alert.status === 'new' ? `<button class="btn btn-success btn-small" onclick="resolveAlert('${doc.id}')">Marquer Traité</button>` : ''}
-                            <button class="btn btn-danger btn-small" onclick="deleteAlert('${doc.id}')">Supprimer</button>
+                        <div class="flex gap-1" style="flex-direction: column;">
+                            ${alert.status === 'new' ? (
+                    isMentorRequest
+                        ? `<button class="btn btn-primary btn-small" onclick="approveMentor('${alert.userId}', '${doc.id}')">Accepter Mentor</button>`
+                        : `<button class="btn btn-success btn-small" onclick="resolveAlert('${doc.id}')">Marquer Traité</button>`
+                ) : ''}
+                            <button class="btn btn-danger btn-small" onclick="deleteAlert('${doc.id}')" style="margin-top: 4px;">Supprimer</button>
                         </div>
                     </td>
                 </tr>
@@ -639,23 +736,29 @@ async function displayPendingAlumni() {
     if (!container) return;
 
     try {
-        const snapshot = await usersRef
-            .where('niveau', '==', 'Lauréat')
-            .where('isApproved', '==', false)
-            .get();
+        // Utilisation d'un seul filtre pour éviter l'erreur d'index composite
+        const snapshot = await usersRef.where('niveau', '==', 'Lauréat').get();
 
         if (snapshot.empty) {
-            container.innerHTML = `
-                <div class="card text-center">
-                    <p style="color: var(--text-secondary);">Aucun lauréat en attente d'approbation.</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucun lauréat trouvé.</p></div>';
+            return;
+        }
+
+        let pending = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.isApproved === false) {
+                pending.push({ id: doc.id, ...data });
+            }
+        });
+
+        if (pending.length === 0) {
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucun lauréat en attente d\'approbation.</p></div>';
             return;
         }
 
         let html = '';
-        snapshot.forEach(doc => {
-            const user = doc.data();
+        pending.forEach(user => {
             html += `
                 <div class="card fade-in" style="margin-bottom: 15px; border-left: 4px solid var(--accent-color);">
                     <div class="flex" style="justify-content: space-between; align-items: center;">
@@ -666,7 +769,7 @@ async function displayPendingAlumni() {
                             </p>
                         </div>
                         <div class="flex gap-1">
-                            <button class="btn btn-primary btn-small" onclick="approveAlumni('${doc.id}')">
+                            <button class="btn btn-primary btn-small" onclick="approveAlumni('${user.id}')">
                                 Approuver
                             </button>
                         </div>
@@ -678,7 +781,7 @@ async function displayPendingAlumni() {
 
     } catch (error) {
         console.error('Erreur lors du chargement des lauréats:', error);
-        container.innerHTML = '<p class="text-error">Erreur de chargement.</p>';
+        container.innerHTML = '<p class="text-error">Erreur de chargement (Vérifiez les index Firestore).</p>';
     }
 }
 
@@ -692,10 +795,39 @@ async function approveAlumni(userId) {
         await logAction('APPROVE_ALUMNI', userId);
         alert('Compte Lauréat approuvé ! Il peut désormais se connecter.');
         displayPendingAlumni();
-        // Optionnel: envoyer un mail automatique ici via Cloud Functions
     } catch (error) {
         console.error('Erreur lors de l\'approbation:', error);
         alert('Erreur lors de l\'approbation.');
+    }
+}
+
+// Approuver un Mentor
+async function approveMentor(userId, alertId = null) {
+    if (!confirm('Voulez-vous approuver ce lauréat en tant que Mentor officiel ?')) return;
+
+    try {
+        await usersRef.doc(userId).update({
+            mentorStatus: 'approved',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await logAction('APPROVE_MENTOR', userId);
+
+        // Si on vient d'une alerte, on la résout
+        if (alertId) {
+            await db.collection('support_alerts').doc(alertId).update({
+                status: 'resolved',
+                resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            loadSupportAlerts();
+        }
+
+        showSuccess('admin-message', 'Mentor approuvé avec succès !');
+        await loadAllUsers();
+        displayUsers();
+    } catch (error) {
+        console.error('Erreur approbation mentor:', error);
+        showError('admin-message', 'Erreur lors de l\'approbation du mentor.');
     }
 }
 
@@ -708,22 +840,15 @@ async function adminApproveRequest(requestId) {
     if (!confirm('Voulez-vous vraiment approuver cette demande au nom du délégué ?')) return;
 
     try {
-        const pin = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 48);
-
         await requestsRef.doc(requestId).update({
             status: 'approved',
-            verificationPin: pin,
-            pinExpiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
-            isVerified: false,
             processedBy: auth.currentUser.uid, // Marqué comme traité par l'admin
             processedAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         await logAction('ADMIN_APPROVE_REQUEST', requestId, { student: requestId });
-        showSuccess('admin-message', `Demande approuvée (Admin) ! PIN : ${pin}`);
+        showSuccess('admin-message', 'Demande approuvée par l\'administrateur !');
         loadAllRequests(); // Recharger les données
     } catch (error) {
         console.error('Erreur Admin Approbation:', error);
