@@ -26,54 +26,56 @@
     <!-- Contenu principal -->
     <div class="container" style="margin-top: var(--spacing-lg);">
         <!-- En-tête -->
-        <div class="card" style="margin-bottom: var(--spacing-lg);">
-            <h2 class="card-title">⚙️ Tableau de bord Administrateur</h2>
-            <p class="card-subtitle">Gestion globale de la plateforme</p>
+        <div class="flex"
+            style="justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg); flex-wrap: wrap; gap: 20px;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 5px;">Tableau
+                    de Bord Admin</h1>
+                <p style="color: var(--text-secondary);">Gérer les filières, les utilisateurs et le réseau Ibn Sina.</p>
+            </div>
+            <div id="admin-message"></div>
         </div>
 
-        <div id="admin-message" class="hidden"></div>
-
-        <!-- Statistiques globales -->
-        <div class="grid grid-3" style="margin-bottom: var(--spacing-lg);">
-            <div class="card stat-card">
-                <div class="stat-value" id="stat-users">0</div>
-                <div class="stat-label">Utilisateurs</div>
+        <!-- Statistiques globales KPI -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">👥</div>
+                <div class="kpi-value" id="stat-users">0</div>
+                <div class="kpi-label">Utilisateurs</div>
             </div>
-            <div class="card stat-card">
-                <div class="stat-value" id="stat-filieres" style="color: var(--primary-color);">0</div>
-                <div class="stat-label">Filières</div>
+            <div class="kpi-card secondary">
+                <div class="kpi-icon">📚</div>
+                <div class="kpi-value" id="stat-filieres">0</div>
+                <div class="kpi-label">Filières</div>
             </div>
-            <div class="card stat-card">
-                <div class="stat-value" id="stat-requests" style="color: var(--secondary-color);">0</div>
-                <div class="stat-label">Demandes totales</div>
+            <div class="kpi-card warning">
+                <div class="kpi-icon">📋</div>
+                <div class="kpi-value" id="stat-requests">0</div>
+                <div class="kpi-label">Demandes</div>
+            </div>
+            <div class="kpi-card danger">
+                <div class="kpi-icon">⏳</div>
+                <div class="kpi-value" id="stat-pending">0</div>
+                <div class="kpi-label">En attente</div>
             </div>
         </div>
 
         <!-- Navigation entre les vues -->
-        <div style="margin-bottom: var(--spacing-md);">
-            <div class="flex gap-1">
-                <button class="btn btn-primary" onclick="showAdminView('filieres')">
-                    📚 Gestion des filières
-                </button>
-                <button class="btn btn-secondary" onclick="showAdminView('users')">
-                    👥 Gestion des utilisateurs
-                </button>
-                <button class="btn btn-secondary" onclick="showAdminView('events')">
-                    📅 Événements
-                </button>
-                <button class="btn btn-secondary" onclick="showAdminView('requests')">
-                    📋 Toutes les demandes
-                </button>
-                <button class="btn btn-warning" onclick="showAdminView('alumni')">
-                    🎓 Valider Lauréats
-                </button>
-                <button class="btn btn-secondary" onclick="showAdminView('logs')">
-                    📜 Journal des Actions
-                </button>
-                <button class="btn btn-danger" onclick="showAdminView('support')">
-                    🚨 Support / Alertes
-                </button>
-            </div>
+        <div class="admin-nav-group">
+            <button class="btn btn-primary admin-nav-btn" data-view="filieres" onclick="showAdminView('filieres')">📚
+                Filières</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="users" onclick="showAdminView('users')">👥
+                Utilisateurs</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="events" onclick="showAdminView('events')">📅
+                Événements</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="requests" onclick="showAdminView('requests')">📋
+                Demandes</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="alumni" onclick="showAdminView('alumni')">🎓
+                Lauréats</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="logs" onclick="showAdminView('logs')">📜
+                Audit</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="support" onclick="showAdminView('support')">🚨
+                Alertes</button>
         </div>
 
         <!-- Vue Gestion des filières -->

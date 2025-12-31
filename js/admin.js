@@ -217,6 +217,13 @@ async function initAdminDashboard() {
 
     // Afficher la vue par défaut
     showAdminView('filieres');
+
+    // Gestion de la fermeture des dropdowns
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.action-dropdown')) {
+            document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
+        }
+    });
 }
 
 // Afficher les informations de l'utilisateur
@@ -263,20 +270,22 @@ async function displayFilieres() {
             }
         }
 
+        const dropdownActions = [
+            { label: 'Modifier', icon: '✏️', onclick: `editFiliere('${filiere.id}')` },
+            { label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteFiliere('${filiere.id}')` }
+        ];
+
         html += `
             <div class="card">
                 <div class="flex" style="justify-content: space-between; align-items: start;">
                     <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-sm);">${filiere.name}</h3>
-                    <span class="badge" style="background: var(--primary-color); color: white;">${filiere.niveau || 'Tous'}</span>
+                    ${renderActionDropdown(dropdownActions)}
                 </div>
+                <div class="badge" style="background: var(--primary-color); color: white; margin-bottom: 10px; display: inline-block;">${filiere.niveau || 'Tous'}</div>
                 <p style="color: var(--text-secondary); margin-bottom: var(--spacing-sm);">
                     👤 Délégué: <strong>${delegateName}</strong>
                 </p>
                 ${filiere.description ? `<p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">${filiere.description}</p>` : ''}
-                <div class="flex gap-1">
-                    <button class="btn btn-secondary btn-small" onclick="editFiliere('${filiere.id}')">Modifier</button>
-                    <button class="btn btn-danger btn-small" onclick="deleteFiliere('${filiere.id}')">Supprimer</button>
-                </div>
             </div>
         `;
     }
@@ -315,63 +324,76 @@ async function loadAllRequests() {
 
 // Afficher les statistiques
 function displayStats() {
-    const totalUsers = allUsers.length;
-    const totalStudents = allUsers.filter(u => u.role === 'student').length;
-    const totalDelegates = allUsers.filter(u => u.role === 'delegate').length;
-    const totalRequests = allRequests.length;
-    const pendingRequests = allRequests.filter(r => r.status === 'pending').length;
-
-    document.getElementById('stat-users').textContent = totalUsers;
-    document.getElementById('stat-students').textContent = totalStudents;
-    document.getElementById('stat-delegates').textContent = totalDelegates;
+    document.getElementById('stat-users').textContent = allUsers.length;
     document.getElementById('stat-filieres').textContent = allFilieres.length;
-    document.getElementById('stat-requests').textContent = totalRequests;
-    document.getElementById('stat-pending').textContent = pendingRequests;
+    document.getElementById('stat-requests').textContent = allRequests.length;
+
+    const pendingCount = allRequests.filter(r => r.status === 'pending').length;
+    if (document.getElementById('stat-pending')) {
+        document.getElementById('stat-pending').textContent = pendingCount;
+    }
+}
+
+// Helper pour les dropdowns d'actions
+function toggleActionMenu(btn, e) {
+    if (e) e.stopPropagation();
+    const menu = btn.nextElementSibling;
+    const isActive = menu.classList.contains('active');
+
+    // Fermer tous les menus ouverts
+    document.querySelectorAll('.dropdown-menu.active').forEach(m => m.classList.remove('active'));
+
+    if (!isActive) {
+        menu.classList.add('active');
+    }
+}
+
+function renderActionDropdown(items) {
+    if (items.length === 0) return '-';
+
+    return `
+        <div class="action-dropdown">
+            <button class="dropdown-toggle" onclick="toggleActionMenu(this, event)">⋮</button>
+            <div class="dropdown-menu">
+                ${items.map(item => `
+                    <button class="dropdown-item ${item.class || ''}" onclick="${item.onclick}">
+                        ${item.icon || ''} ${item.label}
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 // Basculer entre les vues
 function showAdminView(view) {
-    const filieresView = document.getElementById('filieres-view');
-    const usersView = document.getElementById('users-view');
-    const requestsView = document.getElementById('requests-view');
-    const alumniView = document.getElementById('alumni-view');
-    const logsView = document.getElementById('logs-view');
-    const supportView = document.getElementById('support-view');
+    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support'];
 
-    if (logsView) logsView.classList.add('hidden');
-    if (supportView) supportView.classList.add('hidden');
+    views.forEach(v => {
+        const el = document.getElementById(`${v}-view`);
+        if (el) el.classList.add('hidden');
+    });
 
-    filieresView.classList.add('hidden');
-    usersView.classList.add('hidden');
-    requestsView.classList.add('hidden');
-    alumniView.classList.add('hidden');
+    const activeView = document.getElementById(`${view}-view`);
+    if (activeView) activeView.classList.remove('hidden');
 
-    if (view === 'filieres') filieresView.classList.remove('hidden');
-    if (view === 'users') {
-        usersView.classList.remove('hidden');
-        displayUsers();
-    }
-    if (view === 'requests') {
-        requestsView.classList.remove('hidden');
-        displayAllRequests();
-    }
-    if (view === 'alumni') {
-        alumniView.classList.remove('hidden');
-        displayPendingAlumni();
-    }
-    if (view === 'logs') {
-        if (logsView) logsView.classList.remove('hidden');
-        loadLogs();
-    }
-    if (view === 'support') {
-        if (supportView) supportView.classList.remove('hidden');
-        loadSupportAlerts();
-    }
-    if (view === 'events') {
-        const adminEventsView = document.getElementById('events-view');
-        if (adminEventsView) adminEventsView.classList.remove('hidden');
-        loadAdminEvents();
-    }
+    // Mettre à jour l'état actif des boutons
+    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+        if (btn.getAttribute('onclick').includes(`'${view}'`)) {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        }
+    });
+
+    if (view === 'users') displayUsers();
+    if (view === 'requests') displayAllRequests();
+    if (view === 'alumni') displayPendingAlumni();
+    if (view === 'logs') loadLogs();
+    if (view === 'support') loadSupportAlerts();
+    if (view === 'events') loadAdminEvents();
 }
 
 // Ajouter un événement
@@ -418,14 +440,16 @@ async function loadAdminEvents() {
         snapshot.forEach(doc => {
             const ev = doc.data();
             const date = ev.date ? new Date(ev.date.toDate()).toLocaleString('fr-FR') : 'N/A';
+            const dropdownActions = [
+                { label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteEvent('${doc.id}')` }
+            ];
+
             html += `
                 <tr>
                     <td><strong>${ev.title}</strong></td>
                     <td>${date}</td>
                     <td><span class="badge">${ev.type}</span></td>
-                    <td>
-                        <button class="btn btn-danger btn-small" onclick="deleteEvent('${doc.id}')">Supprimer</button>
-                    </td>
+                    <td>${renderActionDropdown(dropdownActions)}</td>
                 </tr>
             `;
         });
@@ -457,41 +481,38 @@ async function loadSupportAlerts() {
             return;
         }
 
-        let html = '<div class="table-container"><table class="table">';
-        html += '<thead><tr><th>Utilisateur</th><th>Message</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+        let html = ''; // No table container, just cards
 
         snapshot.forEach(doc => {
             const alert = doc.data();
             const date = alert.timestamp ? new Date(alert.timestamp.toDate()).toLocaleString('fr-FR') : 'N/A';
-            const statusBadge = alert.status === 'new' ? '<span class="badge badge-rejected">Nouveau</span>' : '<span class="badge badge-approved">Traité</span>';
 
-            const isMentorRequest = alert.type === 'MENTOR_REQUEST';
+            const dropdownActions = [];
+            if (alert.type === 'MENTOR_REQUEST') {
+                dropdownActions.push({ label: 'Approuver le Mentor', icon: '🎓', onclick: `approveMentor('${alert.userId}', '${doc.id}')` });
+            }
+            dropdownActions.push({ label: 'Marquer Résolu', icon: '✓', onclick: `resolveAlert('${doc.id}')` });
+            dropdownActions.push({ label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteAlert('${doc.id}')` });
 
             html += `
-                <tr>
-                    <td>
-                        <strong>${alert.userName}</strong><br>
-                        <small>${alert.userRole}</small>
-                        ${isMentorRequest ? '<br><span class="badge" style="background: var(--primary-color); color: white; border: none;">DEMANDE MENTOR</span>' : ''}
-                    </td>
-                    <td><p style="max-width: 300px; white-space: normal;">${alert.message}</p></td>
-                    <td style="font-size: 0.8rem;">${date}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <div class="flex gap-1" style="flex-direction: column;">
-                            ${alert.status === 'new' ? (
-                    isMentorRequest
-                        ? `<button class="btn btn-primary btn-small" onclick="approveMentor('${alert.userId}', '${doc.id}')">Accepter Mentor</button>`
-                        : `<button class="btn btn-success btn-small" onclick="resolveAlert('${doc.id}')">Marquer Traité</button>`
-                ) : ''}
-                            <button class="btn btn-danger btn-small" onclick="deleteAlert('${doc.id}')" style="margin-top: 4px;">Supprimer</button>
+                <div class="card fade-in" style="border-left: 4px solid var(--danger-color);">
+                    <div class="flex" style="justify-content: space-between; align-items: start;">
+                        <div>
+                            <div class="flex" style="gap: 8px; align-items: center; margin-bottom: 8px;">
+                                <span class="badge badge-rejected">${alert.type}</span>
+                                <small style="color: var(--text-secondary);">${date}</small>
+                            </div>
+                            <h4 style="font-weight: 600; margin-bottom: 5px;">${alert.userName}</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-main); background: var(--bg-tertiary); padding: 10px; border-radius: 6px; margin-top: 5px;">
+                                ${alert.message}
+                            </p>
                         </div>
-                    </td>
-                </tr>
+                        ${renderActionDropdown(dropdownActions)}
+                    </div>
+                </div>
             `;
         });
 
-        html += '</tbody></table></div>';
         container.innerHTML = html;
     } catch (error) {
         console.error('Erreur logs support:', error);
@@ -565,24 +586,33 @@ function displayUsers() {
             ? `🎓 Lauréat (${user.promo || '?'})`
             : user.niveau || 'N/A';
 
+        const dropdownActions = [
+            { label: 'Modifier Infos', icon: '📝', onclick: `openEditUserModal('${user.uid}')` }
+        ];
+
+        if (user.role === 'student') {
+            dropdownActions.push({ label: 'Promouvoir Délégué', icon: '🛡️', onclick: `promoteToDelegate('${user.uid}')` });
+        }
+
+        if (user.niveau === 'Lauréat' && !user.isApproved) {
+            dropdownActions.push({ label: 'Valider Lauréat', icon: '✅', onclick: `approveAlumni('${user.uid}')` });
+        }
+
+        if (user.uid !== auth.currentUser.uid) {
+            if (user.isSuspended) {
+                dropdownActions.push({ label: 'Réactiver', icon: '🔓', onclick: `unsuspendUser('${user.uid}')` });
+            } else {
+                dropdownActions.push({ label: 'Suspendre', icon: '🚫', class: 'danger', onclick: `suspendUser('${user.uid}')` });
+            }
+        }
+
         html += `
             <tr class="fade-in">
                 <td><strong>${user.fullName}</strong></td>
                 <td style="font-size: 0.85rem;">${user.email}</td>
                 <td><span class="badge" style="background: rgba(0,0,0,0.05); color: var(--text-main);">${displayNiveau}</span></td>
                 <td>${roleBadge}</td>
-                <td>
-                    <div class="flex gap-1">
-                        <button class="btn btn-secondary btn-small" onclick="openEditUserModal('${user.uid}')">Modifier Infos</button>
-                        ${user.role === 'student' ? `<button class="btn btn-primary btn-small" onclick="promoteToDelegate('${user.uid}')">Promouvoir</button>` : ''}
-                        ${user.niveau === 'Lauréat' && !user.isApproved ? `<button class="btn btn-warning btn-small" onclick="approveAlumni('${user.uid}')">Valider</button>` : ''}
-                        ${user.uid !== auth.currentUser.uid ? (
-                user.isSuspended
-                    ? `<button class="btn btn-success btn-small" onclick="unsuspendUser('${user.uid}')">Réactiver</button>`
-                    : `<button class="btn btn-danger btn-small" onclick="suspendUser('${user.uid}')">Suspendre</button>`
-            ) : ''}
-                    </div>
-                </td>
+                <td>${renderActionDropdown(dropdownActions)}</td>
             </tr>
         `;
     });
@@ -615,20 +645,19 @@ async function displayAllRequests() {
 
         const date = request.createdAt ? new Date(request.createdAt.toDate()).toLocaleDateString('fr-FR') : 'N/A';
 
-        const actions = request.status === 'pending'
-            ? `<div class="flex gap-1">
-                <button class="btn btn-success btn-small" onclick="adminApproveRequest('${request.id}')" title="Approuver">✓</button>
-                <button class="btn btn-danger btn-small" onclick="adminRejectRequest('${request.id}')" title="Rejeter">✗</button>
-               </div>`
-            : '-';
+        const dropdownActions = [];
+        if (request.status === 'pending') {
+            dropdownActions.push({ label: 'Approuver', icon: '✓', onclick: `adminApproveRequest('${request.id}')` });
+            dropdownActions.push({ label: 'Rejeter', icon: '✗', class: 'danger', onclick: `adminRejectRequest('${request.id}')` });
+        }
 
         html += `
             <tr>
-                <td>${request.userName}</td>
+                <td><strong>${request.userName}</strong></td>
                 <td>${filiereName}</td>
                 <td>${statusBadge}</td>
                 <td>${date}</td>
-                <td>${actions}</td>
+                <td>${renderActionDropdown(dropdownActions)}</td>
             </tr>
         `;
     }
@@ -757,26 +786,28 @@ async function displayPendingAlumni() {
             return;
         }
 
-        let html = '';
+        let html = '<div class="grid grid-2">';
         pending.forEach(user => {
+            const dropdownActions = [
+                { label: 'Approuver Compte', icon: '✅', onclick: `approveAlumni('${user.id}')` }
+            ];
+
             html += `
-                <div class="card fade-in" style="margin-bottom: 15px; border-left: 4px solid var(--accent-color);">
-                    <div class="flex" style="justify-content: space-between; align-items: center;">
+                <div class="card fade-in" style="border-left: 4px solid var(--accent-color);">
+                    <div class="flex" style="justify-content: space-between; align-items: start;">
                         <div>
                             <h4 style="font-weight: 600;">🎓 ${user.fullName}</h4>
                             <p style="font-size: 0.85rem; color: var(--text-secondary);">
-                                <strong>Promo ${user.promo || 'N/A'}</strong> | ${user.email}
+                                <strong>Promo ${user.promo || 'N/A'}</strong>
                             </p>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary);">${user.email}</p>
                         </div>
-                        <div class="flex gap-1">
-                            <button class="btn btn-primary btn-small" onclick="approveAlumni('${user.id}')">
-                                Approuver
-                            </button>
-                        </div>
+                        ${renderActionDropdown(dropdownActions)}
                     </div>
                 </div>
             `;
         });
+        html += '</div>';
         container.innerHTML = html;
 
     } catch (error) {
