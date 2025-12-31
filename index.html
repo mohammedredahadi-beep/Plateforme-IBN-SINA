@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ibn Sina - Plateforme de Gestion des Groupes</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="auth-container">
+    <div class="card auth-card fade-in">
+      <div class="auth-header">
+        <div class="logo-icon" style="width: 64px; height: 64px; font-size: 2rem; margin: 0 auto var(--spacing-md);">IS
+        </div>
+        <h1>Ibn Sina</h1>
+        <p class="card-subtitle">Plateforme de Gestion des Groupes WhatsApp</p>
+      </div>
+
+      <!-- Onglets -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Connexion</button>
+        <button class="auth-tab" onclick="switchTab('signup')">Inscription</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="auth-message" class="hidden"></div>
+
+      <!-- Formulaire de connexion -->
+      <form id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email</label>
+          <input type="email" id="login-email" class="form-input" placeholder="votre.email@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Mot de passe</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <span id="login-btn-text">Se connecter</span>
+          <span id="login-loading" class="loading hidden"></span>
+        </button>
+      </form>
+
+      <!-- Formulaire d'inscription -->
+      <form id="signup-form" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="signup-name">Nom complet</label>
+          <input type="text" id="signup-name" class="form-input" placeholder="Prénom Nom" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signup-phone">Numéro de téléphone</label>
+          <input type="tel" id="signup-phone" class="form-input" placeholder="+212 6XX XXX XXX" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signup-niveau">Niveau / Statut</label>
+          <select id="signup-niveau" class="form-select" required>
+            <option value="">-- Sélectionnez --</option>
+            <option value="TC">Tronc Commun (TC)</option>
+            <option value="1BAC">1ère Année Bac (1BAC)</option>
+            <option value="2BAC">2ème Année Bac (2BAC)</option>
+            <option value="Lauréat">Lauréat (Diplômé)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email</label>
+          <input type="email" id="signup-email" class="form-input" placeholder="votre.email@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signup-password">Mot de passe (min 6 car.)</label>
+          <input type="password" id="signup-password" class="form-input" placeholder="••••••••" required minlength="6">
+        </div>
+
+        <div class="form-group" style="margin-bottom: var(--spacing-lg);">
+          <label class="form-label" for="signup-confirm">Confirmer le mot de passe</label>
+          <input type="password" id="signup-confirm" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <span id="signup-btn-text">S'inscrire</span>
+          <span id="signup-loading" class="loading hidden"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Scripts personnalisés -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Basculer entre les onglets
+    function switchTab(tab) {
+      const loginTab = document.querySelector('.auth-tab:first-child');
+      const signupTab = document.querySelector('.auth-tab:last-child');
+      const loginForm = document.getElementById('login-form');
+      const signupForm = document.getElementById('signup-form');
+
+      if (tab === 'login') {
+        loginTab.classList.add('active');
+        signupTab.classList.remove('active');
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+      } else {
+        signupTab.classList.add('active');
+        loginTab.classList.remove('active');
+        signupForm.classList.add('active');
+        loginForm.classList.remove('active');
+      }
+
+      // Effacer les messages
+      document.getElementById('auth-message').classList.add('hidden');
+    }
+
+    // Vérifier si l'utilisateur est déjà connecté
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const profile = await getCurrentUserProfile();
+        if (profile) {
+          redirectByRole(profile.role);
+        }
+      }
+    });
+
+    // Gérer la soumission du formulaire de connexion
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      // Afficher le loading
+      document.getElementById('login-btn-text').classList.add('hidden');
+      document.getElementById('login-loading').classList.remove('hidden');
+
+      const result = await login(email, password);
+
+      // Masquer le loading
+      document.getElementById('login-btn-text').classList.remove('hidden');
+      document.getElementById('login-loading').classList.add('hidden');
+
+      if (result.success) {
+        showSuccess('auth-message', 'Connexion réussie ! Redirection...');
+        const profile = await getCurrentUserProfile();
+        if (profile) {
+          setTimeout(() => redirectByRole(profile.role), 1000);
+        }
+      } else {
+        showError('auth-message', formatFirebaseError(result.error));
+      }
+    });
+
+    // Gérer la soumission du formulaire d'inscription
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('signup-name').value;
+      const phone = document.getElementById('signup-phone').value;
+      const niveau = document.getElementById('signup-niveau').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+
+      // Validation
+      if (password !== confirm) {
+        showError('auth-message', 'Les mots de passe ne correspondent pas.');
+        return;
+      }
+
+      // Afficher le loading
+      document.getElementById('signup-btn-text').classList.add('hidden');
+      document.getElementById('signup-loading').classList.remove('hidden');
+
+      // Passer l'objet avec le niveau à la fonction signup
+      const result = await signup(email, password, name, phone, 'student', niveau);
+
+      // Masquer le loading
+      document.getElementById('signup-btn-text').classList.remove('hidden');
+      document.getElementById('signup-loading').classList.add('hidden');
+
+      if (result.success) {
+        showSuccess('auth-message', 'Inscription réussie ! Redirection...');
+        setTimeout(() => redirectByRole('student'), 1000);
+      } else {
+        showError('auth-message', formatFirebaseError(result.error));
+      }
+    });
+  </script>
+</body>
+
+</html>

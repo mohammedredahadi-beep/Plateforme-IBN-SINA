@@ -1,0 +1,21 @@
+﻿# Firebase
+.firebase/
+.firebaserc
+firebase.json
+firebase-debug.log
+
+# Système
+node_modules/
+dist/
+.env
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

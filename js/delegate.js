@@ -1,0 +1,344 @@
+// Fonctionnalités pour le tableau de bord délégué
+
+let currentUser = null;
+let delegateFiliereId = null;
+let pendingRequests = [];
+
+// Initialiser le tableau de bord délégué
+async function initDelegateDashboard() {
+    currentUser = await checkAuthAndRedirect();
+
+    if (!currentUser || currentUser.role !== 'delegate') {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Gestion du thème
+    initTheme();
+
+    // Afficher les informations de l'utilisateur
+    displayUserInfo();
+
+    // Charger la filière du délégué
+    await loadDelegateFiliere();
+
+    // Charger les demandes en attente
+    await loadPendingRequests();
+
+    // Charger les statistiques
+    await loadStats();
+}
+
+/**
+ * Initialise le thème sombre/clair
+ */
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+/**
+ * Bascule entre mode sombre et clair
+ */
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+/**
+ * Filtre les demandes basées sur la barre de recherche
+ */
+function filterRequests() {
+    const searchTerm = document.getElementById('search-requests').value.toLowerCase();
+    const currentView = document.getElementById('pending-view').classList.contains('hidden') ? 'history' : 'pending';
+
+    if (currentView === 'pending') {
+        displayPendingRequests(searchTerm);
+    } else {
+        displayHistory(searchTerm);
+    }
+}
+
+// Afficher les informations de l'utilisateur
+function displayUserInfo() {
+    document.getElementById('user-name').textContent = currentUser.fullName;
+}
+
+// Charger la filière assignée au délégué
+async function loadDelegateFiliere() {
+    try {
+        // Trouver la filière où ce délégué est assigné
+        const snapshot = await filieresRef.where('delegateId', '==', auth.currentUser.uid).get();
+
+        if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            delegateFiliereId = doc.id;
+            const filiere = doc.data();
+            document.getElementById('delegate-filiere').textContent = filiere.name;
+        } else {
+            document.getElementById('delegate-filiere').textContent = 'Aucune filière assignée';
+            showError('delegate-message', 'Vous n\'êtes assigné à aucune filière. Contactez l\'administrateur.');
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement de la filière:', error);
+    }
+}
+
+// Charger les demandes en attente
+async function loadPendingRequests() {
+    if (!delegateFiliereId) return;
+
+    try {
+        // Écouter les changements en temps réel
+        requestsRef
+            .where('filiereId', '==', delegateFiliereId)
+            .orderBy('createdAt', 'desc')
+            .onSnapshot(snapshot => {
+                pendingRequests = [];
+                snapshot.forEach(doc => {
+                    pendingRequests.push({ id: doc.id, ...doc.data() });
+                });
+                displayPendingRequests();
+                loadStats(); // Mettre à jour les stats
+            });
+    } catch (error) {
+        console.error('Erreur lors du chargement des demandes:', error);
+    }
+}
+
+// Afficher les demandes en attente
+async function displayPendingRequests(searchFilter = '') {
+    const container = document.getElementById('requests-list');
+
+    let pending = pendingRequests.filter(r => r.status === 'pending');
+
+    if (searchFilter) {
+        pending = pending.filter(r =>
+            r.userName.toLowerCase().includes(searchFilter) ||
+            r.userEmail.toLowerCase().includes(searchFilter) ||
+            r.userPhone.includes(searchFilter)
+        );
+    }
+
+    if (pending.length === 0) {
+        container.innerHTML = `
+            <div class="card text-center">
+                <p style="color: var(--text-secondary);">Aucune demande trouvée</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+
+    for (const request of pending) {
+        const createdDate = request.createdAt ? new Date(request.createdAt.toDate()).toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : 'Date inconnue';
+
+        // Analyse IA
+        let aiBadge = '';
+        if (request.motivation && request.motivation.length > 10) {
+            const aiAnalysis = await analyzeMotivation(request.motivation);
+            if (aiAnalysis) {
+                const color = aiAnalysis.score >= 7 ? 'var(--success-color)' : (aiAnalysis.score >= 5 ? 'var(--warning-color)' : 'var(--danger-color)');
+                aiBadge = `
+                    <div style="margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.03); border-left: 4px solid ${color};">
+                        <small style="color: var(--text-secondary); font-weight: 600;">🤖 ANALYSE IA :</small><br>
+                        <span style="font-size: 0.85rem;">${aiAnalysis.resume} (Score: ${aiAnalysis.score}/10)</span><br>
+                        <strong style="font-size: 0.8rem; color: ${color};">Conseil : ${aiAnalysis.recommandation}</strong>
+                    </div>
+                `;
+            }
+        }
+
+        html += `
+            <div class="card">
+                <div style="margin-bottom: var(--spacing-md);">
+                    <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-xs);">${request.userName}</h3>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <p>📧 ${request.userEmail}</p>
+                        <p>📱 ${request.userPhone}</p>
+                        <p>📚 Niveau: ${request.niveau || 'Non spécifié'}</p>
+                        <p>🕒 ${createdDate}</p>
+                    </div>
+                </div>
+                
+                ${request.motivation ? `
+                    <div style="background: var(--bg-tertiary); padding: var(--spacing-sm); border-radius: var(--radius-sm); margin-bottom: var(--spacing-md);">
+                        <strong style="font-size: 0.9rem;">Motivation:</strong>
+                        <p style="margin-top: var(--spacing-xs); color: var(--text-secondary);">${request.motivation}</p>
+                        ${aiBadge}
+                    </div>
+                ` : ''}
+                
+                <div class="flex gap-1">
+                    <button class="btn btn-success" onclick="approveRequest('${request.id}')" style="flex: 1;">
+                        ✓ Approuver
+                    </button>
+                    <button class="btn btn-danger" onclick="rejectRequest('${request.id}')" style="flex: 1;">
+                        ✗ Rejeter
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// Charger les statistiques
+async function loadStats() {
+    const total = pendingRequests.length;
+    const pending = pendingRequests.filter(r => r.status === 'pending').length;
+    const approved = pendingRequests.filter(r => r.status === 'approved').length;
+    const rejected = pendingRequests.filter(r => r.status === 'rejected').length;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-approved').textContent = approved;
+    document.getElementById('stat-rejected').textContent = rejected;
+}
+
+// Approuver une demande
+async function approveRequest(requestId) {
+    const comment = prompt('Commentaire pour l\'étudiant (optionnel):');
+    const whatsappLink = prompt('Lien du groupe WhatsApp (optionnel):');
+
+    try {
+        await requestsRef.doc(requestId).update({
+            status: 'approved',
+            delegateComment: comment || '',
+            whatsappLink: whatsappLink || '',
+            processedBy: auth.currentUser.uid,
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('delegate-message', 'Demande approuvée avec succès !');
+    } catch (error) {
+        console.error('Erreur lors de l\'approbation:', error);
+        showError('delegate-message', 'Erreur lors de l\'approbation de la demande.');
+    }
+}
+
+// Rejeter une demande
+async function rejectRequest(requestId) {
+    const comment = prompt('Raison du rejet (optionnel):');
+
+    if (comment === null) return; // Annulation
+
+    try {
+        await requestsRef.doc(requestId).update({
+            status: 'rejected',
+            delegateComment: comment || 'Demande rejetée par le délégué.',
+            processedBy: auth.currentUser.uid,
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('delegate-message', 'Demande rejetée.');
+    } catch (error) {
+        console.error('Erreur lors du rejet:', error);
+        showError('delegate-message', 'Erreur lors du rejet de la demande.');
+    }
+}
+
+// Basculer entre les vues
+function showView(view) {
+    document.getElementById('pending-view').classList.add('hidden');
+    document.getElementById('history-view').classList.add('hidden');
+
+    if (view === 'pending') {
+        document.getElementById('pending-view').classList.remove('hidden');
+    } else {
+        document.getElementById('history-view').classList.remove('hidden');
+        displayHistory();
+    }
+}
+
+// Afficher l'historique
+function displayHistory(searchFilter = '') {
+    const container = document.getElementById('history-list');
+    let processed = pendingRequests.filter(r => r.status !== 'pending');
+
+    if (searchFilter) {
+        processed = processed.filter(r =>
+            r.userName.toLowerCase().includes(searchFilter) ||
+            r.userEmail.toLowerCase().includes(searchFilter) ||
+            r.userPhone.includes(searchFilter)
+        );
+    }
+
+    if (processed.length === 0) {
+        container.innerHTML = `
+            <div class="card text-center">
+                <p style="color: var(--text-secondary);">Aucune demande trouvée dans l'historique</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="table-container"><table class="table"><thead><tr><th>Étudiant</th><th>Email</th><th>Téléphone</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
+
+    processed.forEach(request => {
+        const statusBadge = request.status === 'approved'
+            ? '<span class="badge badge-approved">Approuvée</span>'
+            : '<span class="badge badge-rejected">Rejetée</span>';
+        const processedDate = request.processedAt ? new Date(request.processedAt.toDate()).toLocaleDateString('fr-FR') : '-';
+
+        html += `
+            <tr>
+                <td>${request.userName}</td>
+                <td>${request.userEmail}</td>
+                <td>${request.userPhone}</td>
+                <td>${statusBadge}</td>
+                <td>${processedDate}</td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+/**
+ * Exporte la liste des étudiants approuvés en format CSV
+ */
+function exportApprovedToCSV() {
+    const approved = pendingRequests.filter(r => r.status === 'approved');
+
+    if (approved.length === 0) {
+        alert("Aucun étudiant approuvé à exporter.");
+        return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Nom,Email,Telephone,Niveau,Date Approbation\n";
+
+    approved.forEach(req => {
+        const date = req.processedAt ? new Date(req.processedAt.toDate()).toLocaleDateString('fr-FR') : 'N/A';
+        const row = [
+            `"${req.userName}"`,
+            `"${req.userEmail}"`,
+            `"${req.userPhone}"`,
+            `"${req.niveau || 'N/A'}"`,
+            `"${date}"`
+        ].join(",");
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `etudiants_approuves_${delegateFiliereId}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
