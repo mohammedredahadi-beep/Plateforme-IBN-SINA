@@ -269,12 +269,49 @@ async function rejectRequest(requestId) {
 function showView(view) {
     document.getElementById('pending-view').classList.add('hidden');
     document.getElementById('history-view').classList.add('hidden');
+    document.getElementById('settings-view').classList.add('hidden');
 
     if (view === 'pending') {
         document.getElementById('pending-view').classList.remove('hidden');
-    } else {
+    } else if (view === 'history') {
         document.getElementById('history-view').classList.remove('hidden');
         displayHistory();
+    } else if (view === 'settings') {
+        document.getElementById('settings-view').classList.remove('hidden');
+        loadSettings();
+    }
+}
+
+// Charger les paramètres
+async function loadSettings() {
+    if (!delegateFiliereId) return;
+    try {
+        const doc = await filieresRef.doc(delegateFiliereId).get();
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('setting-whatsapp').value = data.whatsappLink || '';
+        }
+    } catch (error) {
+        console.error('Erreur chargement paramètres:', error);
+    }
+}
+
+// Mettre à jour les paramètres
+async function updateFiliereSettings(e) {
+    e.preventDefault();
+    if (!delegateFiliereId) return;
+
+    const whatsappLink = document.getElementById('setting-whatsapp').value;
+
+    try {
+        await filieresRef.doc(delegateFiliereId).update({
+            whatsappLink: whatsappLink,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showSuccess('delegate-message', 'Lien WhatsApp mis à jour avec succès !');
+    } catch (error) {
+        console.error('Erreur mise à jour paramètres:', error);
+        showError('delegate-message', 'Erreur lors de la mise à jour.');
     }
 }
 

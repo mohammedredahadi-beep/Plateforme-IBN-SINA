@@ -495,6 +495,7 @@ async function addFiliere(e) {
     const niveau = document.getElementById('filiere-niveau').value;
     const description = document.getElementById('filiere-description').value;
     const delegateId = document.getElementById('filiere-delegate').value;
+    const whatsappLink = document.getElementById('filiere-whatsapp').value;
 
     try {
         const docRef = await filieresRef.add({
@@ -502,6 +503,7 @@ async function addFiliere(e) {
             niveau: niveau,
             description: description,
             delegateId: delegateId || null,
+            whatsappLink: whatsappLink || null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });

@@ -62,6 +62,9 @@
                 <button class="btn btn-secondary" onclick="showView('history')">
                     📊 Historique
                 </button>
+                <button class="btn btn-secondary" onclick="showView('settings')">
+                    ⚙️ Paramètres
+                </button>
                 <button class="btn btn-success" onclick="exportApprovedToCSV()">
                     📥 Export CSV
                 </button>
@@ -103,6 +106,29 @@
                 <div class="card text-center">
                     <p style="color: var(--text-secondary);">Chargement...</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Vue des paramètres -->
+        <div id="settings-view" class="hidden">
+            <div class="card" style="margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Paramètres de la filière</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Configurez les informations d'accès pour les
+                    étudiants</p>
+            </div>
+
+            <div class="card">
+                <form id="settings-form" onsubmit="updateFiliereSettings(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="setting-whatsapp">Lien du groupe WhatsApp</label>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">
+                            C'est le lien que les étudiants recevront par l'IA une fois leur PIN vérifié.
+                        </p>
+                        <input type="url" id="setting-whatsapp" class="form-input"
+                            placeholder="https://chat.whatsapp.com/..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                </form>
             </div>
         </div>
 
