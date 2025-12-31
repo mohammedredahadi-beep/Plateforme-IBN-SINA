@@ -67,6 +67,9 @@
                 <button class="btn btn-secondary" onclick="showAdminView('logs')">
                     📜 Journal des Actions
                 </button>
+                <button class="btn btn-danger" onclick="showAdminView('support')">
+                    🚨 Support / Alertes
+                </button>
             </div>
         </div>
 
@@ -204,6 +207,21 @@
             <div id="logs-list">
                 <div class="card text-center">
                     <p style="color: var(--text-secondary);">Chargement du journal...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue Support / Alertes -->
+        <div id="support-view" class="hidden">
+            <div class="card" style="margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">🚨 Alertes Support (Chatbot)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Messages complexes que le bot n'a pas pu
+                    traiter.</p>
+            </div>
+
+            <div id="support-list">
+                <div class="card text-center">
+                    <p style="color: var(--text-secondary);">Chargement des alertes...</p>
                 </div>
             </div>
         </div>

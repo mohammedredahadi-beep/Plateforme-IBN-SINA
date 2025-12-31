@@ -323,19 +323,22 @@ function displayStats() {
 // Basculer entre les vues
 function showAdminView(view) {
     const filieresView = document.getElementById('filieres-view');
-    const usersView = document.getElementById('users-view'); // Renamed from 'delegatesView' to 'usersView' to match existing ID
+    const usersView = document.getElementById('users-view');
     const requestsView = document.getElementById('requests-view');
-    const alumniView = document.getElementById('alumni-view'); // Assuming this ID exists in the HTML
+    const alumniView = document.getElementById('alumni-view');
     const logsView = document.getElementById('logs-view');
+    const supportView = document.getElementById('support-view');
+
     if (logsView) logsView.classList.add('hidden');
+    if (supportView) supportView.classList.add('hidden');
 
     filieresView.classList.add('hidden');
-    usersView.classList.add('hidden'); // Use usersView
+    usersView.classList.add('hidden');
     requestsView.classList.add('hidden');
     alumniView.classList.add('hidden');
 
     if (view === 'filieres') filieresView.classList.remove('hidden');
-    if (view === 'users') { // Changed from 'delegates' to 'users'
+    if (view === 'users') {
         usersView.classList.remove('hidden');
         displayUsers();
     }
@@ -345,11 +348,81 @@ function showAdminView(view) {
     }
     if (view === 'alumni') {
         alumniView.classList.remove('hidden');
-        displayPendingAlumni(); // This function needs to be implemented elsewhere
+        displayPendingAlumni();
     }
     if (view === 'logs') {
         if (logsView) logsView.classList.remove('hidden');
         loadLogs();
+    }
+    if (view === 'support') {
+        if (supportView) supportView.classList.remove('hidden');
+        loadSupportAlerts();
+    }
+}
+
+// Charger les alertes support
+async function loadSupportAlerts() {
+    const container = document.getElementById('support-list');
+    try {
+        const snapshot = await db.collection('support_alerts').orderBy('timestamp', 'desc').get();
+        if (snapshot.empty) {
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucune alerte support.</p></div>';
+            return;
+        }
+
+        let html = '<div class="table-container"><table class="table">';
+        html += '<thead><tr><th>Utilisateur</th><th>Message</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+
+        snapshot.forEach(doc => {
+            const alert = doc.data();
+            const date = alert.timestamp ? new Date(alert.timestamp.toDate()).toLocaleString('fr-FR') : 'N/A';
+            const statusBadge = alert.status === 'new' ? '<span class="badge badge-rejected">Nouveau</span>' : '<span class="badge badge-approved">Traité</span>';
+
+            html += `
+                <tr>
+                    <td><strong>${alert.userName}</strong><br><small>${alert.userRole}</small></td>
+                    <td><p style="max-width: 300px; white-space: normal;">${alert.message}</p></td>
+                    <td style="font-size: 0.8rem;">${date}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="flex gap-1">
+                            ${alert.status === 'new' ? `<button class="btn btn-success btn-small" onclick="resolveAlert('${doc.id}')">Marquer Traité</button>` : ''}
+                            <button class="btn btn-danger btn-small" onclick="deleteAlert('${doc.id}')">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Erreur logs support:', error);
+        container.innerHTML = '<p class="text-error">Erreur lors du chargement des alertes.</p>';
+    }
+}
+
+// Résoudre une alerte
+async function resolveAlert(id) {
+    try {
+        await db.collection('support_alerts').doc(id).update({
+            status: 'resolved',
+            resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        loadSupportAlerts();
+    } catch (error) {
+        alert('Erreur lors de la résolution.');
+    }
+}
+
+// Supprimer une alerte
+async function deleteAlert(id) {
+    if (!confirm('Supprimer cette alerte ?')) return;
+    try {
+        await db.collection('support_alerts').doc(id).delete();
+        loadSupportAlerts();
+    } catch (error) {
+        alert('Erreur lors de la suppression.');
     }
 }
 
