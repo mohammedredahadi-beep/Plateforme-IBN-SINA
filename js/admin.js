@@ -256,7 +256,10 @@ async function displayFilieres() {
 
         html += `
             <div class="card">
-                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-sm);">${filiere.name}</h3>
+                <div class="flex" style="justify-content: space-between; align-items: start;">
+                    <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-sm);">${filiere.name}</h3>
+                    <span class="badge" style="background: var(--primary-color); color: white;">${filiere.niveau || 'Tous'}</span>
+                </div>
                 <p style="color: var(--text-secondary); margin-bottom: var(--spacing-sm);">
                     👤 Délégué: <strong>${delegateName}</strong>
                 </p>
@@ -489,19 +492,21 @@ async function addFiliere(e) {
     e.preventDefault();
 
     const name = document.getElementById('filiere-name').value;
+    const niveau = document.getElementById('filiere-niveau').value;
     const description = document.getElementById('filiere-description').value;
     const delegateId = document.getElementById('filiere-delegate').value;
 
     try {
         const docRef = await filieresRef.add({
             name: name,
+            niveau: niveau,
             description: description,
             delegateId: delegateId || null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        await logAction('ADD_FILIERE', docRef.id, { name: name });
+        await logAction('ADD_FILIERE', docRef.id, { name: name, niveau: niveau });
         showSuccess('admin-message', 'Filière créée avec succès !');
         document.getElementById('filiere-form').reset();
         await loadAllFilieres();

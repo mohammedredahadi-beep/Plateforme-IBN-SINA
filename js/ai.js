@@ -54,72 +54,106 @@ async function analyzeMotivation(motivation) {
 }
 
 /**
- * Chatbot simple pour guider les étudiants
+ * Chatbot intelligent avec Streaming et instructions système
  * @param {string} message - Message de l'étudiant
- * @param {Array} history - Historique de la conversation
+ * @param {Object} userProfile - Profil de l'utilisateur connecté
+ * @param {Function} onChunk - Callback pour le streaming (reçoit chaque morceau de texte)
  */
-async function getChatbotResponse(message, history = []) {
-    if (!firebaseConfig.geminiApiKey || firebaseConfig.geminiApiKey === "VOTRE_GEMINI_API_KEY") {
-        return "Bonjour ! Je suis l'assistant IA d'Ibn Sina. Pour que je puisse vous aider de manière intelligente, l'administrateur doit configurer ma clé API. En attendant, n'hésitez pas à remplir le formulaire de demande !";
+async function getChatbotResponse(message, userProfile, onChunk) {
+    if (!firebaseConfig.geminiApiKey) {
+        return onChunk("Bonjour ! L'administrateur doit configurer ma clé API.");
     }
 
-    // Gestion de la commande /verify
+    // Gestion de la commande /verify (immédiat, pas besoin de stream IA pour ça)
     if (message.toLowerCase().startsWith('/verify ')) {
         const pin = message.split(' ')[1]?.toUpperCase();
-        if (!pin) return "Veuillez fournir un code PIN. Exemple: /verify A1B2C3";
-
-        return await verifyPinAndGetLink(pin);
+        if (!pin) return onChunk("Veuillez fournir un code PIN. Exemple: /verify A1B2C3");
+        const res = await verifyPinAndGetLink(pin);
+        return onChunk(res);
     }
 
     try {
-        const prompt = `
-            Tu es l'assistant virtuel expert de la plateforme "Ibn Sina". 
-            Ton but est d'aider les étudiants et lauréats.
+        const role = userProfile?.role || 'visiteur';
+        const level = userProfile?.niveau || 'N/A';
+
+        // Configuration des instructions système
+        const systemInstruction = `
+            Tu es l'Assistant IA expert de la plateforme "Ibn Sina".
+            Profil utilisateur actuel : ${role} (Niveau: ${level}).
             
-            CONSIGNES DE SÉCURITÉ CRITIQUES :
-            - Si l'utilisateur donne un code (ex: A1B2C3), dis-lui d'utiliser EXACTEMENT la commande "/verify [CODE]".
-            - Ne donne JAMAIS de lien WhatsApp directement si tu ne passes pas par la fonction de vérification.
+            TES MISSIONS :
+            1. Guider l'utilisateur selon son rôle :
+               - ÉTUDIANT : Explique comment choisir une filière, l'importance de la motivation, et comment utiliser le code PIN (/verify) une fois approuvé.
+               - LAURÉAT : Explique que le compte doit être validé par l'Admin. Parle des opportunités de réseautage et du mentorat.
+               - DÉLÉGUÉ : Aide-les à comprendre comment traiter les demandes et utiliser l'analyse IA.
             
-            BASE DE CONNAISSANCES (FAQ) :
-            1. INSCRIPTION : L'email de vérification est obligatoire. Vérifiez vos spams.
-            2. APPROBATION : Les demandes sont traitées par les délégués de filière. Le délai varie de quelques heures à 48h.
-            3. CODES PIN : Une fois une demande approuvée, un PIN apparaît sur le dashboard. Ce PIN expire après 48h.
-            4. ACCÈS WHATSAPP : Tapez "/verify VOTRE_CODE" ici pour obtenir le lien.
-            5. LAURÉATS : Votre compte doit être validé par l'Admin. Vous avez accès à un réseau exclusif une fois validé.
-            6. PROBLÈMES : Si le PIN est expiré, contactez votre délégué. Si le mail de vérification ne vient pas, essayez de vous reconnecter pour demander un renvoi.
+            2. Résoudre les problèmes fréquents :
+               - E-mails en SPAM : C'est le problème n°1. Dis-leur de vérifier et de cliquer sur "Non-spam".
+               - PIN expiré : Les codes PIN ne durent que 48h. Si expiré, ils doivent re-contacter le délégué.
+               - Pas de filière : Si l'étudiant ne voit pas sa filière, c'est qu'il doit vérifier son niveau dans son profil.
             
-            Sois professionnel, accueillant et réponds en français. 
-            Question : "${message}"
+            CONSIGNES CRITIQUES :
+            - Si l'utilisateur donne un code de 6 caractères, rappelle-lui d'utiliser "/verify [CODE]".
+            - Ne donne JAMAIS de lien WhatsApp directement.
+            - Sois chaleureux, professionnel et efficace.
         `;
 
-        const response = await fetch(`${GEMINI_API_URL}?key=${firebaseConfig.geminiApiKey}`, {
+        const streamingUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${firebaseConfig.geminiApiKey}`;
+
+        const response = await fetch(streamingUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                system_instruction: { parts: [{ text: systemInstruction }] },
+                contents: [{ parts: [{ text: message }] }]
             })
         });
 
-        const data = await response.json();
-
-        if (data.error) {
-            console.error("Gemini API Error details:", data.error);
-            let userMsg = "Désolé, j'ai un problème de configuration (Clé API).";
-            if (data.error.message.includes("API key not valid")) userMsg = "Erreur : La clé API Gemini est invalide.";
-            if (data.error.message.includes("quota")) userMsg = "Erreur : Quota API Gemini dépassé.";
-            return `${userMsg} Détails : ${data.error.message}`;
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error?.message || "Erreur API");
         }
 
-        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            console.warn("Réponse IA inattendue:", data);
-            return "Je n'ai pas pu générer de réponse. Réessayez avec une question plus simple !";
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // Le streaming de Gemini renvoie des morceaux de JSON dans un tableau
+            // On essaie d'extraire le texte de chaque chunk
+            try {
+                // Nettoyage rapide pour parser les chunks JSON successifs
+                let cleanBuffer = buffer.trim();
+                if (cleanBuffer.startsWith('[')) cleanBuffer = cleanBuffer.substring(1);
+                if (cleanBuffer.endsWith(']')) cleanBuffer = cleanBuffer.slice(0, -1);
+
+                const parts = cleanBuffer.split('}\n,{'); // Séparateur de chunks
+                // Comme le parsing de flux JSON partiel est complexe, on utilise une approche plus simple :
+                // On cherche les patterns "text": "..."
+                const regex = /"text":\s*"((?:[^"\\]|\\.)*)"/g;
+                let match;
+                let lastIndex = 0;
+                while ((match = regex.exec(buffer)) !== null) {
+                    if (match.index >= lastIndex) {
+                        const textChunk = match[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+                        onChunk(textChunk, true); // true = append mode
+                        lastIndex = regex.lastIndex;
+                    }
+                }
+                // Note: Cette méthode regex est simple. Pour un vrai projet, un parser JSON streamé serait mieux.
+            } catch (e) {
+                // Attendre plus de données si le JSON est incomplet
+            }
         }
 
     } catch (error) {
-        console.error("Erreur Chatbot détaillée:", error);
-        return "Désolé, j'ai rencontré une petite erreur technique. Essayez de remplir le formulaire directement !";
+        console.error("Erreur Chatbot:", error);
+        onChunk(`⚠️ Erreur : ${error.message}. Essayez de vérifier vos spams ou contactez l'admin.`);
     }
 }
 

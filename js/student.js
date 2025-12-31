@@ -2,6 +2,7 @@
 
 let currentUser = null;
 let userRequests = [];
+let allFilieres = []; // Cache global pour les noms des filières
 
 // Initialiser le tableau de bord
 async function initStudentDashboard() {
@@ -54,15 +55,19 @@ async function loadFilieres() {
     try {
         const snapshot = await filieresRef.orderBy('name').get();
         const filiereSelect = document.getElementById('request-filiere');
-
         filiereSelect.innerHTML = '<option value="">-- Sélectionnez une filière --</option>';
 
         snapshot.forEach(doc => {
             const filiere = doc.data();
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.textContent = filiere.name;
-            filiereSelect.appendChild(option);
+
+            // Ne montrer que les filières du même niveau que l'étudiant ou sans restriction
+            if (!filiere.niveau || filiere.niveau === currentUser.niveau) {
+                allFilieres.push({ id: doc.id, ...filiere });
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = filiere.name;
+                filiereSelect.appendChild(option);
+            }
         });
     } catch (error) {
         console.error('Erreur lors du chargement des filières:', error);
@@ -76,13 +81,23 @@ async function loadUserRequests() {
         // Écouter les changements en temps réel
         requestsRef
             .where('userId', '==', auth.currentUser.uid)
-            .orderBy('createdAt', 'desc')
             .onSnapshot(snapshot => {
                 userRequests = [];
                 snapshot.forEach(doc => {
                     userRequests.push({ id: doc.id, ...doc.data() });
                 });
+
+                // Trier localement par date de création (desc)
+                userRequests.sort((a, b) => {
+                    const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+                    const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+                    return dateB - dateA;
+                });
+
                 displayUserRequests();
+            }, error => {
+                console.error('Erreur onSnapshot étudiant:', error);
+                // Si l'erreur est liée à l'index, le listener ne marchera pas sans cette version simplifiée
             });
     } catch (error) {
         console.error('Erreur lors du chargement des demandes:', error);
@@ -90,7 +105,7 @@ async function loadUserRequests() {
 }
 
 // Afficher les demandes de l'utilisateur
-async function displayUserRequests() {
+function displayUserRequests() {
     const container = document.getElementById('requests-list');
 
     if (userRequests.length === 0) {
@@ -105,15 +120,11 @@ async function displayUserRequests() {
     let html = '';
 
     for (const request of userRequests) {
-        // Récupérer le nom de la filière
+        // Utiliser allFilieres chargées précédemment pour éviter les appels Firestore en boucle
         let filiereName = 'Chargement...';
-        try {
-            const filiereDoc = await filieresRef.doc(request.filiereId).get();
-            if (filiereDoc.exists) {
-                filiereName = filiereDoc.data().name;
-            }
-        } catch (error) {
-            console.error('Erreur lors de la récupération de la filière:', error);
+        const found = allFilieres.find(f => f.id === request.filiereId);
+        if (found) {
+            filiereName = found.name;
         }
 
         const statusBadge = getStatusBadge(request.status);

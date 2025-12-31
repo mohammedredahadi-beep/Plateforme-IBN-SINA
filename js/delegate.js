@@ -2,6 +2,7 @@
 
 let currentUser = null;
 let delegateFiliereId = null;
+let delegateNiveau = null;
 let pendingRequests = [];
 
 // Initialiser le tableau de bord délégué
@@ -76,7 +77,8 @@ async function loadDelegateFiliere() {
             const doc = snapshot.docs[0];
             delegateFiliereId = doc.id;
             const filiere = doc.data();
-            document.getElementById('delegate-filiere').textContent = filiere.name;
+            delegateNiveau = filiere.niveau;
+            document.getElementById('delegate-filiere').textContent = `${filiere.name} (${delegateNiveau || 'Tous'})`;
         } else {
             document.getElementById('delegate-filiere').textContent = 'Aucune filière assignée';
             showError('delegate-message', 'Vous n\'êtes assigné à aucune filière. Contactez l\'administrateur.');
@@ -92,24 +94,37 @@ async function loadPendingRequests() {
 
     try {
         // Écouter les changements en temps réel
-        requestsRef
-            .where('filiereId', '==', delegateFiliereId)
-            .orderBy('createdAt', 'desc')
-            .onSnapshot(snapshot => {
-                pendingRequests = [];
-                snapshot.forEach(doc => {
-                    pendingRequests.push({ id: doc.id, ...doc.data() });
-                });
-                displayPendingRequests();
-                loadStats(); // Mettre à jour les stats
+        let query = requestsRef.where('filiereId', '==', delegateFiliereId);
+
+        // Si la filière est restreinte à un niveau spécifique
+        if (delegateNiveau) {
+            query = query.where('niveau', '==', delegateNiveau);
+        }
+
+        query.onSnapshot(snapshot => {
+            pendingRequests = [];
+            snapshot.forEach(doc => {
+                pendingRequests.push({ id: doc.id, ...doc.data() });
             });
+            // Trier localement pour éviter les problèmes d'index composite Firebase
+            pendingRequests.sort((a, b) => {
+                const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+                const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+                return dateB - dateA;
+            });
+            displayPendingRequests();
+            loadStats();
+        }, error => {
+            console.error('Erreur onSnapshot délégué:', error);
+            showError('delegate-message', 'Erreur de connexion en temps réel aux demandes.');
+        });
     } catch (error) {
         console.error('Erreur lors du chargement des demandes:', error);
     }
 }
 
 // Afficher les demandes en attente
-async function displayPendingRequests(searchFilter = '') {
+function displayPendingRequests(searchFilter = '') {
     const container = document.getElementById('requests-list');
 
     let pending = pendingRequests.filter(r => r.status === 'pending');
@@ -142,20 +157,11 @@ async function displayPendingRequests(searchFilter = '') {
             minute: '2-digit'
         }) : 'Date inconnue';
 
-        // Analyse IA
-        let aiBadge = '';
+        // Analyse IA déplacée dans une fonction séparée pour ne pas bloquer l'affichage
+        const aiContainerId = `ai-analysis-${request.id}`;
         if (request.motivation && request.motivation.length > 10) {
-            const aiAnalysis = await analyzeMotivation(request.motivation);
-            if (aiAnalysis) {
-                const color = aiAnalysis.score >= 7 ? 'var(--success-color)' : (aiAnalysis.score >= 5 ? 'var(--warning-color)' : 'var(--danger-color)');
-                aiBadge = `
-                    <div style="margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.03); border-left: 4px solid ${color};">
-                        <small style="color: var(--text-secondary); font-weight: 600;">🤖 ANALYSE IA :</small><br>
-                        <span style="font-size: 0.85rem;">${aiAnalysis.resume} (Score: ${aiAnalysis.score}/10)</span><br>
-                        <strong style="font-size: 0.8rem; color: ${color};">Conseil : ${aiAnalysis.recommandation}</strong>
-                    </div>
-                `;
-            }
+            // Lancer l'analyse en arrière-plan sans await
+            runAIAnalysis(request.id, request.motivation, aiContainerId);
         }
 
         html += `
@@ -174,7 +180,9 @@ async function displayPendingRequests(searchFilter = '') {
                     <div style="background: var(--bg-tertiary); padding: var(--spacing-sm); border-radius: var(--radius-sm); margin-bottom: var(--spacing-md);">
                         <strong style="font-size: 0.9rem;">Motivation:</strong>
                         <p style="margin-top: var(--spacing-xs); color: var(--text-secondary);">${request.motivation}</p>
-                        ${aiBadge}
+                        <div id="${aiContainerId}">
+                            <small style="color: var(--text-secondary);">🤖 Analyse IA en cours...</small>
+                        </div>
                     </div>
                 ` : ''}
                 
@@ -348,4 +356,28 @@ function exportApprovedToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+/**
+ * Fonction helper pour l'analyse IA asynchrone (non-bloquante)
+ */
+async function runAIAnalysis(requestId, motivation, containerId) {
+    try {
+        const aiAnalysis = await analyzeMotivation(motivation);
+        const container = document.getElementById(containerId);
+        if (!container || !aiAnalysis) return;
+
+        const color = aiAnalysis.score >= 7 ? 'var(--success-color)' : (aiAnalysis.score >= 5 ? 'var(--warning-color)' : 'var(--danger-color)');
+        container.innerHTML = `
+            <div style="margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.03); border-left: 4px solid ${color};">
+                <small style="color: var(--text-secondary); font-weight: 600;">🤖 ANALYSE IA :</small><br>
+                <span style="font-size: 0.85rem;">${aiAnalysis.resume} (Score: ${aiAnalysis.score}/10)</span><br>
+                <strong style="font-size: 0.8rem; color: ${color};">Conseil : ${aiAnalysis.recommandation}</strong>
+            </div>
+        `;
+    } catch (error) {
+        console.error("Erreur d'analyse IA pour requestId:", requestId, error);
+        const container = document.getElementById(containerId);
+        if (container) container.innerHTML = '';
+    }
 }

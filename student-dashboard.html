@@ -105,43 +105,147 @@
             </div>
         </div>
 
-        <!-- Chatbot IA -->
-        <div id="ai-chatbot" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-            <button id="chatbot-toggle" class="btn btn-primary"
-                style="border-radius: 50%; width: 60px; height: 60px; padding: 0; justify-content: center; box-shadow: var(--glass-shadow);">
-                🤖
+        <!-- Section Chatbot -->
+        <div style="position: fixed; bottom: 25px; right: 25px; z-index: 1000;">
+            <button id="chatbot-toggle" class="chatbot-toggle" title="Besoin d'aide ?">
+                <span>🤖</span>
             </button>
 
-            <div id="chatbot-window" class="card hidden"
-                style="position: absolute; bottom: 70px; right: 0; width: 320px; max-width: 90vw; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: 450px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); box-shadow: var(--glass-shadow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
-                <div style="background: var(--primary-color); color: white; padding: 12px 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer;"
-                    onclick="minimizeChatbot()">
-                    <span style="display: flex; align-items: center; gap: 8px;">🤖 Assistant Ibn Sina</span>
-                    <div style="display: flex; gap: 12px; font-size: 1.2rem;">
-                        <span title="Réduire" style="cursor: pointer; line-height: 1;">−</span>
-                        <span onclick="toggleChatbot(); event.stopPropagation();" title="Fermer"
-                            style="cursor: pointer; line-height: 1;">✕</span>
-                    </div>
-                </div>
-                <div id="chatbot-body" style="display: flex; flex-direction: column; height: 100%;">
-                    <div id="chatbot-messages"
-                        style="flex: 1; padding: 15px; overflow-y: auto; font-size: 0.9rem; background: var(--bg-primary); max-height: 250px;">
-                        <div
-                            style="background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #333;">
-                            Bonjour ! Une question sur les filières, votre PIN ou les inscriptions ? Je suis là pour
-                            vous aider.
+            <div id="chatbot-window" class="chatbot-window hidden">
+                <div class="chatbot-header">
+                    <div class="flex" style="align-items: center; gap: 10px;">
+                        <span style="font-size: 1.2rem;">🤖</span>
+                        <div style="line-height: 1.2;">
+                            <strong style="display: block; font-size: 0.9rem;">Assistant IBN SINA</strong>
+                            <small style="font-size: 0.7rem; opacity: 0.8;">IA Connectée</small>
                         </div>
                     </div>
-                    <div id="chatbot-input-area"
-                        style="padding: 10px; background: rgba(255,255,255,0.8); border-top: 1px solid var(--border-color); display: flex; gap: 5px;">
-                        <input type="text" id="chatbot-input" placeholder="Posez votre question..."
-                            style="flex: 1; border: 1px solid var(--border-color); border-radius: 5px; padding: 8px 12px; font-size: 0.85rem; background: white;">
-                        <button onclick="handleChatbotSend()" class="btn btn-primary btn-small"
-                            style="padding: 5px 12px; border-radius: 5px;">➔</button>
+                    <div class="flex gap-1">
+                        <button class="chatbot-control" onclick="minimizeChatbot()">−</button>
+                        <button class="chatbot-control" onclick="toggleChatbot()">✕</button>
+                    </div>
+                </div>
+                <div id="chatbot-body">
+                    <div id="chatbot-messages" class="chatbot-messages"
+                        style="flex: 1; padding: 15px; overflow-y: auto; background: var(--bg-tertiary); display: flex; flex-direction: column;">
+                        <div class="card"
+                            style="padding: 10px; margin-bottom: 15px; font-size: 0.8rem; background: var(--bg-tertiary); border: none; box-shadow: none;">
+                            👋 Bonjour ! Je suis votre assistant "Ibn Sina". Posez-moi vos questions sur les filières,
+                            votre PIN ou les inscriptions !
+                        </div>
+                    </div>
+                    <div class="chatbot-input-container">
+                        <input type="text" id="chatbot-input" placeholder="Posez une question..." autocomplete="off">
+                        <button onclick="handleChatbotSend()">➤</button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <style>
+            .chatbot-toggle {
+                position: fixed;
+                bottom: 25px;
+                right: 25px;
+                width: 60px;
+                height: 60px;
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                color: white;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+                z-index: 999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                transition: 0.3s;
+            }
+
+            .chatbot-window {
+                position: fixed;
+                bottom: 95px;
+                right: 25px;
+                width: 320px;
+                height: 450px;
+                background: var(--bg-secondary);
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                transition: 0.3s;
+            }
+
+            .chatbot-header {
+                background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+                color: white;
+                padding: 12px 15px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .chatbot-input-container {
+                padding: 10px;
+                background: var(--bg-secondary);
+                border-top: 1px solid var(--border-color);
+                display: flex;
+                gap: 5px;
+            }
+
+            .chatbot-input-container input {
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid var(--border-color);
+                border-radius: 20px;
+                outline: none;
+                font-size: 0.9rem;
+            }
+
+            .chatbot-input-container button {
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .chatbot-control {
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                width: 25px;
+                height: 25px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .loading-dots {
+                animation: blink 1.4s infinite both;
+            }
+
+            @keyframes blink {
+                0% {
+                    opacity: .2;
+                }
+
+                20% {
+                    opacity: 1;
+                }
+
+                100% {
+                    opacity: .2;
+                }
+            }
+        </style>
 
         <!-- Espace Lauréat (Section Alumni Premium) -->
         <div id="laureat-view" class="hidden">
@@ -269,35 +373,54 @@
             appendMessage('user', message);
             chatbotInput.value = '';
 
-            // Ajouter message de chargement
-            const loadingId = 'loading-' + Date.now();
-            appendMessage('ai', 'Réflexion...', loadingId);
+            // Ajouter un conteneur vide pour la réponse AI streaming
+            const aiMsgId = 'ai-stream-' + Date.now();
+            appendMessage('ai', '', aiMsgId);
+            const aiContainer = document.getElementById(aiMsgId);
+            aiContainer.innerHTML = '<span class="loading-dots">Réflexion...</span>';
 
-            // Obtenir réponse IA
-            const response = await getChatbotResponse(message);
+            let isFirstChunk = true;
 
-            // Remplacer chargement par réponse
-            document.getElementById(loadingId).textContent = response;
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            // Appeler l'IA avec streaming
+            try {
+                await getChatbotResponse(message, currentUser, (chunk, isAppend) => {
+                    if (isFirstChunk) {
+                        aiContainer.textContent = ''; // On efface "Réflexion..."
+                        isFirstChunk = false;
+                    }
+
+                    if (isAppend) {
+                        aiContainer.textContent += chunk;
+                    } else {
+                        aiContainer.textContent = chunk;
+                    }
+                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                });
+            } catch (err) {
+                aiContainer.textContent = "Erreur : " + err.message;
+            }
         }
 
         function appendMessage(sender, text, id = null) {
             const msgDiv = document.createElement('div');
+            msgDiv.className = 'message-bubble';
             msgDiv.style.padding = '10px';
             msgDiv.style.borderRadius = '10px';
             msgDiv.style.marginBottom = '10px';
             msgDiv.style.fontSize = '0.85rem';
-            msgDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+            msgDiv.style.maxWidth = '85%';
+            msgDiv.style.wordBreak = 'break-word';
 
             if (sender === 'user') {
                 msgDiv.style.background = 'var(--primary-color)';
                 msgDiv.style.color = 'white';
-                msgDiv.style.marginLeft = '20px';
+                msgDiv.style.marginLeft = 'auto';
                 msgDiv.style.borderBottomRightRadius = '2px';
             } else {
                 msgDiv.style.background = 'white';
-                msgDiv.style.marginRight = '20px';
+                msgDiv.style.marginRight = 'auto';
                 msgDiv.style.borderBottomLeftRadius = '2px';
+                msgDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
                 if (id) msgDiv.id = id;
             }
 

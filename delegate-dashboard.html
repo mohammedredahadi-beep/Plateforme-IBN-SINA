@@ -133,9 +133,210 @@
     <script src="js/ai.js"></script>
     <script src="js/delegate.js"></script>
 
+    <!-- Chatbot Button -->
+    <button id="chatbot-toggle" class="chatbot-toggle" title="Besoin d'aide ?">
+        <span>🤖</span>
+    </button>
+
+    <!-- Chatbot Window -->
+    <div id="chatbot-window" class="chatbot-window hidden">
+        <div class="chatbot-header">
+            <div class="flex" style="align-items: center; gap: 10px;">
+                <span style="font-size: 1.2rem;">🤖</span>
+                <div style="line-height: 1.2;">
+                    <strong style="display: block; font-size: 0.9rem;">Assistant IBN SINA</strong>
+                    <small style="font-size: 0.7rem; opacity: 0.8;">IA Connectée</small>
+                </div>
+            </div>
+            <div class="flex gap-1">
+                <button class="chatbot-control" onclick="minimizeChatbot()">−</button>
+                <button class="chatbot-control" onclick="toggleChatbot()">✕</button>
+            </div>
+        </div>
+        <div id="chatbot-body">
+            <div id="chatbot-messages" class="chatbot-messages"
+                style="flex: 1; padding: 15px; overflow-y: auto; background: var(--bg-tertiary); display: flex; flex-direction: column;">
+                <div class="card"
+                    style="padding: 10px; margin-bottom: 15px; font-size: 0.8rem; background: var(--bg-tertiary); border: none; box-shadow: none;">
+                    👋 Bonjour Délégué ! Je suis votre assistant. Je peux vous aider à analyser les motivations ou gérer
+                    les erreurs courantes.
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <input type="text" id="chatbot-input" placeholder="Posez une question..." autocomplete="off">
+                <button onclick="handleChatbotSend()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .chatbot-toggle {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: 0.3s;
+        }
+
+        .chatbot-window {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 320px;
+            height: 450px;
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-input-container {
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 5px;
+        }
+
+        .chatbot-input-container input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .chatbot-input-container button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-control {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .loading-dots {
+            animation: blink 1.4s infinite both;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: .2;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: .2;
+            }
+        }
+    </style>
+
     <script>
         // Initialiser le tableau de bord au chargement de la page
         window.addEventListener('DOMContentLoaded', initDelegateDashboard);
+
+        // Logique Chatbot
+        const chatbotToggle = document.getElementById('chatbot-toggle');
+        const chatbotWindow = document.getElementById('chatbot-window');
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+
+        chatbotToggle.addEventListener('click', toggleChatbot);
+
+        function toggleChatbot() { chatbotWindow.classList.toggle('hidden'); }
+        function minimizeChatbot() {
+            const body = document.getElementById('chatbot-body');
+            body.classList.toggle('hidden');
+            chatbotWindow.style.height = body.classList.contains('hidden') ? '48px' : '450px';
+        }
+
+        async function handleChatbotSend() {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+            appendMessage('user', message);
+            chatbotInput.value = '';
+            const aiMsgId = 'ai-stream-' + Date.now();
+            appendMessage('ai', '', aiMsgId);
+            const aiContainer = document.getElementById(aiMsgId);
+            aiContainer.innerHTML = '<span class="loading-dots">Réflexion...</span>';
+            let isFirstChunk = true;
+            try {
+                await getChatbotResponse(message, currentUser, (chunk, isAppend) => {
+                    if (isFirstChunk) { aiContainer.textContent = ''; isFirstChunk = false; }
+                    if (isAppend) aiContainer.textContent += chunk; else aiContainer.textContent = chunk;
+                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                });
+            } catch (err) { aiContainer.textContent = "Erreur : " + err.message; }
+        }
+
+        function appendMessage(sender, text, id = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.style.padding = '8px 12px';
+            msgDiv.style.borderRadius = '12px';
+            msgDiv.style.marginBottom = '10px';
+            msgDiv.style.fontSize = '0.85rem';
+            msgDiv.style.maxWidth = '85%';
+            if (sender === 'user') {
+                msgDiv.style.background = 'var(--primary-color)';
+                msgDiv.style.color = 'white';
+                msgDiv.style.marginLeft = 'auto';
+                msgDiv.style.borderBottomRightRadius = '2px';
+            } else {
+                msgDiv.style.background = 'white';
+                msgDiv.style.marginRight = 'auto';
+                msgDiv.style.borderBottomLeftRadius = '2px';
+                msgDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                if (id) msgDiv.id = id;
+            }
+            msgDiv.textContent = text;
+            chatbotMessages.appendChild(msgDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        chatbotInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatbotSend(); });
     </script>
 </body>
 
