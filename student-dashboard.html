@@ -113,7 +113,7 @@
             </button>
 
             <div id="chatbot-window" class="card hidden"
-                style="position: absolute; bottom: 70px; right: 0; width: 320px; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: 450px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); box-shadow: var(--glass-shadow); transition: all 0.3s ease;">
+                style="position: absolute; bottom: 70px; right: 0; width: 320px; max-width: 90vw; padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: 450px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); box-shadow: var(--glass-shadow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                 <div style="background: var(--primary-color); color: white; padding: 12px 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; cursor: pointer;"
                     onclick="minimizeChatbot()">
                     <span style="display: flex; align-items: center; gap: 8px;">🤖 Assistant Ibn Sina</span>
@@ -249,11 +249,15 @@
 
         function minimizeChatbot() {
             const body = document.getElementById('chatbot-body');
+            const window = document.getElementById('chatbot-window');
             body.classList.toggle('hidden');
+
             if (body.classList.contains('hidden')) {
-                chatbotWindow.style.height = 'auto';
+                window.style.maxHeight = '48px'; // Just the header
+                window.style.width = '200px';    // Narrower when minimized
             } else {
-                chatbotWindow.style.height = '';
+                window.style.maxHeight = '450px';
+                window.style.width = '320px';
             }
         }
 

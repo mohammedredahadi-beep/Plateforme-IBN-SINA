@@ -64,6 +64,9 @@
                 <button class="btn btn-warning" onclick="showAdminView('alumni')">
                     🎓 Valider Lauréats
                 </button>
+                <button class="btn btn-secondary" onclick="showAdminView('logs')">
+                    📜 Journal des Actions
+                </button>
             </div>
         </div>
 
@@ -174,6 +177,21 @@
                 </div>
             </div>
         </div>
+
+        <!-- Vue Logs & Audit -->
+        <div id="logs-view" class="hidden">
+            <div class="card" style="margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Journal des Actions (Audit)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Historique des modifications administratives
+                </p>
+            </div>
+
+            <div id="logs-list">
+                <div class="card text-center">
+                    <p style="color: var(--text-secondary);">Chargement du journal...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK -->
@@ -185,6 +203,93 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
+
+    <!-- Modal d'édition d'utilisateur -->
+    <div id="edit-user-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="flex"
+                style="justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600;">Modifier l'utilisateur</h3>
+                <button class="btn btn-secondary btn-small" onclick="closeEditUserModal()">✕</button>
+            </div>
+            <form id="edit-user-form" onsubmit="updateUser(event)">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label class="form-label" for="edit-user-name">Nom complet</label>
+                    <input type="text" id="edit-user-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-user-email">Email (Lecture seule)</label>
+                    <input type="email" id="edit-user-email" class="form-input" readonly
+                        style="background: var(--bg-tertiary); cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-user-phone">Téléphone</label>
+                    <input type="tel" id="edit-user-phone" class="form-input" required>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-user-niveau">Niveau / Statut</label>
+                        <select id="edit-user-niveau" class="form-select" required
+                            onchange="toggleEditPromoField(this.value)">
+                            <option value="TC">TC</option>
+                            <option value="1BAC">1BAC</option>
+                            <option value="2BAC">2BAC</option>
+                            <option value="Lauréat">Lauréat</option>
+                        </select>
+                    </div>
+                    <div id="edit-promo-group" class="form-group hidden">
+                        <label class="form-label" for="edit-user-promo">Promotion</label>
+                        <input type="number" id="edit-user-promo" class="form-input" placeholder="2024">
+                    </div>
+                </div>
+                <div class="flex gap-1" style="margin-top: var(--spacing-md);">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer les
+                        modifications</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;"
+                        onclick="closeEditUserModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 500px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 
     <script>
         // Initialiser le tableau de bord au chargement de la page

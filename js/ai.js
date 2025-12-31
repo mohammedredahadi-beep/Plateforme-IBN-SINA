@@ -103,8 +103,11 @@ async function getChatbotResponse(message, history = []) {
         const data = await response.json();
 
         if (data.error) {
-            console.error("Gemini API Error:", data.error);
-            return "Désolé, j'ai un problème de configuration avec mon cerveau IA (Clé API). Merci de contacter l'administrateur.";
+            console.error("Gemini API Error details:", data.error);
+            let userMsg = "Désolé, j'ai un problème de configuration (Clé API).";
+            if (data.error.message.includes("API key not valid")) userMsg = "Erreur : La clé API Gemini est invalide.";
+            if (data.error.message.includes("quota")) userMsg = "Erreur : Quota API Gemini dépassé.";
+            return `${userMsg} Détails : ${data.error.message}`;
         }
 
         if (data.candidates && data.candidates[0] && data.candidates[0].content) {

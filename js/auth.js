@@ -109,6 +109,15 @@ async function checkAuthAndRedirect() {
             }
 
             const profile = await getCurrentUserProfile();
+
+            // Si le compte est suspendu
+            if (profile && profile.isSuspended) {
+                await auth.signOut();
+                window.location.href = 'index.html?error=suspended';
+                resolve(null);
+                return;
+            }
+
             resolve(profile);
         });
     });

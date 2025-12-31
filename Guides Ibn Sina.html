@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guides d'Utilisation - Plateforme Ibn Sina</title>
+    <style>
+        :root {
+            --color-primary: #208090;
+            --color-delegate: #27ae60;
+            --color-admin: #f5a623;
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #2c3e50;
+            --color-border: #ddd;
+            --color-error: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            font-family: 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, #1a6b78 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Role Selector */
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .role-card {
+            background: var(--color-surface);
+            border: 3px solid var(--color-border);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .role-card.active {
+            border-color: currentColor;
+            box-shadow: 0 0 0 4px rgba(32, 128, 144, 0.1);
+        }
+
+        .role-card.student {
+            --card-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .role-card.delegate {
+            --card-color: var(--color-delegate);
+            color: var(--color-delegate);
+        }
+
+        .role-card.admin {
+            --card-color: var(--color-admin);
+            color: var(--color-admin);
+        }
+
+        .role-card.active {
+            background: var(--card-color);
+            color: white;
+            border-color: var(--card-color);
+        }
+
+        .role-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .role-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .role-card p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* Guide Content */
+        .guide-content {
+            background: var(--color-surface);
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .guide-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .guide-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .guide-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-intro {
+            background: rgba(32, 128, 144, 0.05);
+            padding: 20px;
+            border-left: 4px solid var(--color-primary);
+            border-radius: 6px;
+            margin-bottom: 30px;
+            font-size: 1.05rem;
+        }
+
+        .steps {
+            margin: 30px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            margin-bottom: 10px;
+            color: var(--color-primary);
+        }
+
+        .step-content p {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: #f9f9f9;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 4px 12px rgba(32, 128, 144, 0.15);
+        }
+
+        .feature-card h4 {
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+        }
+
+        .security-box {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.05) 0%, rgba(231, 76, 60, 0.02) 100%);
+            border-left: 4px solid var(--color-error);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 30px 0;
+        }
+
+        .security-box h4 {
+            color: var(--color-error);
+            margin-bottom: 10px;
+        }
+
+        .security-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .security-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .security-box li:before {
+            content: "🔒";
+            position: absolute;
+            left: 0;
+        }
+
+        .faq-item {
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        .faq-question {
+            padding: 20px;
+            cursor: pointer;
+            background: #f9f9f9;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .faq-question:hover {
+            background: #f0f0f0;
+        }
+
+        .faq-question.active {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s;
+        }
+
+        .faq-answer.active {
+            max-height: 500px;
+            padding: 20px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .role-card {
+                padding: 20px;
+            }
+
+            .guide-content {
+                padding: 20px;
+            }
+
+            .step {
+                flex-direction: column;
+            }
+
+            .role-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted var(--color-primary);
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: var(--color-primary);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>📚 Guides d'Utilisation</h1>
+            <p>Plateforme Ibn Sina - Choisissez votre rôle pour accéder au guide personnalisé</p>
+        </header>
+
+        <!-- Role Selector -->
+        <div class="role-selector">
+            <div class="role-card student active" onclick="switchGuide('student')">
+                <div class="role-icon">🎓</div>
+                <h3>Guide Étudiant</h3>
+                <p>Accès aux groupes WhatsApp</p>
+            </div>
+            <div class="role-card delegate" onclick="switchGuide('delegate')">
+                <div class="role-icon">🛡️</div>
+                <h3>Guide Délégué</h3>
+                <p>Gestion de votre filière</p>
+            </div>
+            <div class="role-card admin" onclick="switchGuide('admin')">
+                <div class="role-icon">⚙️</div>
+                <h3>Guide Administrateur</h3>
+                <p>Contrôle total de la plateforme</p>
+            </div>
+        </div>
+
+        <!-- Guide Content -->
+        <div class="guide-content">
+            <!-- GUIDE ÉTUDIANT -->
+            <div id="student" class="guide-section active">
+                <h2><span class="role-icon">🎓</span>Guide d'Utilisation - Étudiant</h2>
+                
+                <div class="section-intro">
+                    <strong>Bienvenue sur la plateforme Ibn Sina!</strong> Ce guide vous aidera à naviguer et à accéder aux groupes WhatsApp de votre filière en quelques étapes simples.
+                </div>
+
+                <h3>📝 Étape 1: Création de Compte</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Cliquez sur "Inscription"</h4>
+                            <p>Sur la page de connexion, sélectionnez l'onglet <span class="highlight">Inscription</span>.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Remplissez vos informations</h4>
+                            <p>• <strong>Nom Complet:</strong> Votre prénom et nom<br>
+                            • <strong>Email:</strong> Votre adresse email (importante pour la vérification)<br>
+                            • <strong>Mot de passe:</strong> Créez un mot de passe fort (minimum 6 caractères)<br>
+                            • <strong>Filière:</strong> Sélectionnez votre filière d'études<br>
+                            • <strong>Niveau:</strong> Optionnel - Indiquez votre année d'études<br>
+                            • <strong>WhatsApp:</strong> Optionnel - Votre numéro pour contact direct</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Vérifiez votre email</h4>
+                            <p>Un email de confirmation sera envoyé à votre adresse. <span class="tooltip">Cliquez sur le lien de vérification pour activer votre compte.<span class="tooltiptext">Cette étape est obligatoire pour accéder à tous les services</span></span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🔐 Étape 2: Soumettre une Demande d'Adhésion</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Connectez-vous</h4>
+                            <p>Utilisez votre email et mot de passe pour accéder à votre tableau de bord.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Accédez à "Ma Demande"</h4>
+                            <p>Sur le tableau de bord, cliquez sur l'onglet <span class="highlight">Ma Demande</span>.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Remplissez le formulaire</h4>
+                            <p>• Votre filière s'affiche automatiquement<br>
+                            • Votre niveau s'affiche automatiquement<br>
+                            • <strong>Message (optionnel):</strong> Présentez-vous brièvement (pourquoi vous souhaitez rejoindre, vos intérêts, etc.)<br>
+                            • Cliquez sur <span class="highlight">Envoyer la Demande</span></p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Attendez l'approbation</h4>
+                            <p>Le délégué de votre filière examinera votre demande. Vous verrez le statut mis à jour en temps réel.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🔗 Étape 3: Recevoir le Lien WhatsApp</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Approuvation par le délégué</h4>
+                            <p>Quand votre demande est approuvée, le délégué génère un <span class="highlight">code PIN</span> sécurisé.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Recevez le code PIN</h4>
+                            <p>Vous recevrez le code PIN par:<br>
+                            • 📧 Email à votre adresse enregistrée<br>
+                            • 💬 SMS/WhatsApp (si numéro fourni)<br>
+                            • 🔔 Notification sur la plateforme</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Validez le code PIN</h4>
+                            <p>Allez à la section "Validation PIN" et entrez le code reçu. <span class="tooltip">Le Bot IA Gemini vérifiera le code en arrière-plan.<span class="tooltiptext">Ce système garantit la sécurité des groupes WhatsApp</span></span></p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Accédez au groupe WhatsApp</h4>
+                            <p>Une fois validé, le lien WhatsApp officiel s'affichera. Cliquez pour rejoindre le groupe de votre filière!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>⭐ Caractéristiques Principales</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">📋</span>Historique des Demandes</h4>
+                        <p>Consultez l'historique complet de toutes vos demandes avec leurs statuts et décisions.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">🎓</span>Espace Lauréat</h4>
+                        <p>Si vous êtes marqué comme "Lauréat", accédez à des fonctions de mentorat et partage de ressources.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">👤</span>Profil Personnel</h4>
+                        <p>Modifiez vos informations personnelles et votre numéro WhatsApp à tout moment.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">🔐</span>Confidentialité</h4>
+                        <p>Vos données restent confidentielles. Seules les informations nécessaires sont partagées avec le délégué.</p>
+                    </div>
+                </div>
+
+                <h3>❓ Questions Fréquentes (FAQ)</h3>
+                <div id="student-faq">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Pourquoi ma demande a été rejetée?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Le délégué a le droit de rejeter les demandes. Les raisons peuvent être:<br>
+                            • Informations incomplètes<br>
+                            • Limite de membres atteinte<br>
+                            • Raisons de sécurité<br><br>
+                            <strong>Conseil:</strong> Contactez le délégué pour connaître la raison exacte et réessayez.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Je n'ai pas reçu le code PIN, que faire?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Vérifiez:<br>
+                            • Votre dossier spam/courrier indésirable<br>
+                            • Que votre email est correct sur votre profil<br>
+                            • Si vous avez fourni un numéro WhatsApp, vérifiez vos messages<br><br>
+                            <strong>Solution:</strong> Contactez le délégué de votre filière pour renvoyer le code.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Puis-je soumettre plusieurs demandes?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Vous pouvez soumettre une demande par filière. Si vous changez de filière, vous pouvez en soumettre une nouvelle. Les anciennes demandes restent dans votre historique.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="security-box">
+                    <h4>🔒 Recommandations de Sécurité</h4>
+                    <ul>
+                        <li>Ne partagez jamais votre mot de passe</li>
+                        <li>Utilisez un mot de passe unique (ne l'utilisez pas ailleurs)</li>
+                        <li>Vérifiez votre adresse email pour débloquer toutes les fonctionnalités</li>
+                        <li>Ne partagez pas le code PIN reçu</li>
+                        <li>Signalez tout activité suspecte au délégué</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- GUIDE DÉLÉGUÉ -->
+            <div id="delegate" class="guide-section">
+                <h2><span class="role-icon">🛡️</span>Guide d'Utilisation - Délégué</h2>
+                
+                <div class="section-intro">
+                    <strong>Bienvenue en tant que délégué!</strong> Vous êtes responsable de la gestion des demandes d'adhésion pour votre filière. Ce guide vous explique comment approuver/rejeter les demandes, générer des codes PIN et gérer votre filière.
+                </div>
+
+                <h3>📊 Tableau de Bord Délégué</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Accédez l'onglet "Gestion des Demandes"</h4>
+                            <p>Sur votre tableau de bord, vous verrez automatiquement l'onglet <span class="highlight">Gestion des Demandes</span> (visible uniquement pour les délégués).</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Consultez les demandes en attente</h4>
+                            <p>Vous verrez une liste de toutes les demandes <span class="highlight">en attente</span> pour votre filière. Les colonnes affichent:<br>
+                            • Email de l'étudiant<br>
+                            • Date de la demande<br>
+                            • Aperçu du message de présentation</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Cliquez sur "Détails"</h4>
+                            <p>Pour voir toutes les informations de l'étudiant et son message complet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>✅ Approuver une Demande</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Ouvrez les détails de la demande</h4>
+                            <p>Vous verrez:<br>
+                            • Nom complet de l'étudiant<br>
+                            • Email et numéro WhatsApp<br>
+                            • Niveau d'études<br>
+                            • Message de présentation complet</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Ajoutez une note (optionnel)</h4>
+                            <p>Vous pouvez ajouter une note personnalisée à l'étudiant. Exemples:<br>
+                            • "Bienvenue dans notre groupe!"<br>
+                            • "N'oublie pas de lire les règles du groupe"<br>
+                            • Toute remarque pertinente</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Générez le code PIN</h4>
+                            <p>Cliquez sur le bouton <span class="highlight">Approuver</span>. Le système générera automatiquement un code PIN sécurisé et le system l'enverra à l'étudiant.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Code PIN envoyé automatiquement</h4>
+                            <p>L'étudiant reçoit le code PIN par:<br>
+                            • 📧 Email<br>
+                            • 💬 SMS/WhatsApp (si numéro fourni)<br>
+                            • 🔔 Notification plateforme</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>❌ Rejeter une Demande</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Consultez les informations</h4>
+                            <p>Examinez les détails de l'étudiant pour décider si la demande doit être rejetée.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Écrivez une justification</h4>
+                            <p>Dans la zone "Décision", écrivez une raison claire et respectueuse. Exemples:<br>
+                            • "La limite de membres est atteinte"<br>
+                            • "Veuillez compléter vos informations"<br>
+                            • Toute autre raison pertinente</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Cliquez sur "Rejeter"</h4>
+                            <p>La demande sera marquée comme rejetée et l'étudiant recevra une notification avec la justification.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📥 Exporter la Liste des Étudiants</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Accédez à "Exporter Données"</h4>
+                            <p>Un bouton dans votre tableau de bord vous permet d'exporter la liste des étudiants approuvés.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Format Excel/CSV</h4>
+                            <p>Le fichier contient:<br>
+                            • Noms des étudiants<br>
+                            • Emails<br>
+                            • Numéros WhatsApp<br>
+                            • Date d'approbation<br>
+                            • Statut</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Utilisations</h4>
+                            <p>Vous pouvez utiliser ce fichier pour:<br>
+                            • Gérer votre groupe WhatsApp<br>
+                            • Créer des rappels ou annonces<br>
+                            • Tenir des statistiques</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🤖 Score IA Gemini</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">📊</span>Analyse de Motivation</h4>
+                        <p>Pour chaque demande, l'IA Gemini analyse le message et génère un score de motivation (0-100).</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">💡</span>Recommandations</h4>
+                        <p>L'IA fournit des insights sur le profil de l'étudiant pour vous aider dans votre décision.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">🔍</span>Détection Automatique</h4>
+                        <p>Détecte les demandes suspectes ou incomplètes pour vous aider à filtrer.</p>
+                    </div>
+                </div>
+
+                <h3>⭐ Responsabilités du Délégué</h3>
+                <div class="security-box">
+                    <h4>Respectez ces obligations:</h4>
+                    <ul>
+                        <li>Répondre aux demandes dans un délai raisonnable (24-48h recommandé)</li>
+                        <li>Protéger les données personnelles des étudiants</li>
+                        <li>Ne pas partager les codes PIN avec d'autres</li>
+                        <li>Utiliser le système de manière équitable et transparente</li>
+                        <li>Signaler au administrateur tout problème ou abus</li>
+                        <li>Mettre à jour le lien WhatsApp officiel si changement</li>
+                    </ul>
+                </div>
+
+                <h3>❓ Questions Fréquentes (FAQ)</h3>
+                <div id="delegate-faq">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Puis-je voir les codes PIN que j'ai généré?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Pour des raisons de sécurité, les codes PIN ne sont pas archivés. Une fois généré et envoyé, seul l'étudiant le possède. Si un étudiant l'a perdu, vous pouvez générer un nouveau code en rejettant et réapprouvant la demande.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Combien d'étudiants puis-je approuver?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Il n'y a pas de limite technique. Cependant, vous pouvez définir une limite personnelle basée sur la capacité de votre groupe WhatsApp. Vous pouvez rejeter des demandes en expliquant que le groupe est saturé.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Que faire si un étudiant abuse du système?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Signalez immédiatement à l'administrateur. Vous pouvez:<br>
+                            • Rejeter les demandes suspectes<br>
+                            • Documenter les problèmes<br>
+                            • Contacter l'admin pour un blocage ou suppression de compte</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GUIDE ADMINISTRATEUR -->
+            <div id="admin" class="guide-section">
+                <h2><span class="role-icon">⚙️</span>Guide d'Utilisation - Administrateur</h2>
+                
+                <div class="section-intro">
+                    <strong>Bienvenue administrateur!</strong> Vous avez le contrôle total de la plateforme Ibn Sina. Ce guide explique comment gérer les filières, les utilisateurs, et surveiller la plateforme.
+                </div>
+
+                <h3>👥 Gestion des Utilisateurs</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Accédez l'onglet "Administration"</h4>
+                            <p>Sur votre tableau de bord, l'onglet <span class="highlight">Administration</span> affiche tous les outils de gestion.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Section "Ajouter un Délégué"</h4>
+                            <p>Entrez:<br>
+                            • <strong>Email:</strong> L'email de l'utilisateur à promouvoir<br>
+                            • <strong>Filière:</strong> La filière qu'il gérera<br><br>
+                            Cet utilisateur recevra un accès délégué pour cette filière.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Consulter la liste des délégués</h4>
+                            <p>Vous pouvez voir tous les délégués actuels et leur filière assignée. Vous pouvez les supprimer ou les modifier à tout moment.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Promouvoir à administrateur</h4>
+                            <p>Vous pouvez promouvoir un utilisateur délégué au rôle d'administrateur (accès complet). Utilisez la section dédiée.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🗂️ Gestion des Filières</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Créer une nouvelle filière</h4>
+                            <p>Cliquez sur <span class="highlight">Ajouter Filière</span>. Entrez:<br>
+                            • Nom de la filière<br>
+                            • Code/Abréviation (ex: STE, SM, PC)<br>
+                            • Description (optionnel)<br>
+                            • Lien WhatsApp officiel</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Modifier une filière</h4>
+                            <p>Vous pouvez modifier:<br>
+                            • Nom et description<br>
+                            • Lien WhatsApp (si le groupe est réorganisé)<br>
+                            • Statut (active/inactive)</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Supprimer une filière</h4>
+                            <p><span class="highlight">Attention:</span> Supprimer une filière supprimera aussi toutes ses demandes associées. Cette action est irréversible.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Assigner délégués aux filières</h4>
+                            <p>Vous pouvez assigner plusieurs délégués à une filière ou reassigner d'une filière à l'autre.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📊 Vue Globale et Statistiques</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">👥</span>Nombre d'Utilisateurs</h4>
+                        <p>Total des utilisateurs inscrits, avec répartition par filière et rôle.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">📈</span>Taux d'Approbation</h4>
+                        <p>Pourcentage de demandes approuvées vs rejetées par filière et globalement.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">⏱️</span>Temps de Traitement</h4>
+                        <p>Temps moyen pour approuver une demande par délégué et par filière.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">📋</span>Toutes les Demandes</h4>
+                        <p>Accès complet à toutes les demandes de toutes les filières (en attente, approuvées, rejetées).</p>
+                    </div>
+                </div>
+
+                <h3>🔐 Configuration de Sécurité</h3>
+                <div class="security-box">
+                    <h4>Vérifiez ces paramètres:</h4>
+                    <ul>
+                        <li>Vérification Email obligatoire pour l'accès au dashboard</li>
+                        <li>Règles Firestore bloquent les accès non autorisés</li>
+                        <li>Codes PIN sécurisés et temporaires</li>
+                        <li>Audit des actions administrateur</li>
+                        <li>Chiffrement des données sensibles</li>
+                        <li>Politique RGPD et confidentialité des données</li>
+                    </ul>
+                </div>
+
+                <h3>🛡️ Modération et Gestion des Abus</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Identifier les comportements suspects</h4>
+                            <p>Surveillez:<br>
+                            • Demandes en masse par un utilisateur<br>
+                            • Contenus offensants dans les messages<br>
+                            • Délégués qui n'approuvent jamais les demandes<br>
+                            • Accès anormaux</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Avertissement</h4>
+                            <p>Contacter l'utilisateur ou le délégué pour clarifier le comportement problématique.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Suspension du compte</h4>
+                            <p>Vous pouvez suspendre temporairement un compte pour investigation.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Suppression définitive</h4>
+                            <p>En dernier recours, vous pouvez supprimer un compte. Cette action supprime aussi toutes ses données associées.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📝 Logs et Audit</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">📊</span>Journal des Actions</h4>
+                        <p>Consultez l'historique de toutes les actions administrateur (modifications, suppressions, promotions).</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">🔍</span>Filtrage par Date</h4>
+                        <p>Filtrez les logs par date, utilisateur, type d'action pour investigations.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4><span class="feature-icon">📧</span>Alertes Email</h4>
+                        <p>Recevez des alertes pour les actions administrateur critiques.</p>
+                    </div>
+                </div>
+
+                <h3>❓ Questions Fréquentes (FAQ)</h3>
+                <div id="admin-faq">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Peut-on avoir plusieurs administrateurs?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Oui! Vous pouvez promouvoir autant d'utilisateurs que nécessaire au rang d'administrateur. Chaque administrateur a les mêmes droits complets.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Puis-je rétrograder un délégué ou un administrateur?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Oui. Vous pouvez changer le rôle de n'importe quel utilisateur:<br>
+                            • Administrateur → Délégué<br>
+                            • Délégué → Étudiant<br>
+                            • Étudiant → Délégué<br>
+                            Cette action est instantanée.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Que se passe-t-il si je supprime une filière?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Suppression d'une filière = Suppression définitive de:<br>
+                            • La filière<br>
+                            • Tous les délégués assignés à cette filière<br>
+                            • Toutes les demandes associées<br>
+                            • Le lien WhatsApp<br><br>
+                            <strong>ATTENTION:</strong> Cette action est irréversible. Téléchargez les données en CSV avant de supprimer.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <span>Comment faire une sauvegarde de la plateforme?</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Google Firestore offre des sauvegardes automatiques. Vous pouvez aussi:<br>
+                            • Exporter les données en CSV depuis l'admin<br>
+                            • Utiliser Google Cloud Storage pour les backups<br>
+                            • Configurer des sauvegardes programmées</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchGuide(role) {
+            // Hide all guides
+            const guides = document.querySelectorAll('.guide-section');
+            guides.forEach(guide => guide.classList.remove('active'));
+
+            // Remove active from all cards
+            const cards = document.querySelectorAll('.role-card');
+            cards.forEach(card => card.classList.remove('active'));
+
+            // Show selected guide
+            document.getElementById(role).classList.add('active');
+
+            // Add active to clicked card
+            event.target.closest('.role-card').classList.add('active');
+
+            // Scroll to content
+            document.querySelector('.guide-content').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleFAQ(element) {
+            const question = element;
+            const answer = element.nextElementSibling;
+
+            // Close other FAQs in same section
+            const container = question.closest('div');
+            container.querySelectorAll('.faq-answer').forEach(ans => {
+                if (ans !== answer) {
+                    ans.classList.remove('active');
+                    ans.previousElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle current
+            question.classList.toggle('active');
+            answer.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

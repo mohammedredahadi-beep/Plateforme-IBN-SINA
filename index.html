@@ -189,6 +189,13 @@
         if (result.error === 'email-not-verified') {
           showError('auth-message', result.message);
         } else {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('error') === 'unverified') {
+            showError('auth-message', 'Votre email n\'est pas encore vérifié. Veuillez consulter vos spams.');
+          }
+          if (urlParams.get('error') === 'suspended') {
+            showError('auth-message', 'Désolé, votre compte a été suspendu par l\'administrateur. Contactez le délégué pour plus d\'informations.');
+          }
           showError('auth-message', formatFirebaseError(result.error));
         }
       }
