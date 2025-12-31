@@ -162,6 +162,23 @@ async function displayUserRequests() {
     }
 
     container.innerHTML = html;
+
+    // Phase 15 : Désactivation du formulaire si une demande existe déjà
+    const requestForm = document.getElementById('request-form');
+    const submitBtn = requestForm.querySelector('button[type="submit"]');
+    const hasActiveRequest = userRequests.some(r => r.status === 'pending' || r.status === 'approved');
+
+    if (hasActiveRequest) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.cursor = 'not-allowed';
+        const infoMsg = document.getElementById('request-message');
+        infoMsg.innerHTML = '<div class="alert alert-warning">Vous avez déjà une demande active. Vous ne pouvez pas soumettre plusieurs demandes d\'adhésion.</div>';
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+    }
 }
 
 // Obtenir le badge de statut
@@ -188,13 +205,9 @@ async function submitRequest(e) {
         return;
     }
 
-    // Vérifier si une demande existe déjà pour cette filière
-    const existingRequest = userRequests.find(
-        r => r.filiereId === filiereId && r.status === 'pending'
-    );
-
-    if (existingRequest) {
-        showError('request-message', 'Vous avez déjà une demande en attente pour cette filière.');
+    // Phase 15 : Vérification de l'unicité globale (1 seule demande par compte)
+    if (userRequests.length > 0) {
+        showError('request-message', 'Vous avez déjà soumis une demande d\'adhésion. Une seule demande est autorisée par compte.');
         return;
     }
 

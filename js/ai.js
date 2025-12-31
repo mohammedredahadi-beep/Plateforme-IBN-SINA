@@ -101,10 +101,21 @@ async function getChatbotResponse(message, history = []) {
         });
 
         const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
+
+        if (data.error) {
+            console.error("Gemini API Error:", data.error);
+            return "Désolé, j'ai un problème de configuration avec mon cerveau IA (Clé API). Merci de contacter l'administrateur.";
+        }
+
+        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            console.warn("Réponse IA inattendue:", data);
+            return "Je n'ai pas pu générer de réponse. Réessayez avec une question plus simple !";
+        }
 
     } catch (error) {
-        console.error("Erreur Chatbot:", error);
+        console.error("Erreur Chatbot détaillée:", error);
         return "Désolé, j'ai rencontré une petite erreur technique. Essayez de remplir le formulaire directement !";
     }
 }
