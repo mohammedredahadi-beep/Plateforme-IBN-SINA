@@ -271,10 +271,15 @@ async function initAdminDashboard() {
     // Afficher les informations de l'utilisateur
     displayUserInfo();
 
-    // Charger toutes les données
+    // Charger toutes les données dans l'ordre (Dépendances d'abord)
+    await loadAllUsers(); // Nécessaire pour afficher les noms des délégués dans les filières
     await loadAllFilieres();
-    await loadAllUsers();
-    await loadAllRequests();
+
+    // Initialiser l'écouteur des demandes
+    loadAllRequests();
+
+    // Afficher les stats initiales (au cas où les demandes prennent du temps)
+    displayStats();
 
     // Afficher la vue par défaut
     showAdminView('filieres');
@@ -377,6 +382,9 @@ async function loadAllRequests() {
                 allRequests.push({ id: doc.id, ...doc.data() });
             });
             displayStats();
+        }, error => {
+            console.error("Erreur écouteur demandes:", error);
+            // On ignore l'erreur d'index potentielle pour ne pas bloquer le reste
         });
     } catch (error) {
         console.error('Erreur lors du chargement des demandes:', error);
