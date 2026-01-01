@@ -314,11 +314,15 @@ function displayUserInfo() {
 // Charger toutes les filières
 async function loadAllFilieres() {
     try {
-        const snapshot = await filieresRef.orderBy('name').get();
+        const snapshot = await filieresRef.get();
         allFilieres = [];
         snapshot.forEach(doc => {
             allFilieres.push({ id: doc.id, ...doc.data() });
         });
+
+        // Tri client-side pour éviter les erreurs d'index manquant
+        allFilieres.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
         displayFilieres();
     } catch (error) {
         console.error('Erreur lors du chargement des filières:', error);
@@ -400,11 +404,20 @@ async function loadAllUsers() {
 // Charger toutes les demandes
 async function loadAllRequests() {
     try {
-        requestsRef.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        // On retire orderBy pour éviter les blocages d'index si la collection est nouvelle
+        requestsRef.onSnapshot(snapshot => {
             allRequests = [];
             snapshot.forEach(doc => {
                 allRequests.push({ id: doc.id, ...doc.data() });
             });
+
+            // Tri client-side
+            allRequests.sort((a, b) => {
+                const timeA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : 0) : 0;
+                const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : 0) : 0;
+                return timeB - timeA;
+            });
+
             displayStats();
         }, error => {
             console.error("Erreur écouteur demandes:", error);
@@ -528,20 +541,31 @@ async function addEvent(e) {
 async function loadAdminEvents() {
     const container = document.getElementById('admin-events-list');
     try {
-        const snapshot = await db.collection('events').orderBy('date', 'desc').get();
+        const snapshot = await db.collection('events').get();
         if (snapshot.empty) {
             container.innerHTML = '<p class="text-center" style="color: var(--text-secondary);">Aucun événement créé.</p>';
             return;
         }
 
+        let events = [];
+        snapshot.forEach(doc => {
+            events.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Tri client-side
+        events.sort((a, b) => {
+            const timeA = a.date ? (a.date.toMillis ? a.date.toMillis() : 0) : 0;
+            const timeB = b.date ? (b.date.toMillis ? b.date.toMillis() : 0) : 0;
+            return timeB - timeA;
+        });
+
         let html = '<div class="table-container"><table class="table">';
         html += '<thead><tr><th>Titre</th><th>Date</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
 
-        snapshot.forEach(doc => {
-            const ev = doc.data();
+        events.forEach(ev => {
             const date = ev.date ? new Date(ev.date.toDate()).toLocaleString('fr-FR') : 'N/A';
             const dropdownActions = [
-                { label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteEvent('${doc.id}')` }
+                { label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteEvent('${ev.id}')` }
             ];
 
             html += `
