@@ -31,6 +31,38 @@ function displayAlumniInfo() {
     document.getElementById('profile-email').value = currentUser.email;
     document.getElementById('profile-promo').value = `Promo ${currentUser.promo || 'N/A'}`;
     document.getElementById('profile-phone').value = currentUser.phone || 'N/A';
+    document.getElementById('profile-phone').value = currentUser.phone || 'N/A';
+
+    // Charger les nouveaux champs
+    document.getElementById('profile-linkedin').value = currentUser.linkedin || '';
+    document.getElementById('profile-job').value = currentUser.currentJob || '';
+    document.getElementById('profile-bio').value = currentUser.bio || '';
+}
+
+// Sauvegarder le profil
+async function saveAlumniProfile() {
+    const linkedin = document.getElementById('profile-linkedin').value;
+    const job = document.getElementById('profile-job').value;
+    const bio = document.getElementById('profile-bio').value;
+
+    try {
+        await usersRef.doc(currentUser.uid).update({
+            linkedin: linkedin,
+            currentJob: job,
+            bio: bio,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Mettre à jour l'objet local
+        currentUser.linkedin = linkedin;
+        currentUser.currentJob = job;
+        currentUser.bio = bio;
+
+        showSuccess('alumni-message', 'Profil mis à jour avec succès !');
+    } catch (error) {
+        console.error('Erreur sauvegarde profil:', error);
+        showError('alumni-message', 'Erreur lors de la sauvegarde: ' + error.message);
+    }
 }
 
 // Basculer entre les vues
@@ -137,7 +169,7 @@ async function requestMentorRole() {
 
     } catch (error) {
         console.error('Erreur demande mentor:', error);
-        showError('alumni-message', 'Erreur lors de l\'envoi de la demande.');
+        showError('alumni-message', 'Erreur lors de l\'envoi de la demande: ' + error.message);
     }
 }
 

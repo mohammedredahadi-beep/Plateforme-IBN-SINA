@@ -1,7 +1,7 @@
 // Gestion de l'authentification
 
 // Fonction d'inscription
-async function signup(email, password, fullName, phone, role = 'student', niveau = null, promo = null) {
+async function signup(email, password, fullName, phone, role = 'student', niveau = null, promo = null, filiere = null) {
     try {
         // Créer l'utilisateur avec Firebase Auth
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
@@ -24,6 +24,7 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
             role: finalRole,
             niveau: niveau,
             promo: promo, // Année de promotion
+            filiere: filiere, // Filière (STE, STM, etc.)
             isApproved: isApproved, // Flag d'approbation
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()

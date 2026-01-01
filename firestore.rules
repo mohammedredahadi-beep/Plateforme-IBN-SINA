@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Helper function to check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn(); // Users can view profiles (for directory/admin)
+      allow create: if isSignedIn(); // Sign up
+      allow update: if request.auth.uid == userId || isAdmin(); // Update own profile or admin
+      allow delete: if isAdmin();
+    }
+    
+    // Filieres
+    match /filieres/{filiereId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Events
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Requests (Delegate permissions)
+    match /requests/{requestId} {
+      allow create: if isSignedIn();
+      allow read: if request.auth.uid == resource.data.userId || isAdmin() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'delegate';
+      allow update: if isAdmin() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'delegate';
+    }
+    
+    // Logs (Audit) - ADMIN ONLY
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Support Alerts - Admin & Creation by users
+    match /support_alerts/{alertId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

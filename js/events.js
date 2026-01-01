@@ -67,7 +67,8 @@ async function loadEvents(containerId, isPreview = false) {
         console.error("Error loading events:", error);
         container.innerHTML = `
             <div class="card text-center" style="grid-column: span 3;">
-                <p class="text-error">Erreur de chargement des événements.</p>
+                <p class="text-error">Erreur de chargement des événements: ${error.message}</p>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">Vérifiez la console pour plus de détails.</p>
             </div>
         `;
     }

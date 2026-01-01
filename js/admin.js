@@ -378,7 +378,7 @@ function renderActionDropdown(items) {
 
 // Basculer entre les vues
 function showAdminView(view) {
-    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support'];
+    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support', 'backup'];
 
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
@@ -468,6 +468,7 @@ async function loadAdminEvents() {
         container.innerHTML = html;
     } catch (error) {
         console.error('Erreur chargement événements admin:', error);
+        container.innerHTML = `<p class="text-error text-center">Erreur de chargement: ${error.message}</p>`;
     }
 }
 
@@ -942,4 +943,156 @@ async function adminRejectRequest(requestId) {
         console.error('Erreur Admin Rejet:', error);
         showError('admin-message', 'Erreur lors du rejet Admin.');
     }
+}
+
+/**
+ * PHASE 12: BACKUP & RESTORE
+ */
+
+// Exporter les données (Backup)
+async function exportData() {
+    const btnText = document.getElementById('export-text');
+    const loading = document.getElementById('export-loading');
+
+    btnText.classList.add('hidden');
+    loading.classList.remove('hidden');
+
+    try {
+        const collections = ['users', 'filieres', 'events', 'requests', 'logs', 'support_alerts'];
+        const backupData = {
+            timestamp: new Date().toISOString(),
+            version: '1.0',
+            data: {}
+        };
+
+        for (const colName of collections) {
+            const snapshot = await db.collection(colName).get();
+            backupData.data[colName] = {};
+            snapshot.forEach(doc => {
+                // Convertir les Timestamps Firestore en ISO strings pour le JSON
+                const data = doc.data();
+                for (const key in data) {
+                    if (data[key] && typeof data[key].toDate === 'function') {
+                        data[key] = data[key].toDate().toISOString();
+                    }
+                }
+                backupData.data[colName][doc.id] = data;
+            });
+        }
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "ibn_sina_backup_" + new Date().toISOString().slice(0, 10) + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+
+        showSuccess('admin-message', 'Sauvegarde téléchargée avec succès !');
+
+    } catch (error) {
+        console.error('Erreur export:', error);
+        showError('admin-message', 'Erreur lors de l\'exportation: ' + error.message);
+    } finally {
+        if (btnText) btnText.classList.remove('hidden');
+        if (loading) loading.classList.add('hidden');
+    }
+}
+
+// Importer les données (Restore)
+async function importData() {
+    const fileInput = document.getElementById('import-file');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Veuillez sélectionner un fichier JSON de sauvegarde.');
+        return;
+    }
+
+    if (!confirm('ATTENTION : Cette action va restaurer les données et écraser les éléments existants avec les mêmes IDs. Êtes-vous sûr de vouloir continuer ?')) {
+        return;
+    }
+
+    const btnText = document.getElementById('import-text');
+    const loading = document.getElementById('import-loading');
+    const statusDiv = document.getElementById('import-status');
+
+    btnText.classList.add('hidden');
+    loading.classList.remove('hidden');
+    statusDiv.textContent = "Lecture du fichier...";
+    statusDiv.classList.remove('hidden');
+    statusDiv.className = ""; // Reset classes
+
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+        try {
+            const backup = JSON.parse(e.target.result);
+            if (!backup.data) throw new Error("Format de fichier invalide.");
+
+            const collections = Object.keys(backup.data);
+            let totalDocs = 0;
+            let processedDocs = 0;
+
+            // Compter le total
+            collections.forEach(col => {
+                totalDocs += Object.keys(backup.data[col]).length;
+            });
+
+            // Batch writes (limite 500 opérations par batch)
+            const BATCH_SIZE = 400;
+            let batch = db.batch();
+            let opCount = 0;
+            let batchCount = 0;
+
+            for (const colName of collections) {
+                const docs = backup.data[colName];
+                for (const docId in docs) {
+                    const docData = docs[docId];
+                    const docRef = db.collection(colName).doc(docId);
+
+                    // Conversion basique des dates ISO strings
+                    ['createdAt', 'updatedAt', 'date', 'timestamp', 'processedAt', 'mentorRequestDate', 'resolvedAt'].forEach(field => {
+                        if (docData[field] && typeof docData[field] === 'string' && docData[field].match(/^\d{4}-\d{2}-\d{2}T/)) {
+                            docData[field] = firebase.firestore.Timestamp.fromDate(new Date(docData[field]));
+                        }
+                    });
+
+                    batch.set(docRef, docData, { merge: true });
+                    opCount++;
+                    processedDocs++;
+
+                    if (opCount >= BATCH_SIZE) {
+                        await batch.commit();
+                        batch = db.batch();
+                        opCount = 0;
+                        batchCount++;
+                        statusDiv.textContent = `Progression : ${processedDocs} / ${totalDocs} documents traités...`;
+                    }
+                }
+            }
+
+            if (opCount > 0) {
+                await batch.commit();
+            }
+
+            statusDiv.textContent = `Terminé ! ${processedDocs} documents restaurés.`;
+            statusDiv.className = "text-success";
+            showSuccess('admin-message', "Restauration terminée avec succès.");
+
+            // Recharger les données de l'interface
+            if (typeof initAdminDashboard === 'function') await initAdminDashboard();
+
+        } catch (error) {
+            console.error('Erreur import:', error);
+            statusDiv.textContent = "Erreur : " + error.message;
+            statusDiv.className = "text-error";
+            showError('admin-message', 'Erreur critique lors de l\'importation.');
+        } finally {
+            if (btnText) btnText.classList.remove('hidden');
+            if (loading) loading.classList.add('hidden');
+        }
+    };
+
+    reader.readAsText(file);
 }

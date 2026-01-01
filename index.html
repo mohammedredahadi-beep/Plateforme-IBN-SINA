@@ -69,6 +69,18 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="signup-filiere">Filière</label>
+          <select id="signup-filiere" class="form-select" required>
+            <option value="">-- Sélectionnez --</option>
+            <option value="STE">STE - Sciences et Technologies Électriques</option>
+            <option value="STM">STM - Sciences et Technologies Mécaniques</option>
+            <option value="AA">AA - Arts Appliqués</option>
+            <option value="ECO">ECO - Économie</option>
+            <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
+          </select>
+        </div>
+
         <div id="promo-group" class="form-group hidden">
           <label class="form-label" for="signup-promo">Année de Promotion (ex: 2022)</label>
           <input type="number" id="signup-promo" class="form-input" placeholder="2024" min="1990" max="2030">
@@ -255,8 +267,10 @@
       document.getElementById('signup-btn-text').classList.add('hidden');
       document.getElementById('signup-loading').classList.remove('hidden');
 
+      const filiere = document.getElementById('signup-filiere').value;
+
       // Passer l'objet avec le niveau et la promo à la fonction signup
-      const result = await signup(email, password, name, phone, 'student', niveau, promo);
+      const result = await signup(email, password, name, phone, 'student', niveau, promo, filiere);
 
       // Masquer le loading
       document.getElementById('signup-btn-text').classList.remove('hidden');

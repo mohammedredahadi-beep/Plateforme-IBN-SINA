@@ -156,7 +156,24 @@
                     </div>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="form-label">Compte LinkedIn</label>
+                <input type="url" id="profile-linkedin" class="form-input" placeholder="https://linkedin.com/in/...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Poste Actuel / Situation</label>
+                <input type="text" id="profile-job" class="form-input"
+                    placeholder="Ex: Étudiant Ingénieur ou Consultant Junior">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Mon Parcours (Détails)</label>
+                <textarea id="profile-bio" class="form-textarea" rows="4"
+                    placeholder="Racontez votre parcours après le bac..."></textarea>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
+                onclick="saveAlumniProfile()">Enregistrer les modifications</button>
         </div>
+    </div>
     </div>
 
     <!-- Vue Annuaire [NEW] -->
@@ -175,10 +192,11 @@
                     <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
                         style="max-width: 150px;">
                         <option value="all">Toutes Filières</option>
-                        <option value="S.Math">Sciences Maths</option>
-                        <option value="S.Physique">Sciences Physiques</option>
-                        <option value="S.V.T">S.V.T</option>
-                        <option value="Eco">Économie</option>
+                        <option value="STE">STE - Sciences et Technologies Électriques</option>
+                        <option value="STM">STM - Sciences et Technologies Mécaniques</option>
+                        <option value="AA">AA - Arts Appliqués</option>
+                        <option value="ECO">ECO - Économie</option>
+                        <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
                     </select>
                 </div>
             </div>

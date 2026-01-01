@@ -74,8 +74,9 @@
                 Lauréats</button>
             <button class="btn btn-secondary admin-nav-btn" data-view="logs" onclick="showAdminView('logs')">📜
                 Audit</button>
-            <button class="btn btn-secondary admin-nav-btn" data-view="support" onclick="showAdminView('support')">🚨
-                Alertes</button>
+            Alertes</button>
+            <button class="btn btn-secondary admin-nav-btn" data-view="backup" onclick="showAdminView('backup')">💾
+                Sauvegarde</button>
         </div>
 
         <!-- Vue Gestion des filières -->
@@ -275,6 +276,48 @@
             <div id="support-list">
                 <div class="card text-center">
                     <p style="color: var(--text-secondary);">Chargement des alertes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue Sauvegarde / Restauration -->
+        <div id="backup-view" class="hidden">
+            <div class="card" style="margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">💾 Sauvegarde et Restauration</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Exportez vos données pour créer une copie de
+                    sécurité ou restaurez une version précédente.</p>
+            </div>
+
+            <div class="grid grid-2">
+                <!-- Export -->
+                <div class="card">
+                    <h4 style="font-weight: 600; margin-bottom: 15px;">📤 Exporter les données</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">
+                        Télécharge un fichier JSON contenant toutes les collections (Utilisateurs, Filières, Événements,
+                        Logs, Demandes).
+                    </p>
+                    <button class="btn btn-primary" onclick="exportData()"
+                        style="width: 100%; justify-content: center;">
+                        <span id="export-text">Télécharger la sauvegarde</span>
+                        <span id="export-loading" class="loading hidden"></span>
+                    </button>
+                </div>
+
+                <!-- Import -->
+                <div class="card">
+                    <h4 style="font-weight: 600; margin-bottom: 15px;">📥 Importer / Restaurer</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">
+                        Restaure les données à partir d'un fichier JSON. <strong
+                            style="color: var(--warning-color);">Attention : Les données existantes avec les mêmes IDs
+                            seront écrasées.</strong>
+                    </p>
+                    <input type="file" id="import-file" accept=".json" style="margin-bottom: 15px; width: 100%;">
+                    <button class="btn btn-secondary" onclick="importData()"
+                        style="width: 100%; justify-content: center;">
+                        <span id="import-text">Restaurer les données</span>
+                        <span id="import-loading" class="loading hidden"></span>
+                    </button>
+                    <div id="import-status" class="hidden" style="margin-top: 10px; font-size: 0.85rem;"></div>
                 </div>
             </div>
         </div>
