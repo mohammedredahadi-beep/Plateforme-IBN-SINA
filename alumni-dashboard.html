@@ -234,6 +234,70 @@
 
 
 
+
+    <!-- Modal Détails Annuaire -->
+    <div id="alumni-modal" class="modal hidden">
+        <div class="modal-content">
+            <div
+                style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="card-title" style="margin: 0; font-size: 1.2rem;">Profil Lauréat</h3>
+                <button onclick="closeAlumniModal()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+            </div>
+            <div style="padding: 24px;">
+                <div class="text-center mb-2">
+                    <div id="modal-avatar"
+                        style="width: 70px; height: 70px; background: var(--primary-color); color: white; font-size: 1.8rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);">
+                        ?</div>
+                    <h2 id="modal-name" style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">Nom
+                        Complet</h2>
+                    <span id="modal-job" class="badge"
+                        style="background: var(--bg-tertiary); color: var(--primary-color); margin-top: 8px;">Poste
+                        Actuel</span>
+                </div>
+
+                <div class="grid grid-2 gap-1 mb-2"
+                    style="background: var(--bg-tertiary); padding: 15px; border-radius: var(--radius-md);">
+                    <div>
+                        <span
+                            style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Filière</span>
+                        <div id="modal-filiere" style="font-weight: 600; color: var(--text-primary);">-</div>
+                    </div>
+                    <div>
+                        <span
+                            style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Promotion</span>
+                        <div id="modal-promo" style="font-weight: 600; color: var(--text-primary);">-</div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <span
+                        style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 5px;">Parcours
+                        & Bio</span>
+                    <div id="modal-parcours" class="scrollable-text"
+                        style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-size: 0.95rem; line-height: 1.6; min-height: 80px;">
+                        Aucune information sur le parcours.
+                    </div>
+                </div>
+
+                <div class="grid grid-3 gap-1" style="margin-top: 20px;">
+                    <a id="btn-linkedin" href="#" target="_blank" class="btn btn-secondary btn-small flex-center"
+                        style="width: 100%; justify-content: center;">
+                        LinkedIn
+                    </a>
+                    <a id="btn-whatsapp" href="#" target="_blank" class="btn btn-success btn-small flex-center"
+                        style="width: 100%; justify-content: center;">
+                        WhatsApp
+                    </a>
+                    <a id="btn-email" href="#" class="btn btn-primary btn-small flex-center"
+                        style="width: 100%; justify-content: center;">
+                        Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
