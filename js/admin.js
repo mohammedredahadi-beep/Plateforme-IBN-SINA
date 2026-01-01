@@ -272,14 +272,24 @@ async function initAdminDashboard() {
     displayUserInfo();
 
     // Charger toutes les données dans l'ordre (Dépendances d'abord)
-    await loadAllUsers(); // Nécessaire pour afficher les noms des délégués dans les filières
-    await loadAllFilieres();
+    // On utilise des try-catch individuels pour qu'une erreur ne bloque pas tout le dashboard
+    try {
+        await loadAllUsers(); // Nécessaire pour afficher les noms des délégués dans les filières
+    } catch (e) { console.error("Admin Init: Error loading users", e); }
+
+    try {
+        await loadAllFilieres();
+    } catch (e) { console.error("Admin Init: Error loading filieres", e); }
 
     // Initialiser l'écouteur des demandes
-    loadAllRequests();
+    try {
+        loadAllRequests(); // C'est non-bloquant car c'est un listener, mais on le garde safe
+    } catch (e) { console.error("Admin Init: Error starting requests listener", e); }
 
-    // Afficher les stats initiales (au cas où les demandes prennent du temps)
-    displayStats();
+    // Afficher les stats initiales
+    try {
+        displayStats();
+    } catch (e) { console.error("Admin Init: Error displaying stats", e); }
 
     // Afficher la vue par défaut
     showAdminView('filieres');
@@ -675,9 +685,7 @@ function displayUsers() {
             ? '<span class="badge badge-approved">Délégué</span>'
             : user.role === 'admin'
                 ? '<span class="badge badge-rejected">Admin</span>'
-                : user.role === 'co-admin'
-                    ? '<span class="badge" style="background: var(--accent-color); color: white;">Co-Admin</span>'
-                    : '<span class="badge badge-pending">Étudiant</span>';
+                : '<span class="badge badge-pending">Étudiant</span>';
 
         const displayNiveau = user.niveau === 'Lauréat'
             ? `🎓 Lauréat (${user.promo || '?'})`
