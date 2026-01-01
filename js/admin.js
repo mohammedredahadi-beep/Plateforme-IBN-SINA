@@ -135,10 +135,16 @@ function openEditUserModal(userId) {
     if (!user) return;
 
     document.getElementById('edit-user-id').value = user.uid;
-    document.getElementById('edit-user-name').value = user.fullName;
-    document.getElementById('edit-user-email').value = user.email;
-    document.getElementById('edit-user-phone').value = user.phone;
+    document.getElementById('edit-user-name').value = user.fullName || '';
+    document.getElementById('edit-user-email').value = user.email || '';
+    document.getElementById('edit-user-phone').value = user.phone || '';
+    document.getElementById('edit-user-role').value = user.role || 'student';
     document.getElementById('edit-user-niveau').value = user.niveau || 'TC';
+    document.getElementById('edit-user-linkedin').value = user.linkedin || '';
+    document.getElementById('edit-user-bio').value = user.bio || user.parcours || '';
+
+    document.getElementById('edit-user-approved').checked = user.isApproved === true;
+    document.getElementById('edit-user-suspended').checked = user.isSuspended === true;
 
     const promoGroup = document.getElementById('edit-promo-group');
     const promoInput = document.getElementById('edit-user-promo');
@@ -176,14 +182,25 @@ async function updateUser(e) {
     const userId = document.getElementById('edit-user-id').value;
     const fullName = document.getElementById('edit-user-name').value;
     const phone = document.getElementById('edit-user-phone').value;
+    const role = document.getElementById('edit-user-role').value;
     const niveau = document.getElementById('edit-user-niveau').value;
     const promo = document.getElementById('edit-user-promo').value;
+    const linkedin = document.getElementById('edit-user-linkedin').value;
+    const bio = document.getElementById('edit-user-bio').value;
+
+    const isApproved = document.getElementById('edit-user-approved').checked;
+    const isSuspended = document.getElementById('edit-user-suspended').checked;
 
     try {
         const updateData = {
             fullName: fullName,
             phone: phone,
+            role: role,
             niveau: niveau,
+            linkedin: linkedin,
+            bio: bio,
+            isApproved: isApproved,
+            isSuspended: isSuspended,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
@@ -195,8 +212,9 @@ async function updateUser(e) {
 
         await logAction('UPDATE_USER_PROFILE', userId, {
             name: fullName,
+            role: role,
             niveau: niveau,
-            promo: promo
+            status: isSuspended ? 'Suspended' : 'Active'
         });
 
         showSuccess('admin-message', 'Profil utilisateur mis à jour avec succès.');
@@ -206,6 +224,38 @@ async function updateUser(e) {
     } catch (error) {
         console.error('Erreur mise à jour utilisateur:', error);
         showError('admin-message', 'Erreur lors de la mise à jour du profil.');
+    }
+}
+
+// Envoyer un message marketing/annonce
+async function sendMarketingMessage(e) {
+    e.preventDefault();
+    const target = document.getElementById('msg-target').value;
+    const title = document.getElementById('msg-title').value;
+    const content = document.getElementById('msg-content').value;
+
+    if (!title || !content) return;
+
+    try {
+        const messageData = {
+            title: title,
+            content: content,
+            target: target,
+            senderId: auth.currentUser.uid,
+            senderName: currentUser.fullName,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            readBy: []
+        };
+
+        // On enregistre dans une collection principale 'messages'
+        await db.collection('messages').add(messageData);
+
+        await logAction('SEND_MESSAGE', target, { title: title });
+        showSuccess('admin-message', 'Message envoyé avec succès !');
+        document.getElementById('marketing-form').reset();
+    } catch (error) {
+        console.error('Erreur envoi message:', error);
+        showError('admin-message', 'Erreur lors de l\'envoi du message.');
     }
 }
 
@@ -377,8 +427,9 @@ function renderActionDropdown(items) {
 }
 
 // Basculer entre les vues
+// Basculer entre les vues
 function showAdminView(view) {
-    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support', 'backup'];
+    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support', 'backup', 'marketing'];
 
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
@@ -388,14 +439,14 @@ function showAdminView(view) {
     const activeView = document.getElementById(`${view}-view`);
     if (activeView) activeView.classList.remove('hidden');
 
-    // Mettre à jour l'état actif des boutons
-    document.querySelectorAll('.admin-nav-btn').forEach(btn => {
-        if (btn.getAttribute('onclick').includes(`'${view}'`)) {
-            btn.classList.remove('btn-secondary');
-            btn.classList.add('btn-primary');
+    // Mettre à jour l'état actif des boutons de la sidebar
+    document.querySelectorAll('.admin-nav-item').forEach(btn => {
+        // Check if the button's onclick contains the view name
+        const onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes(`'${view}'`)) {
+            btn.classList.add('active');
         } else {
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-secondary');
+            btn.classList.remove('active');
         }
     });
 
@@ -616,7 +667,9 @@ function displayUsers() {
             ? '<span class="badge badge-approved">Délégué</span>'
             : user.role === 'admin'
                 ? '<span class="badge badge-rejected">Admin</span>'
-                : '<span class="badge badge-pending">Étudiant</span>';
+                : user.role === 'co-admin'
+                    ? '<span class="badge" style="background: var(--accent-color); color: white;">Co-Admin</span>'
+                    : '<span class="badge badge-pending">Étudiant</span>';
 
         const displayNiveau = user.niveau === 'Lauréat'
             ? `🎓 Lauréat (${user.promo || '?'})`

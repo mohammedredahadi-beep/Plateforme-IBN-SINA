@@ -23,8 +23,35 @@
                 <div class="logo-icon">IS</div>
                 <span>Ibn Sina</span>
             </a>
-            <div class="nav-menu">
+            <div class="nav-menu" style="align-items: center; gap: 15px;">
                 <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">🌓</button>
+
+                <!-- Notification Bell -->
+                <div class="notification-container" style="position: relative;">
+                    <button class="btn-icon" onclick="toggleNotifications()"
+                        style="background: none; border: none; font-size: 1.2rem; cursor: pointer; position: relative;">
+                        🔔
+                        <span id="notif-badge" class="badge-dot hidden"
+                            style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: red; border-radius: 50%; border: 2px solid var(--bg-primary);"></span>
+                    </button>
+                    <!-- Dropdown Panel -->
+                    <div id="notification-panel" class="card hidden"
+                        style="position: absolute; top: 40px; right: 0; width: 320px; z-index: 1000; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid var(--border-color);">
+                        <div
+                            style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary); border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">Notifications</h4>
+                            <button onclick="markAllRead()"
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 500;">Tout
+                                lire</button>
+                        </div>
+                        <div id="notif-list" style="max-height: 300px; overflow-y: auto;">
+                            <div
+                                style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+                                Aucune nouvelle notification</div>
+                        </div>
+                    </div>
+                </div>
+
                 <span id="user-display-name" style="font-weight: 500;">Chargement...</span>
                 <button class="btn btn-secondary btn-small" onclick="logout()">Déconnexion</button>
             </div>

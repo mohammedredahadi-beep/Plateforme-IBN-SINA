@@ -16,6 +16,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayAlumniInfo();
         loadDashboardEventsPreview();
         updateMentorStatusDisplay();
+
+        // Initialiser les notifications
+        if (typeof initNotifications === 'function') {
+            initNotifications();
+        }
     }
 });
 
@@ -221,4 +226,99 @@ function showError(id, msg) {
     el.innerHTML = `<div class="alert alert-error">${msg}</div>`;
     el.classList.remove('hidden');
     setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+// --- Notifications System ---
+
+let allMessages = [];
+let unreadCount = 0;
+
+async function initNotifications() {
+    // Listen for messages
+    db.collection('messages')
+        .orderBy('createdAt', 'desc')
+        .limit(20) // Limit to last 20 messages
+        .onSnapshot(snapshot => {
+            allMessages = [];
+            const readMessages = JSON.parse(localStorage.getItem('readMessages') || '[]');
+            unreadCount = 0;
+
+            snapshot.forEach(doc => {
+                const msg = doc.data();
+                const isTarget = msg.target === 'all' ||
+                    msg.target === 'alumni';
+
+                if (isTarget) {
+                    msg.id = doc.id;
+                    allMessages.push(msg);
+                    if (!readMessages.includes(doc.id)) {
+                        unreadCount++;
+                    }
+                }
+            });
+
+            updateNotificationUI();
+        }, error => {
+            console.error("Erreur notifications:", error);
+        });
+}
+
+function updateNotificationUI() {
+    const badge = document.getElementById('notif-badge');
+    const list = document.getElementById('notif-list');
+
+    if (unreadCount > 0) {
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+
+    if (allMessages.length === 0) {
+        if (list) list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Aucune notification</div>';
+        return;
+    }
+
+    let html = '';
+    const readMessages = JSON.parse(localStorage.getItem('readMessages') || '[]');
+
+    allMessages.forEach(msg => {
+        const isRead = readMessages.includes(msg.id);
+        let dateStr = 'Date inconnue';
+        if (msg.createdAt) {
+            const d = msg.createdAt.toDate();
+            dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        }
+
+        html += `
+            <div class="notification-item" style="padding: 15px; border-bottom: 1px solid var(--border-color); background: ${!isRead ? 'rgba(37, 99, 235, 0.05)' : 'transparent'}; transition: background 0.2s;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">${msg.title || 'Message'}</div>
+                    ${!isRead ? '<span style="width: 8px; height: 8px; background: var(--primary-color); border-radius: 50%;"></span>' : ''}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.4;">${msg.content}</div>
+                <div style="font-size: 0.75rem; color: var(--text-light); text-align: right;">${dateStr}</div>
+            </div>
+        `;
+    });
+
+    if (list) list.innerHTML = html;
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notification-panel');
+    if (panel) {
+        panel.classList.toggle('hidden');
+    }
+}
+
+function markAllRead() {
+    const readMessages = JSON.parse(localStorage.getItem('readMessages') || '[]');
+    allMessages.forEach(msg => {
+        if (!readMessages.includes(msg.id)) {
+            readMessages.push(msg.id);
+        }
+    });
+    localStorage.setItem('readMessages', JSON.stringify(readMessages));
+    unreadCount = 0;
+    updateNotificationUI();
 }
