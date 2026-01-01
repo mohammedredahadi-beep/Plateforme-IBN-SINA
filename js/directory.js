@@ -89,6 +89,33 @@ function renderDirectory(alumniList, container) {
         const job = user.currentJob || user.motivation || "Non renseigné";
         const filiere = user.filiere || 'Filière inconnue';
 
+        // Social Buttons Logic (moved from Modal to Card)
+        let socialBtns = '';
+
+        if (user.linkedin) {
+            socialBtns += `
+                <a href="${user.linkedin}" target="_blank" 
+                   onclick="event.stopPropagation()"
+                   class="btn btn-small" 
+                   title="LinkedIn"
+                   style="background: #0077b5; color: white; min-width: 32px; justify-content: center; padding: 4px 8px; border-radius: 4px;">
+                   IN
+                </a>`;
+        }
+
+        const waNum = user.whatsapp || user.phone;
+        if (waNum) {
+            const cleanWa = waNum.replace(/[^\d]/g, '');
+            socialBtns += `
+                <a href="https://wa.me/${cleanWa}" target="_blank" 
+                   onclick="event.stopPropagation()"
+                   class="btn btn-small" 
+                   title="WhatsApp"
+                   style="background: #25D366; color: white; min-width: 32px; justify-content: center; padding: 4px 8px; border-radius: 4px;">
+                   WA
+                </a>`;
+        }
+
         // We use INLINE ONCLICK to be absolutely sure it fires
         html += `
             <div class="card directory-card fade-in"
@@ -97,16 +124,20 @@ function renderDirectory(alumniList, container) {
                  <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
                     ${initials}
                 </div>
-                <div style="flex: 1;">
+                <div style="flex: 1; display: flex; flex-direction: column;">
                     <h4 style="font-weight: 600; font-size: 1rem; color: var(--text-main); margin-bottom: 2px;">${user.fullName}</h4>
-                    <span class="badge" style="font-size: 0.7em; background: var(--bg-secondary); color: var(--text-secondary); margin-bottom: 5px; display: inline-block;">${filiere}</span>
+                    <span class="badge" style="font-size: 0.7em; background: var(--bg-secondary); color: var(--text-secondary); margin-bottom: 5px; display: inline-block; align-self: flex-start;">${filiere}</span>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.4;">
                         ${job.substring(0, 50)}${job.length > 50 ? '...' : ''}
                     </p>
-                    <div class="flex gap-1">
+                    <div class="flex gap-1" style="align-items: center; margin-top: auto; justify-content: space-between;">
                         <button class="btn btn-secondary btn-small"
                             onclick="event.stopPropagation(); openAlumniModal('${user.id}')"
                             style="font-size: 0.75rem;">Voir Profil</button>
+                        
+                        <div class="flex gap-1">
+                            ${socialBtns}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -165,24 +196,19 @@ function openAlumniModal(userId) {
         const bioContent = user.bio ? user.bio.replace(/\n/g, '<br>') : "Aucune information sur le parcours.";
         if (document.getElementById('modal-parcours')) document.getElementById('modal-parcours').innerHTML = bioContent;
 
-        // Buttons
+        // Buttons: Hide Socials in Modal (moved to card), Keep Email
         const btnLink = document.getElementById('btn-linkedin');
-        if (btnLink) {
-            btnLink.style.display = user.linkedin ? 'flex' : 'none';
-            if (user.linkedin) btnLink.href = user.linkedin;
-        }
+        if (btnLink) btnLink.style.display = 'none'; // Moved to card
 
         const btnWa = document.getElementById('btn-whatsapp');
-        if (btnWa) {
-            const wa = user.whatsapp || user.phone;
-            btnWa.style.display = wa ? 'flex' : 'none';
-            if (wa) btnWa.href = `https://wa.me/${wa.replace(/[^\d]/g, '')}`;
-        }
+        if (btnWa) btnWa.style.display = 'none'; // Moved to card
 
         const btnMail = document.getElementById('btn-email');
         if (btnMail) {
             btnMail.style.display = user.email ? 'flex' : 'none';
             if (user.email) btnMail.href = `mailto:${user.email}`;
+            // Optional: Make Email button full width if it's the only one
+            btnMail.style.width = '100%';
         }
 
         // Show Modal
