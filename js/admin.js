@@ -6,6 +6,18 @@ let allUsers = [];
 let allRequests = [];
 const logsRef = db.collection('logs');
 
+// --- DEBUG HELPER ---
+function visibleLog(msg, type = 'info') {
+    const debugEl = document.getElementById('debug-console');
+    if (debugEl) {
+        const color = type === 'error' ? 'red' : 'lime';
+        debugEl.innerHTML += `<div style="color: ${color}; border-bottom: 1px solid #333;">${new Date().toLocaleTimeString()} - ${msg}</div>`;
+        debugEl.scrollTop = debugEl.scrollHeight;
+    }
+    console.log(`[VISIBLE] ${msg}`);
+}
+// --------------------
+
 /**
  * PHASE 16: JOURNAL DES ACTIONS ET MODÉRATION
  */
@@ -274,26 +286,44 @@ async function initAdminDashboard() {
 
     // Afficher les informations de l'utilisateur
     displayUserInfo();
+    visibleLog("Admin Init: Starting...");
 
     // Charger toutes les données dans l'ordre (Dépendances d'abord)
     // On utilise des try-catch individuels pour qu'une erreur ne bloque pas tout le dashboard
     try {
+        visibleLog("Fetching Users...");
         await loadAllUsers(); // Nécessaire pour afficher les noms des délégués dans les filières
-    } catch (e) { console.error("Admin Init: Error loading users", e); }
+        visibleLog(`Users loaded: ${allUsers.length}`);
+    } catch (e) {
+        console.error("Admin Init: Error loading users", e);
+        visibleLog(`Error loading users: ${e.message}`, 'error');
+    }
 
     try {
+        visibleLog("Fetching Filieres...");
         await loadAllFilieres();
-    } catch (e) { console.error("Admin Init: Error loading filieres", e); }
+        visibleLog(`Filieres loaded: ${allFilieres.length}`);
+    } catch (e) {
+        console.error("Admin Init: Error loading filieres", e);
+        visibleLog(`Error loading filieres: ${e.message}`, 'error');
+    }
 
     // Initialiser l'écouteur des demandes
     try {
+        visibleLog("Starting Requests Listener...");
         loadAllRequests(); // C'est non-bloquant car c'est un listener, mais on le garde safe
-    } catch (e) { console.error("Admin Init: Error starting requests listener", e); }
+    } catch (e) {
+        console.error("Admin Init: Error starting requests listener", e);
+        visibleLog(`Error requesting listener: ${e.message}`, 'error');
+    }
 
     // Afficher les stats initiales
     try {
         displayStats();
-    } catch (e) { console.error("Admin Init: Error displaying stats", e); }
+    } catch (e) {
+        console.error("Admin Init: Error displaying stats", e);
+        visibleLog(`Error displaying stats: ${e.message}`, 'error');
+    }
 
     // Afficher la vue par défaut
     showAdminView('filieres');
