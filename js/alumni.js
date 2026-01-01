@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (currentUser) {
         displayAlumniInfo();
-        loadEvents();
+        loadDashboardEventsPreview();
         updateMentorStatusDisplay();
     }
 });
@@ -35,7 +35,7 @@ function displayAlumniInfo() {
 
 // Basculer entre les vues
 function showAlumniView(view) {
-    const views = ['dashboard', 'events', 'mentor', 'profile'];
+    const views = ['dashboard', 'events', 'mentor', 'profile', 'directory'];
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
         if (el) el.classList.add('hidden');
@@ -54,63 +54,22 @@ function showAlumniView(view) {
     const activeView = document.getElementById(`${view}-view`);
     if (activeView) activeView.classList.remove('hidden');
 
-    if (view === 'events') loadEvents();
+    if (view === 'events') loadEvents('events-list');
     if (view === 'mentor') updateMentorStatusDisplay();
+    if (view === 'directory' && typeof initDirectory === 'function') initDirectory();
 }
 
 // Charger les événements depuis Firestore
-async function loadEvents() {
-    const eventsList = document.getElementById('events-list');
-    const eventsPreview = document.getElementById('events-preview-list');
+// Charger les événements DEPRECATED -> Uses js/events.js now
+// We keep this function name because existing dashboard onload might call it, but we redirect it.
+// Actually, alumni-dashboard calls loadEvents() in init.
+// But we should verify if 'events-list' id matches.
+// In dashboard view, there is 'events-preview-list'.
 
-    try {
-        // Supposons une collection 'events' gérée par l'admin
-        const snapshot = await db.collection('events').orderBy('date', 'asc').limit(10).get();
-
-        if (snapshot.empty) {
-            const emptyMsg = '<p style="color: var(--text-light);">Aucun événement prévu pour le moment.</p>';
-            if (eventsList) eventsList.innerHTML = emptyMsg;
-            if (eventsPreview) eventsPreview.innerHTML = emptyMsg;
-            return;
-        }
-
-        let html = '';
-        snapshot.forEach(doc => {
-            const event = doc.data();
-            const eventDate = event.date ? new Date(event.date.toDate()).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Date à venir';
-
-            html += `
-                <div class="card event-card fade-in">
-                    <div class="badge" style="background: var(--bg-tertiary); color: var(--primary-color); margin-bottom: 10px;">${event.type || 'Événement'}</div>
-                    <h4 style="font-weight: 700; margin-bottom: 8px;">${event.title}</h4>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">📅 ${eventDate}</p>
-                    <p style="font-size: 0.9rem; margin-bottom: 15px;">${event.description || ''}</p>
-                    ${event.link ? `<a href="${event.link}" target="_blank" class="btn btn-secondary btn-small">En savoir plus</a>` : ''}
-                </div>
-            `;
-        });
-
-        if (eventsList) eventsList.innerHTML = html;
-        if (eventsPreview) {
-            // Pour la prévieuw, on prend juste les 2 premiers
-            const previewSnapshot = snapshot.docs.slice(0, 2);
-            let previewHtml = '';
-            previewSnapshot.forEach(doc => {
-                const event = doc.data();
-                previewHtml += `
-                    <div style="border-bottom: 1px solid var(--border-color); padding: 10px 0;">
-                        <strong style="display: block; font-size: 0.9rem;">${event.title}</strong>
-                        <small style="color: var(--text-secondary);">${event.type || 'Conférence'}</small>
-                    </div>
-                `;
-            });
-            eventsPreview.innerHTML = previewHtml;
-        }
-
-    } catch (error) {
-        console.error('Erreur chargement événements:', error);
-        const errMsg = '<p class="text-error">Impossible de charger les événements.</p>';
-        if (eventsList) eventsList.innerHTML = errMsg;
+// We need a small adapter to load the preview in Dashboard view
+async function loadDashboardEventsPreview() {
+    if (typeof loadEvents === 'function') {
+        loadEvents('events-preview-list', true); // True for preview mode
     }
 }
 

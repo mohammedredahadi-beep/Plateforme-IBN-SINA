@@ -56,6 +56,7 @@
                     Bord</button>
                 <button class="btn btn-secondary nav-tab" onclick="showAlumniView('events')">📅 Événements</button>
                 <button class="btn btn-secondary nav-tab" onclick="showAlumniView('mentor')">🤝 Mentorat</button>
+                <button class="btn btn-secondary nav-tab" onclick="showAlumniView('directory')">📂 Annuaire</button>
                 <button class="btn btn-secondary nav-tab" onclick="showAlumniView('profile')">👤 Mon Profil</button>
             </div>
         </div>
@@ -158,40 +159,38 @@
         </div>
     </div>
 
-    <!-- Chatbot Widget -->
-    <div style="position: fixed; bottom: 25px; right: 25px; z-index: 1000;">
-        <button id="chatbot-toggle" class="chatbot-toggle" title="Besoin d'aide ?">
-            <span>🤖</span>
-        </button>
-
-        <div id="chatbot-window" class="chatbot-window hidden">
-            <div class="chatbot-header">
-                <div class="flex" style="align-items: center; gap: 10px;">
-                    <span style="font-size: 1.2rem;">🤖</span>
-                    <div style="line-height: 1.2;">
-                        <strong style="display: block; font-size: 0.9rem;">Assistant Lauréat</strong>
-                        <small style="font-size: 0.7rem; opacity: 0.8;">IA Connectée</small>
-                    </div>
+    <!-- Vue Annuaire [NEW] -->
+    <div id="directory-view" class="tab-content hidden">
+        <!-- Reusing same structure as student dashboard -->
+        <div class="card" style="margin-bottom: var(--spacing-md);">
+            <div class="flex" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3 style="font-weight: 600;">📂 Annuaire des Anciens</h3>
+                    <p style="color: var(--text-secondary);">Retrouvez vos camarades</p>
                 </div>
-                <div class="flex gap-1">
-                    <button class="chatbot-control" onclick="minimizeChatbot()">−</button>
-                    <button class="chatbot-control" onclick="toggleChatbot()">✕</button>
-                </div>
-            </div>
-            <div id="chatbot-body">
-                <div id="chatbot-messages" class="chatbot-messages">
-                    <div class="message-bubble message-ai"
-                        style="font-size: 0.8rem; background: transparent; box-shadow: none; border: 1px dashed var(--border-color);">
-                        👋 Bonjour cher Lauréat ! Comment puis-je vous accompagner dans votre réseau aujourd'hui ?
-                    </div>
-                </div>
-                <div class="chatbot-input-container">
-                    <input type="text" id="chatbot-input" placeholder="Posez une question..." autocomplete="off">
-                    <button onclick="handleChatbotSend()">➤</button>
+                <!-- Search Controls -->
+                <div class="flex gap-1" style="flex: 1; min-width: 250px; justify-content: flex-end;">
+                    <input type="text" id="dir-search" class="form-input" placeholder="🔍 Nom, École, Entreprise..."
+                        oninput="handleDirectorySearch()" style="max-width: 200px;">
+                    <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
+                        style="max-width: 150px;">
+                        <option value="all">Toutes Filières</option>
+                        <option value="S.Math">Sciences Maths</option>
+                        <option value="S.Physique">Sciences Physiques</option>
+                        <option value="S.V.T">S.V.T</option>
+                        <option value="Eco">Économie</option>
+                    </select>
                 </div>
             </div>
         </div>
+
+        <div id="directory-grid" class="grid grid-2" style="gap: 15px;">
+            <!-- Loaded by JS -->
+        </div>
     </div>
+    </div>
+
+
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -202,53 +201,13 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/ai.js"></script>
+    <script src="js/events.js"></script>
     <script src="js/alumni.js"></script>
+    <script src="js/directory.js"></script>
+    <script src="js/chatbot-ui.js"></script>
 
     <script>
-        // Logique Chatbot simplifiée pour redirection locale
-        const chatbotToggle = document.getElementById('chatbot-toggle');
-        const chatbotWindow = document.getElementById('chatbot-window');
-        const chatbotInput = document.getElementById('chatbot-input');
-        const chatbotMessages = document.getElementById('chatbot-messages');
 
-        if (chatbotToggle) chatbotToggle.addEventListener('click', toggleChatbot);
-
-        function toggleChatbot() { chatbotWindow.classList.toggle('hidden'); }
-        function minimizeChatbot() {
-            const body = document.getElementById('chatbot-body');
-            body.classList.toggle('hidden');
-            chatbotWindow.style.height = body.classList.contains('hidden') ? '48px' : '500px';
-        }
-
-        async function handleChatbotSend() {
-            const message = chatbotInput.value.trim();
-            if (!message) return;
-            appendMessage('user', message);
-            chatbotInput.value = '';
-            const aiMsgId = 'ai-stream-' + Date.now();
-            appendMessage('ai', '', aiMsgId);
-            const aiContainer = document.getElementById(aiMsgId);
-            aiContainer.innerHTML = '<span class="loading-dots">Réflexion...</span>';
-            let isFirstChunk = true;
-            try {
-                await getChatbotResponse(message, currentUser, (chunk, isAppend) => {
-                    if (isFirstChunk) { aiContainer.textContent = ''; isFirstChunk = false; }
-                    if (isAppend) aiContainer.textContent += chunk; else aiContainer.textContent = chunk;
-                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-                });
-            } catch (err) { aiContainer.textContent = "Erreur : " + err.message; }
-        }
-
-        function appendMessage(sender, text, id = null) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message-bubble ${sender === 'user' ? 'message-user' : 'message-ai'}`;
-            if (id) msgDiv.id = id;
-            msgDiv.textContent = text;
-            chatbotMessages.appendChild(msgDiv);
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-        }
-
-        if (chatbotInput) chatbotInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatbotSend(); });
 
         // Thème
         function toggleTheme() {

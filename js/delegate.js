@@ -260,6 +260,7 @@ function showView(view) {
     document.getElementById('pending-view').classList.add('hidden');
     document.getElementById('history-view').classList.add('hidden');
     document.getElementById('settings-view').classList.add('hidden');
+    document.getElementById('announcements-view').classList.add('hidden');
 
     if (view === 'pending') {
         document.getElementById('pending-view').classList.remove('hidden');
@@ -269,6 +270,53 @@ function showView(view) {
     } else if (view === 'settings') {
         document.getElementById('settings-view').classList.remove('hidden');
         loadSettings();
+    } else if (view === 'announcements') {
+        document.getElementById('announcements-view').classList.remove('hidden');
+        if (typeof loadDelegateHistory === 'function') loadDelegateHistory();
+    }
+}
+
+// ---- ANNOUNCEMENT FUNCTIONS ----
+
+function openAnnouncementModal() {
+    // Scroll to form (since it's inline in this version)
+    document.getElementById('announcement-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function submitAnnouncement(e) {
+    e.preventDefault();
+    if (typeof createAnnouncement !== 'function') {
+        console.error("Module annonces non chargé");
+        return;
+    }
+
+    const title = document.getElementById('ann-title').value;
+    const type = document.getElementById('ann-type').value;
+    const target = document.getElementById('ann-target').value;
+    const content = document.getElementById('ann-content').value;
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.textContent = 'Publication...';
+    btn.disabled = true;
+
+    try {
+        const targetId = target === 'filiere' ? delegateFiliereId : 'all';
+        const result = await createAnnouncement(title, content, type, targetId);
+
+        if (result.success) {
+            alert('Annonce publiée avec succès !');
+            e.target.reset();
+            loadDelegateHistory();
+        } else {
+            alert('Erreur lors de la publication.');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Erreur inattendue.');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
     }
 }
 

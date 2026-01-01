@@ -689,166 +689,228 @@ body {
     transform: rotate(30deg);
 }
 
-/* --- Chatbot Premium Design --- */
+/* --- Chatbot Premium Design (Glassmorphism & Animations) --- */
 .chatbot-toggle {
     position: fixed;
-    bottom: 25px;
-    right: 25px;
+    bottom: 30px;
+    right: 30px;
     width: 65px;
     height: 65px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
     border: none;
     border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5);
-    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 2rem;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: float 3s ease-in-out infinite;
 }
 
 .chatbot-toggle:hover {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 6px 25px rgba(37, 99, 235, 0.6);
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.6);
 }
 
 .chatbot-toggle::after {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 100%;
-    background: inherit;
+    inset: -5px;
     border-radius: 50%;
-    z-index: -1;
-    animation: pulse-glow 2s infinite;
+    border: 2px solid var(--primary-color);
+    opacity: 0;
+    transition: 0.3s;
 }
 
-@keyframes pulse-glow {
-    0% {
-        transform: scale(1);
-        opacity: 0.6;
-    }
+.chatbot-toggle:hover::after {
+    opacity: 0.5;
+    transform: scale(1.1);
+}
 
+@keyframes float {
+
+    0%,
     100% {
-        transform: scale(1.5);
-        opacity: 0;
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
     }
 }
 
+/* Fenêtre du Chatbot */
 .chatbot-window {
     position: fixed;
-    bottom: 100px;
-    right: 25px;
-    width: 350px;
-    height: 500px;
-    max-height: calc(100vh - 120px);
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-    z-index: 1001;
+    bottom: 110px;
+    right: 30px;
+    width: 380px;
+    height: 550px;
+    max-height: calc(100vh - 140px);
+    max-width: calc(100vw - 40px);
+    background: rgba(255, 255, 255, 0.85);
+    /* Glass fallback */
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: all 0.3s ease;
-    border: 1px solid var(--glass-border);
+    z-index: 10000;
+    transform-origin: bottom right;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+[data-theme="dark"] .chatbot-window {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.chatbot-window.hidden {
+    display: none;
+    /* JS toggle uses this but we can use opacity/transform for animation */
+    /* La classe hidden est gérée par JS (display: none), mais si on veut animer, 
+       on peut utiliser une classe différente comme .chatbot-closed */
+}
+
+/* Animation d'entrée */
+.fade-in-up {
+    animation: fadeInUp 0.4s forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .chatbot-header {
+    padding: 20px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
-    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chatbot-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .chatbot-messages {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background: var(--bg-primary);
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-/* Scrollbar personnalisée */
-.chatbot-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.chatbot-messages::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.chatbot-messages::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-}
-
-[data-theme="dark"] .chatbot-messages::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    gap: 15px;
+    scroll-behavior: smooth;
 }
 
 .message-bubble {
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-radius: 18px;
-    font-size: 0.9rem;
     max-width: 85%;
-    line-height: 1.4;
+    font-size: 0.95rem;
+    line-height: 1.5;
     position: relative;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    animation: messagePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes messagePop {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .message-user {
-    background: var(--primary-color);
-    color: white;
     align-self: flex-end;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
     border-bottom-right-radius: 4px;
 }
 
 .message-ai {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
     align-self: flex-start;
+    background: white;
+    color: var(--text-primary);
     border-bottom-left-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .message-ai {
+    background: var(--bg-tertiary);
+    border-color: rgba(255, 255, 255, 0.05);
 }
 
 .chatbot-input-container {
-    padding: 15px;
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     gap: 10px;
+    align-items: center;
+}
+
+[data-theme="dark"] .chatbot-input-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.05);
 }
 
 .chatbot-input-container input {
     flex: 1;
-    padding: 10px 15px;
-    border: 1px solid var(--border-color);
+    padding: 12px 20px;
     border-radius: 25px;
-    outline: none;
-    background: var(--bg-tertiary);
+    border: 1px solid transparent;
+    background: var(--bg-secondary);
     color: var(--text-primary);
-    font-size: 0.9rem;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+}
+
+.chatbot-input-container input:focus {
+    outline: none;
+    background: var(--bg-primary);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05), 0 0 0 2px var(--primary-light);
 }
 
 .chatbot-input-container button {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: none;
     background: var(--primary-color);
     color: white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: 0.2s;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }
 
 .chatbot-input-container button:hover {
@@ -856,48 +918,16 @@ body {
     background: var(--primary-dark);
 }
 
-.chatbot-control {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
-}
-
-.chatbot-control:hover {
-    background: rgba(255, 255, 255, 0.3);
+/* Loading Dots Animation */
+.loading-dots {
+    display: inline-block;
+    position: relative;
+    height: 10px;
 }
 
 .loading-dots::after {
     content: '...';
-    display: inline-block;
-    width: 1em;
-    text-align: left;
-    animation: dots 1.5s infinite;
-}
-
-@keyframes dots {
-    0% {
-        content: '';
-    }
-
-    25% {
-        content: '.';
-    }
-
-    50% {
-        content: '..';
-    }
-
-    75% {
-        content: '...';
-    }
+    animation: dots 1.5s steps(4, end) infinite;
 }
 
 /* --- Admin Premium UI Components --- */
@@ -1057,4 +1087,197 @@ body {
 
 .dropdown-item.danger:hover {
     background: rgba(239, 68, 68, 0.05);
+}
+
+/* MENTORSHIP STYLES */
+.mentor-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mentor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.mentor-header {
+    padding: 20px;
+    background: linear-gradient(to bottom, var(--bg-secondary), white);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mentor-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.3);
+}
+
+.mentor-info {
+    flex: 1;
+}
+
+.mentor-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+
+.mentor-role {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.mentor-bio {
+    padding: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    flex: 1;
+    /* Pushes action button to bottom */
+    line-height: 1.6;
+}
+
+.mentor-actions {
+    padding: 20px;
+    padding-top: 0;
+}
+
+/* DIRECTORY STYLES */
+.directory-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid var(--border-color);
+}
+
+.directory-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* FORUM STYLES */
+.forum-card {
+    border: 1px solid var(--border-color);
+    background: white;
+}
+
+.forum-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.forum-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.forum-author {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.forum-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.forum-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.forum-preview {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.forum-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+    display: flex;
+    gap: 15px;
+}
+
+.action-btn {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    color: var(--primary-color);
+}
+
+/* UNIVERSAL MODAL */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal:not(.hidden) {
+    display: flex !important;
+}
+
+.modal-content {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--radius-lg);
+    animation: slideUp 0.3s ease-out;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

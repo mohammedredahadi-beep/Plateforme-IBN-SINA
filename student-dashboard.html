@@ -34,7 +34,32 @@
             </div>
         </div>
 
+        <!-- Navigation par onglets [NEW] -->
+        <div style="margin-bottom: var(--spacing-md);">
+            <div class="flex gap-1" style="flex-wrap: wrap;">
+                <button class="btn btn-primary nav-tab" onclick="showStudentView('dashboard')">🏠 Tableau de
+                    Bord</button>
+                <button class="btn btn-secondary nav-tab" onclick="showStudentView('events')">📅 Événements</button>
+                <button class="btn btn-secondary nav-tab" onclick="showStudentView('mentorship')">🤝 Mentorat <span
+                        class="badge"
+                        style="background: var(--accent-color); font-size: 0.6em; margin-left: 5px;">NEW</span></button>
+                <button class="btn btn-secondary nav-tab" onclick="showStudentView('mentorship')">🤝 Mentorat <span
+                        class="badge"
+                        style="background: var(--accent-color); font-size: 0.6em; margin-left: 5px;">NEW</span></button>
+                <button class="btn btn-secondary nav-tab" onclick="showStudentView('forum')">💬 Forum</button>
+                <button class="btn btn-secondary nav-tab" onclick="showStudentView('directory')">📂 Annuaire</button>
+            </div>
+        </div>
+
         <div class="grid grid-2">
+            <!-- Section Annonces [NEW] -->
+            <div id="announcements-section" class="card hidden"
+                style="grid-column: span 2; border-left: 4px solid var(--primary-color);">
+                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">📢 Annonces</h3>
+                <div id="announcements-feed">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
             <!-- Formulaire de demande -->
             <div class="card">
                 <div class="card-header">
@@ -105,115 +130,144 @@
             </div>
         </div>
 
-        <!-- Section Chatbot -->
-        <div style="position: fixed; bottom: 25px; right: 25px; z-index: 1000;">
-            <button id="chatbot-toggle" class="chatbot-toggle" title="Besoin d'aide ?">
-                <span>🤖</span>
-            </button>
+        <!-- Vue Mentorat [NEW] -->
+        <div id="mentorship-view" class="tab-content hidden">
+            <div class="card"
+                style="margin-bottom: var(--spacing-md); background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                <h3 class="card-title" style="color: white; margin-bottom: 5px;">🤝 Connectez-vous avec nos Anciens</h3>
+                <p style="opacity: 0.9;">Bénéficiez de l'expérience des lauréats pour guider votre avenir.</p>
+            </div>
 
-            <div id="chatbot-window" class="chatbot-window hidden">
-                <div class="chatbot-header">
-                    <div class="flex" style="align-items: center; gap: 10px;">
-                        <span style="font-size: 1.2rem;">🤖</span>
-                        <div style="line-height: 1.2;">
-                            <strong style="display: block; font-size: 0.9rem;">Assistant IBN SINA</strong>
-                            <small style="font-size: 0.7rem; opacity: 0.8;">IA Connectée</small>
-                        </div>
-                    </div>
-                    <div class="flex gap-1">
-                        <button class="chatbot-control" onclick="minimizeChatbot()">−</button>
-                        <button class="chatbot-control" onclick="toggleChatbot()">✕</button>
-                    </div>
+            <!-- Grid des mentors -->
+            <div id="mentors-grid" class="grid grid-3" style="gap: 20px;">
+                <!-- Injecté par JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue Forum [NEW] -->
+    <div id="forum-view" class="tab-content hidden">
+        <div class="card" style="margin-bottom: var(--spacing-md); background: white;">
+            <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">Forum de discussion</h2>
+                    <p style="color: var(--text-secondary);">Posez vos questions et échangez avec la communauté.</p>
                 </div>
-                <div id="chatbot-body">
-                    <div id="chatbot-messages" class="chatbot-messages">
-                        <div class="message-bubble message-ai"
-                            style="font-size: 0.8rem; background: transparent; box-shadow: none; border: 1px dashed var(--border-color);">
-                            👋 Bonjour ! Je suis votre assistant "Ibn Sina". Posez-moi vos questions sur les filières ou
-                            les inscriptions !
-                        </div>
-                    </div>
-                    <div class="chatbot-input-container">
-                        <input type="text" id="chatbot-input" placeholder="Posez une question..." autocomplete="off">
-                        <button onclick="handleChatbotSend()">➤</button>
-                    </div>
+                <button class="btn btn-primary" onclick="openNewPostModal()">
+                    <span>+ Nouveau Post</span>
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex gap-1" style="margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;">
+                <button class="btn btn-secondary btn-small filter-btn active" data-category="all"
+                    onclick="loadForumPosts('all')">Tout</button>
+                <button class="btn btn-secondary btn-small filter-btn" data-category="Orientation"
+                    onclick="loadForumPosts('Orientation')">Orientation</button>
+                <button class="btn btn-secondary btn-small filter-btn" data-category="Stage"
+                    onclick="loadForumPosts('Stage')">Stage & Emploi</button>
+                <button class="btn btn-secondary btn-small filter-btn" data-category="Campus"
+                    onclick="loadForumPosts('Campus')">Vie du Campus</button>
+            </div>
+
+            <!-- Feed -->
+            <div id="forum-feed" class="flex flex-col" style="gap: 15px;">
+                <!-- Injecté par JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue Événements [NEW] -->
+    <div id="events-view" class="tab-content hidden">
+        <div class="card" style="margin-bottom: var(--spacing-md);">
+            <div class="flex" style="justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-weight: 600;">📅 Événements & Actualités</h3>
+                    <p style="color: var(--text-secondary);">Ne manquez rien de la vie étudiante</p>
                 </div>
             </div>
         </div>
 
+        <div id="events-feed" class="grid grid-3" style="gap: 15px;">
+            <!-- Loaded by JS -->
+        </div>
+    </div>
 
-        <!-- Espace Lauréat (Section Alumni Premium) -->
-        <div id="laureat-view" class="hidden">
-            <div class="card fade-in"
-                style="background: var(--glass-bg); border: 2px solid var(--primary-color); position: relative; overflow: hidden; margin-bottom: var(--spacing-lg);">
-                <div
-                    style="position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.05; transform: rotate(15deg);">
-                    🎓</div>
-                <div class="card-header">
-                    <h2 class="card-title"
-                        style="color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
-                        <span>💎 Espace Lauréat Ibn Sina</span>
-                    </h2>
-                    <p class="card-subtitle">Bienvenue dans votre espace exclusif, cher ancien.</p>
+
+
+
+    <!-- Espace Lauréat (Section Alumni Premium) -->
+    <div id="laureat-view" class="hidden">
+        <div class="card fade-in"
+            style="background: var(--glass-bg); border: 2px solid var(--primary-color); position: relative; overflow: hidden; margin-bottom: var(--spacing-lg);">
+            <div
+                style="position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.05; transform: rotate(15deg);">
+                🎓</div>
+            <div class="card-header">
+                <h2 class="card-title"
+                    style="color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+                    <span>💎 Espace Lauréat Ibn Sina</span>
+                </h2>
+                <p class="card-subtitle">Bienvenue dans votre espace exclusif, cher ancien.</p>
+            </div>
+
+            <div class="grid grid-3" style="margin-top: var(--spacing-md); gap: 15px;">
+                <div class="card"
+                    style="padding: 15px; background: rgba(var(--primary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                    onclick="joinMentorship()">
+                    <div style="font-size: 1.5rem; margin-bottom: 10px;">🤝</div>
+                    <h4 style="font-weight: 600; font-size: 0.95rem;">Devenir Mentor</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Accompagnez les nouveaux étudiants.
+                    </p>
                 </div>
-
-                <div class="grid grid-3" style="margin-top: var(--spacing-md); gap: 15px;">
-                    <div class="card"
-                        style="padding: 15px; background: rgba(var(--primary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
-                        onclick="joinMentorship()">
-                        <div style="font-size: 1.5rem; margin-bottom: 10px;">🤝</div>
-                        <h4 style="font-weight: 600; font-size: 0.95rem;">Devenir Mentor</h4>
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Accompagnez les nouveaux étudiants.
-                        </p>
-                    </div>
-                    <div class="card"
-                        style="padding: 15px; background: rgba(var(--secondary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
-                        onclick="shareResources()">
-                        <div style="font-size: 1.5rem; margin-bottom: 10px;">📚</div>
-                        <h4 style="font-weight: 600; font-size: 0.95rem;">Ressources</h4>
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Partagez vos outils & conseils.</p>
-                    </div>
-                    <div class="card"
-                        style="padding: 15px; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
-                        onclick="window.open('https://linkedin.com', '_blank')">
-                        <div style="font-size: 1.5rem; margin-bottom: 10px;">�</div>
-                        <h4 style="font-weight: 600; font-size: 0.95rem;">Opportunités</h4>
-                        <p style="font-size: 0.75rem; color: var(--text-secondary);">Publiez ou trouvez une offre.</p>
-                    </div>
+                <div class="card"
+                    style="padding: 15px; background: rgba(var(--secondary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                    onclick="shareResources()">
+                    <div style="font-size: 1.5rem; margin-bottom: 10px;">📚</div>
+                    <h4 style="font-weight: 600; font-size: 0.95rem;">Ressources</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Partagez vos outils & conseils.</p>
                 </div>
+                <div class="card"
+                    style="padding: 15px; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                    onclick="window.open('https://linkedin.com', '_blank')">
+                    <div style="font-size: 1.5rem; margin-bottom: 10px;">�</div>
+                    <h4 style="font-weight: 600; font-size: 0.95rem;">Opportunités</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Publiez ou trouvez une offre.</p>
+                </div>
+            </div>
 
-                <hr
-                    style="margin: var(--spacing-lg) 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
+            <hr
+                style="margin: var(--spacing-lg) 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
 
-                <!-- Réseau de ma Promotion -->
-                <div id="promo-network-section">
-                    <h3
-                        style="font-size: 1.1rem; font-weight: 600; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: 8px;">
-                        <span>👥 Réseau de ma Promotion</span>
-                        <span id="my-promo-badge" class="badge badge-approved" style="font-size: 0.7rem;"></span>
-                    </h3>
-                    <div id="promo-users-list" class="grid grid-3" style="gap: 15px;">
-                        <div class="card text-center" style="grid-column: span 3;">
-                            <p style="color: var(--text-secondary);">Chargement des contacts...</p>
-                        </div>
+            <!-- Réseau de ma Promotion -->
+            <div id="promo-network-section">
+                <h3
+                    style="font-size: 1.1rem; font-weight: 600; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: 8px;">
+                    <span>👥 Réseau de ma Promotion</span>
+                    <span id="my-promo-badge" class="badge badge-approved" style="font-size: 0.7rem;"></span>
+                </h3>
+                <div id="promo-users-list" class="grid grid-3" style="gap: 15px;">
+                    <div class="card text-center" style="grid-column: span 3;">
+                        <p style="color: var(--text-secondary);">Chargement des contacts...</p>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Aide -->
-        <div class="card" style="margin-top: var(--spacing-lg);">
-            <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Comment ça marche ?</h4>
-            <ol style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
-                <li style="margin-bottom: var(--spacing-xs);">Remplissez le formulaire avec la filière qui vous
-                    intéresse</li>
-                <li style="margin-bottom: var(--spacing-xs);">Votre demande sera automatiquement transmise au délégué de
-                    cette filière</li>
-                <li style="margin-bottom: var(--spacing-xs);">Le délégué examinera et approuvera/rejettera votre demande
-                </li>
-                <li>Si approuvée, vous recevrez le lien du groupe WhatsApp ou serez ajouté directement</li>
-            </ol>
-        </div>
+    <!-- Aide -->
+    <div class="card" style="margin-top: var(--spacing-lg);">
+        <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Comment ça marche ?</h4>
+        <ol style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
+            <li style="margin-bottom: var(--spacing-xs);">Remplissez le formulaire avec la filière qui vous
+                intéresse</li>
+            <li style="margin-bottom: var(--spacing-xs);">Votre demande sera automatiquement transmise au délégué de
+                cette filière</li>
+            <li style="margin-bottom: var(--spacing-xs);">Le délégué examinera et approuvera/rejettera votre demande
+            </li>
+            <li>Si approuvée, vous recevrez le lien du groupe WhatsApp ou serez ajouté directement</li>
+        </ol>
+    </div>
     </div>
 
     <!-- Firebase SDK -->
@@ -225,91 +279,118 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/ai.js"></script>
+    <script src="js/chatbot-ui.js"></script>
     <script src="js/student.js"></script>
+    <script src="js/mentorship.js"></script>
+    <script src="js/forum.js"></script>
+    <script src="js/announcements.js"></script>
+    <script src="js/directory.js"></script>
+    <script src="js/events.js"></script>
 
     <script>
         // Initialiser le tableau de bord au chargement de la page
-        window.addEventListener('DOMContentLoaded', initStudentDashboard);
-
-        // Logique Chatbot
-        const chatbotToggle = document.getElementById('chatbot-toggle');
-        const chatbotWindow = document.getElementById('chatbot-window');
-        const chatbotInput = document.getElementById('chatbot-input');
-        const chatbotMessages = document.getElementById('chatbot-messages');
-
-        chatbotToggle.addEventListener('click', toggleChatbot);
-
-        function toggleChatbot() {
-            chatbotWindow.classList.toggle('hidden');
-            // Réinitialiser l'état réduit si on ferme/ouvre complètement
-            document.getElementById('chatbot-body').classList.remove('hidden');
-            chatbotWindow.style.height = '';
-        }
-
-        function minimizeChatbot() {
-            const body = document.getElementById('chatbot-body');
-            const window = document.getElementById('chatbot-window');
-            body.classList.toggle('hidden');
-
-            if (body.classList.contains('hidden')) {
-                window.style.maxHeight = '48px'; // Just the header
-                window.style.width = '200px';    // Narrower when minimized
-            } else {
-                window.style.maxHeight = '450px';
-                window.style.width = '320px';
-            }
-        }
-
-        async function handleChatbotSend() {
-            const message = chatbotInput.value.trim();
-            if (!message) return;
-
-            // Ajouter message utilisateur
-            appendMessage('user', message);
-            chatbotInput.value = '';
-
-            // Ajouter un conteneur vide pour la réponse AI streaming
-            const aiMsgId = 'ai-stream-' + Date.now();
-            appendMessage('ai', '', aiMsgId);
-            const aiContainer = document.getElementById(aiMsgId);
-            aiContainer.innerHTML = '<span class="loading-dots">Réflexion...</span>';
-
-            let isFirstChunk = true;
-
-            // Appeler l'IA avec streaming
-            try {
-                await getChatbotResponse(message, currentUser, (chunk, isAppend) => {
-                    if (isFirstChunk) {
-                        aiContainer.textContent = ''; // On efface "Réflexion..."
-                        isFirstChunk = false;
-                    }
-
-                    if (isAppend) {
-                        aiContainer.textContent += chunk;
-                    } else {
-                        aiContainer.textContent = chunk;
-                    }
-                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-                });
-            } catch (err) {
-                aiContainer.textContent = "Erreur : " + err.message;
-            }
-        }
-
-        function appendMessage(sender, text, id = null) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message-bubble ${sender === 'user' ? 'message-user' : 'message-ai'}`;
-            if (id) msgDiv.id = id;
-            msgDiv.textContent = text;
-            chatbotMessages.appendChild(msgDiv);
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-        }
-
-        // Envoyer avec Entrée
-        chatbotInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleChatbotSend();
+        window.addEventListener('DOMContentLoaded', () => {
+            initStudentDashboard();
+            if (typeof initAnnouncementsValue === 'function') initAnnouncementsValue();
         });
+
+        // Fonction pour gérer les onglets étudiants (Similaire à celle des autres dashboards)
+        function showStudentView(view) {
+            // Masquer toutes les vues
+            // Note: student.js ne gère pas nativement les onglets comme alumni.js, 
+            // il affichait tout sur une page. On va adapter ça.
+
+            // Masquer les sections par défaut
+            const dashboardSection = document.querySelector('.grid.grid-2'); // Contient le form et la liste
+            const laheuatSection = document.getElementById('laureat-view');
+            const mentorshipSection = document.getElementById('mentorship-view');
+            const forumSection = document.getElementById('forum-view');
+            const directorySection = document.getElementById('directory-view');
+
+            // Reset tabs
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+
+                const btnText = btn.innerHTML.toLowerCase(); // Utiliser innerHTML pour attraper le texte et les icones
+
+                if (view === 'requests' && btnText.includes('demandes')) {
+                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+                } else if (view === 'mentorship' && btnText.includes('mentorat')) {
+                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+                } else if (view === 'dashboard' && btnText.includes('tableau')) {
+                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+                } else if (view === 'forum' && btnText.includes('forum')) {
+                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+                } else if (view === 'directory' && btnText.includes('annuaire')) {
+                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+                } else if (view === 'events' && btnText.includes('événements')) {
+                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+                }
+            });
+
+            if (view === 'dashboard') {
+                if (dashboardSection) dashboardSection.classList.remove('hidden');
+                if (laheuatSection && currentUser && currentUser.niveau === 'Lauréat') laheuatSection.classList.remove('hidden');
+                if (mentorshipSection) mentorshipSection.classList.add('hidden');
+                if (forumSection) forumSection.classList.add('hidden');
+                if (directorySection) directorySection.classList.add('hidden');
+                const eventsSection = document.getElementById('events-view');
+                if (eventsSection) eventsSection.classList.add('hidden');
+            } else if (view === 'events') {
+                if (dashboardSection) dashboardSection.classList.add('hidden');
+                if (laheuatSection) laheuatSection.classList.add('hidden');
+                if (mentorshipSection) mentorshipSection.classList.add('hidden');
+                if (forumSection) forumSection.classList.add('hidden');
+                if (directorySection) directorySection.classList.add('hidden');
+                const eventsSection = document.getElementById('events-view');
+                if (eventsSection) eventsSection.classList.remove('hidden');
+
+                if (typeof loadEvents === 'function') loadEvents('events-feed');
+            } else if (view === 'requests') {
+                // Pour simplifier, 'requests' et 'dashboard' sont la même vue dans l'implémentation actuelle
+                if (dashboardSection) dashboardSection.classList.remove('hidden');
+                if (laheuatSection) laheuatSection.classList.add('hidden');
+                if (mentorshipSection) mentorshipSection.classList.add('hidden');
+                if (forumSection) forumSection.classList.add('hidden');
+            } else if (view === 'mentorship') {
+                if (dashboardSection) dashboardSection.classList.add('hidden');
+                if (laheuatSection) laheuatSection.classList.add('hidden');
+                if (mentorshipSection) mentorshipSection.classList.remove('hidden');
+                if (forumSection) forumSection.classList.add('hidden');
+
+                // Charger les mentors si pas encore fait
+                if (typeof initMentorship === 'function') {
+                    initMentorship();
+                }
+            } else if (view === 'forum') {
+                if (dashboardSection) dashboardSection.classList.add('hidden');
+                if (laheuatSection) laheuatSection.classList.add('hidden');
+                if (mentorshipSection) mentorshipSection.classList.add('hidden');
+                if (forumSection) forumSection.classList.remove('hidden');
+                if (directorySection) directorySection.classList.add('hidden');
+
+                if (typeof initForum === 'function') {
+                    initForum();
+                }
+                if (typeof initForum === 'function') {
+                    initForum();
+                }
+            } else if (view === 'directory') {
+                if (dashboardSection) dashboardSection.classList.add('hidden');
+                if (laheuatSection) laheuatSection.classList.add('hidden');
+                if (mentorshipSection) mentorshipSection.classList.add('hidden');
+                if (forumSection) forumSection.classList.add('hidden');
+                const directorySection = document.getElementById('directory-view');
+                if (directorySection) directorySection.classList.remove('hidden');
+
+                if (typeof initDirectory === 'function') initDirectory();
+            }
+        }
     </script>
+
+
+
 </body>
 
 </html>

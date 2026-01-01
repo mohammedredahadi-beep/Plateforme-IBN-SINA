@@ -59,6 +59,9 @@
                 <button class="btn btn-primary" onclick="showView('pending')">
                     📋 Demandes <span class="hidden-mobile">en attente</span>
                 </button>
+                <button class="btn btn-secondary" onclick="showView('announcements')">
+                    📢 Annonces
+                </button>
                 <button class="btn btn-secondary" onclick="showView('history')">
                     📊 Historique
                 </button>
@@ -131,21 +134,78 @@
                 </form>
             </div>
         </div>
+    </div>
 
-        <!-- Guide -->
-        <div class="card" style="margin-top: var(--spacing-xl);">
-            <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Guide du délégué</h4>
-            <ul style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
-                <li style="margin-bottom: var(--spacing-xs);"><strong>Approuver:</strong> Vous pourrez fournir un lien
-                    WhatsApp ou ajouter manuellement l'étudiant au groupe</li>
-                <li style="margin-bottom: var(--spacing-xs);"><strong>Rejeter:</strong> Expliquez brièvement la raison
-                    du rejet à l'étudiant</li>
-                <li style="margin-bottom: var(--spacing-xs);"><strong>Notifications:</strong> Les étudiants voient les
-                    mises à jour en temps réel</li>
-                <li>Les coordonnées des étudiants (email, téléphone) sont disponibles pour faciliter la communication
-                </li>
-            </ul>
+    <!-- Vue des Annonces [NEW] -->
+    <div id="announcements-view" class="hidden">
+        <div class="card" style="margin-bottom: var(--spacing-md);">
+            <div class="flex" style="justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">📢 Annonces aux Étudiants</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Informez les étudiants de votre filière
+                    </p>
+                </div>
+                <button class="btn btn-primary" onclick="openAnnouncementModal()">+ Nouvelle Annonce</button>
+            </div>
         </div>
+
+        <div class="card bg-secondary" style="margin-bottom: var(--spacing-md);">
+            <h4 style="margin-bottom: 10px;">📣 Publier une annonce</h4>
+            <form id="announcement-form" onsubmit="submitAnnouncement(event)">
+                <div class="form-group">
+                    <label class="form-label">Titre</label>
+                    <input type="text" id="ann-title" class="form-input" required
+                        placeholder="Ex: Changement de salle...">
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select id="ann-type" class="form-select">
+                            <option value="Info">ℹ️ Info</option>
+                            <option value="Warning">⚠️ Important</option>
+                            <option value="Urgent">🚨 Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cible</label>
+                        <select id="ann-target" class="form-select">
+                            <option value="filiere">Ma Filière</option>
+                            <option value="all">Tout le monde (Global)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea id="ann-content" class="form-textarea" required placeholder="Votre message..."
+                        rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Publier</button>
+            </form>
+        </div>
+
+        <h4 style="margin-bottom: 10px;">📋 Historique de vos annonces</h4>
+        <div id="my-announcements-list">
+            <!-- Loaded by JS -->
+            <div class="card text-center">
+                <p>Chargement...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guide -->
+    <div class="card" style="margin-top: var(--spacing-xl);">
+        <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Guide du délégué</h4>
+        <ul style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
+            <li style="margin-bottom: var(--spacing-xs);"><strong>Approuver:</strong> Vous pourrez fournir un lien
+                WhatsApp ou ajouter manuellement l'étudiant au groupe</li>
+            <li style="margin-bottom: var(--spacing-xs);"><strong>Rejeter:</strong> Expliquez brièvement la raison
+                du rejet à l'étudiant</li>
+            <li style="margin-bottom: var(--spacing-xs);"><strong>Notifications:</strong> Les étudiants voient les
+                mises à jour en temps réel</li>
+            <li>Les coordonnées des étudiants (email, téléphone) sont disponibles pour faciliter la communication
+            </li>
+        </ul>
+    </div>
     </div>
 
     <!-- Firebase SDK -->
@@ -158,90 +218,27 @@
     <script src="js/auth.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/delegate.js"></script>
+    <script src="js/delegate.js"></script>
+    <script src="js/announcements.js"></script>
+    <script src="js/chatbot-ui.js"></script>
 
-    <!-- Chatbot Button -->
-    <button id="chatbot-toggle" class="chatbot-toggle" title="Besoin d'aide ?">
-        <span>🤖</span>
-    </button>
+    <script>
+        // Fonction globale pour gérer les vues du délégué (incluant les annonces)
+        // On surcharge ou on étend la fonction existante si elle est accessible,
+        // sinon on modifie delegate.js.
+        // Puisque delegate.js n'est pas facilement modifiable sans le lire entièrement,
+        // injectons un override ici ou modifions delegate.js.
+        // Le mieux est de modifier delegate.js, mais pour ce patch, modifions delegate.js.
+    </script>
 
-    <!-- Chatbot Window -->
-    <div id="chatbot-window" class="chatbot-window hidden">
-        <div class="chatbot-header">
-            <div class="flex" style="align-items: center; gap: 10px;">
-                <span style="font-size: 1.2rem;">🤖</span>
-                <div style="line-height: 1.2;">
-                    <strong style="display: block; font-size: 0.9rem;">Assistant IBN SINA</strong>
-                    <small style="font-size: 0.7rem; opacity: 0.8;">IA Connectée</small>
-                </div>
-            </div>
-            <div class="flex gap-1">
-                <button class="chatbot-control" onclick="minimizeChatbot()">−</button>
-                <button class="chatbot-control" onclick="toggleChatbot()">✕</button>
-            </div>
-        </div>
-        <div id="chatbot-body">
-            <div id="chatbot-messages" class="chatbot-messages">
-                <div class="message-bubble message-ai"
-                    style="font-size: 0.8rem; background: transparent; box-shadow: none; border: 1px dashed var(--border-color);">
-                    👋 Bonjour Délégué ! Je suis votre assistant. Comment puis-je vous aider aujourd'hui ?
-                </div>
-            </div>
-            <div class="chatbot-input-container">
-                <input type="text" id="chatbot-input" placeholder="Posez une question..." autocomplete="off">
-                <button onclick="handleChatbotSend()">➤</button>
-            </div>
-        </div>
-    </div>
+
 
 
     <script>
         // Initialiser le tableau de bord au chargement de la page
         window.addEventListener('DOMContentLoaded', initDelegateDashboard);
 
-        // Logique Chatbot
-        const chatbotToggle = document.getElementById('chatbot-toggle');
-        const chatbotWindow = document.getElementById('chatbot-window');
-        const chatbotInput = document.getElementById('chatbot-input');
-        const chatbotMessages = document.getElementById('chatbot-messages');
 
-        chatbotToggle.addEventListener('click', toggleChatbot);
-
-        function toggleChatbot() { chatbotWindow.classList.toggle('hidden'); }
-        function minimizeChatbot() {
-            const body = document.getElementById('chatbot-body');
-            body.classList.toggle('hidden');
-            chatbotWindow.style.height = body.classList.contains('hidden') ? '48px' : '450px';
-        }
-
-        async function handleChatbotSend() {
-            const message = chatbotInput.value.trim();
-            if (!message) return;
-            appendMessage('user', message);
-            chatbotInput.value = '';
-            const aiMsgId = 'ai-stream-' + Date.now();
-            appendMessage('ai', '', aiMsgId);
-            const aiContainer = document.getElementById(aiMsgId);
-            aiContainer.innerHTML = '<span class="loading-dots">Réflexion...</span>';
-            let isFirstChunk = true;
-            try {
-                await getChatbotResponse(message, currentUser, (chunk, isAppend) => {
-                    if (isFirstChunk) { aiContainer.textContent = ''; isFirstChunk = false; }
-                    if (isAppend) aiContainer.textContent += chunk; else aiContainer.textContent = chunk;
-                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-                });
-            } catch (err) { aiContainer.textContent = "Erreur : " + err.message; }
-        }
-
-        function appendMessage(sender, text, id = null) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message-bubble ${sender === 'user' ? 'message-user' : 'message-ai'}`;
-            if (id) msgDiv.id = id;
-            msgDiv.textContent = text;
-            chatbotMessages.appendChild(msgDiv);
-            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-        }
-
-        chatbotInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatbotSend(); });
     </script>
 </body>
 
