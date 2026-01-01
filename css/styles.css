@@ -1281,3 +1281,25 @@ body {
         transform: translateY(0);
     }
 }
+
+/* Scrollable Text for Long Content */
+.scrollable-text {
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 5px;
+    white-space: pre-wrap;
+    /* Preserve line breaks */
+}
+
+.scrollable-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollable-text::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+
+.scrollable-text::-webkit-scrollbar-track {
+    background: transparent;
+}

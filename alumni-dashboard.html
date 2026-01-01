@@ -139,39 +139,63 @@
                 <h3 class="card-title">Mon Profil Lauréat</h3>
                 <div class="form-group">
                     <label class="form-label">Nom Complet</label>
-                    <input type="text" id="profile-name" class="form-input" readonly>
+                    <input type="text" id="profile-name" class="form-input">
                 </div>
+                <!-- Email reste en lecture seule -->
                 <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input type="text" id="profile-email" class="form-input" readonly>
+                    <input type="text" id="profile-email" class="form-input" readonly disabled
+                        style="opacity: 0.7; cursor: not-allowed;">
                 </div>
                 <div class="grid grid-2">
                     <div class="form-group">
-                        <label class="form-label">Promotion</label>
-                        <input type="text" id="profile-promo" class="form-input" readonly>
+                        <label class="form-label">Promotion (Année)</label>
+                        <input type="number" id="profile-promo" class="form-input" placeholder="Ex: 2023">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Filière</label>
+                        <select id="profile-filiere" class="form-select">
+                            <option value="">-- Sélectionner --</option>
+                            <option value="STE">STE - Sc. et Tech. Électriques</option>
+                            <option value="STM">STM - Sc. et Tech. Mécaniques</option>
+                            <option value="AA">AA - Arts Appliqués</option>
+                            <option value="ECO">ECO - Économie</option>
+                            <option value="BTS">BTS - Brevet Tec. Supérieur</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
                         <label class="form-label">Téléphone</label>
-                        <input type="text" id="profile-phone" class="form-input" readonly>
+                        <input type="tel" id="profile-phone" class="form-input" placeholder="+212 6...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">WhatsApp (optionnel)</label>
+                        <input type="tel" id="profile-whatsapp" class="form-input"
+                            placeholder="+212 6... (pour contact direct)">
                     </div>
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Compte LinkedIn</label>
-                <input type="url" id="profile-linkedin" class="form-input" placeholder="https://linkedin.com/in/...">
+
+            <div class="card" style="max-width: 600px; margin: var(--spacing-md) auto;">
+                <div class="form-group">
+                    <label class="form-label">Compte LinkedIn</label>
+                    <input type="url" id="profile-linkedin" class="form-input"
+                        placeholder="https://linkedin.com/in/...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Poste Actuel / Situation</label>
+                    <input type="text" id="profile-job" class="form-input"
+                        placeholder="Ex: Étudiant Ingénieur ou Consultant Junior">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mon Parcours (Détails)</label>
+                    <textarea id="profile-bio" class="form-textarea scrollable-text" rows="6"
+                        placeholder="Racontez votre parcours après le bac, vos expériences, vos conseils..."></textarea>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
+                    onclick="saveAlumniProfile()">Enregistrer les modifications</button>
             </div>
-            <div class="form-group">
-                <label class="form-label">Poste Actuel / Situation</label>
-                <input type="text" id="profile-job" class="form-input"
-                    placeholder="Ex: Étudiant Ingénieur ou Consultant Junior">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Mon Parcours (Détails)</label>
-                <textarea id="profile-bio" class="form-textarea" rows="4"
-                    placeholder="Racontez votre parcours après le bac..."></textarea>
-            </div>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
-                onclick="saveAlumniProfile()">Enregistrer les modifications</button>
         </div>
     </div>
     </div>

@@ -27,13 +27,20 @@ function displayAlumniInfo() {
     }
 
     // Remplir la vue profil
-    document.getElementById('profile-name').value = currentUser.fullName;
-    document.getElementById('profile-email').value = currentUser.email;
-    document.getElementById('profile-promo').value = `Promo ${currentUser.promo || 'N/A'}`;
-    document.getElementById('profile-phone').value = currentUser.phone || 'N/A';
-    document.getElementById('profile-phone').value = currentUser.phone || 'N/A';
+    document.getElementById('profile-name').value = currentUser.fullName || '';
+    document.getElementById('profile-email').value = currentUser.email || '';
 
-    // Charger les nouveaux champs
+    // Promo : just the number now
+    document.getElementById('profile-promo').value = currentUser.promo || '';
+
+    // Filière
+    document.getElementById('profile-filiere').value = currentUser.filiere || '';
+
+    // Phone & WhatsApp
+    document.getElementById('profile-phone').value = currentUser.phone || '';
+    document.getElementById('profile-whatsapp').value = currentUser.whatsapp || '';
+
+    // Charger les autres champs
     document.getElementById('profile-linkedin').value = currentUser.linkedin || '';
     document.getElementById('profile-job').value = currentUser.currentJob || '';
     document.getElementById('profile-bio').value = currentUser.bio || '';
@@ -41,12 +48,23 @@ function displayAlumniInfo() {
 
 // Sauvegarder le profil
 async function saveAlumniProfile() {
+    const name = document.getElementById('profile-name').value;
+    const promo = document.getElementById('profile-promo').value;
+    const filiere = document.getElementById('profile-filiere').value;
+    const phone = document.getElementById('profile-phone').value;
+    const whatsapp = document.getElementById('profile-whatsapp').value;
+
     const linkedin = document.getElementById('profile-linkedin').value;
     const job = document.getElementById('profile-job').value;
     const bio = document.getElementById('profile-bio').value;
 
     try {
         await usersRef.doc(currentUser.uid).update({
+            fullName: name,
+            promo: promo,
+            filiere: filiere,
+            phone: phone,
+            whatsapp: whatsapp,
             linkedin: linkedin,
             currentJob: job,
             bio: bio,
@@ -54,9 +72,20 @@ async function saveAlumniProfile() {
         });
 
         // Mettre à jour l'objet local
+        currentUser.fullName = name;
+        currentUser.promo = promo;
+        currentUser.filiere = filiere;
+        currentUser.phone = phone;
+        currentUser.whatsapp = whatsapp;
         currentUser.linkedin = linkedin;
         currentUser.currentJob = job;
         currentUser.bio = bio;
+
+        // Update header name too
+        document.getElementById('welcome-name').textContent = `Bonjour, ${currentUser.fullName}`;
+        if (document.getElementById('user-display-name')) {
+            document.getElementById('user-display-name').textContent = currentUser.fullName;
+        }
 
         showSuccess('alumni-message', 'Profil mis à jour avec succès !');
     } catch (error) {
