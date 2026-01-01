@@ -206,9 +206,16 @@ function openAlumniModal(userId) {
         const btnMail = document.getElementById('btn-email');
         if (btnMail) {
             btnMail.style.display = user.email ? 'flex' : 'none';
-            if (user.email) btnMail.href = `mailto:${user.email}`;
-            // Optional: Make Email button full width if it's the only one
-            btnMail.style.width = '100%';
+            if (user.email) {
+                btnMail.href = `mailto:${user.email}`;
+                // Fix layout: Parent is grid-3, we want full width for email alone
+                if (btnMail.parentElement) {
+                    btnMail.parentElement.classList.remove('grid', 'grid-3');
+                    btnMail.parentElement.style.display = 'flex';
+                    btnMail.parentElement.style.flexDirection = 'column';
+                }
+                btnMail.style.width = '100%';
+            }
         }
 
         // Show Modal
