@@ -125,7 +125,11 @@ async function loadLogs() {
 
     } catch (error) {
         console.error('Erreur logs:', error);
-        container.innerHTML = `<div class="card text-center"><p class="text-error">Erreur de chargement : ${error.message}</p></div>`;
+        container.innerHTML = `
+            <div class="card text-center">
+                <p class="text-error">Erreur de chargement des logs: ${error.message}</p>
+                <button class="btn btn-secondary mt-2" onclick="loadLogs()">Réessayer</button>
+            </div>`;
     }
 }
 
@@ -318,6 +322,11 @@ async function loadAllFilieres() {
         displayFilieres();
     } catch (error) {
         console.error('Erreur lors du chargement des filières:', error);
+        document.getElementById('filieres-list').innerHTML = `
+            <div class="card text-center">
+                <p class="text-error">Erreur de chargement: ${error.message}</p>
+                <button class="btn btn-secondary mt-2" onclick="loadAllFilieres()">Réessayer</button>
+            </div>`;
     }
 }
 
@@ -380,6 +389,11 @@ async function loadAllUsers() {
         });
     } catch (error) {
         console.error('Erreur lors du chargement des utilisateurs:', error);
+        document.getElementById('users-list').innerHTML = `
+            <div class="card text-center">
+                <p class="text-error">Erreur de chargement utilisateurs: ${error.message}</p>
+                <button class="btn btn-secondary mt-2" onclick="loadAllUsers()">Réessayer</button>
+            </div>`;
     }
 }
 
@@ -394,7 +408,13 @@ async function loadAllRequests() {
             displayStats();
         }, error => {
             console.error("Erreur écouteur demandes:", error);
-            // On ignore l'erreur d'index potentielle pour ne pas bloquer le reste
+            const container = document.getElementById('requests-all-list');
+            if (container) {
+                container.innerHTML = `
+                    <div class="card text-center">
+                        <p class="text-error">Erreur chargement demandes: ${error.message}</p>
+                    </div>`;
+            }
         });
     } catch (error) {
         console.error('Erreur lors du chargement des demandes:', error);
@@ -537,7 +557,11 @@ async function loadAdminEvents() {
         container.innerHTML = html;
     } catch (error) {
         console.error('Erreur chargement événements admin:', error);
-        container.innerHTML = `<p class="text-error text-center">Erreur de chargement: ${error.message}</p>`;
+        container.innerHTML = `
+            <div class="card text-center">
+                <p class="text-error">Erreur de chargement: ${error.message}</p>
+                <button class="btn btn-secondary mt-2" onclick="loadAdminEvents()">Réessayer</button>
+            </div>`;
     }
 }
 
@@ -621,7 +645,11 @@ async function loadSupportAlerts() {
         container.innerHTML = html;
     } catch (error) {
         console.error('Erreur logs support:', error);
-        container.innerHTML = `<div class="card text-center"><p class="text-error">Erreur de chargement : ${error.message}</p></div>`;
+        container.innerHTML = `
+            <div class="card text-center">
+                <p class="text-error">Erreur logs support: ${error.message}</p>
+                <button class="btn btn-secondary mt-2" onclick="loadSupportAlerts()">Réessayer</button>
+            </div>`;
     }
 }
 
