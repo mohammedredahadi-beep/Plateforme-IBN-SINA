@@ -90,6 +90,8 @@ function renderDirectory(alumniList, container) {
         const filiere = user.filiere || 'Filière inconnue';
 
         // Card is clickable to open modal
+        // We add stopPropagation to the button to avoid double triggering if nested, though here it's fine.
+        // Changing span to button for better accessibility and "clickability" feel.
         html += `
             <div class="card directory-card fade-in" 
                  onclick="openAlumniModal('${user.id}')"
@@ -104,7 +106,7 @@ function renderDirectory(alumniList, container) {
                         ${job.substring(0, 50)}${job.length > 50 ? '...' : ''}
                     </p>
                     <div class="flex gap-1">
-                        <span class="btn btn-secondary btn-small" style="font-size: 0.75rem;">Voir Profil</span>
+                        <button class="btn btn-secondary btn-small" style="font-size: 0.75rem;" onclick="event.stopPropagation(); openAlumniModal('${user.id}')">Voir Profil</button>
                     </div>
                 </div>
             </div>
