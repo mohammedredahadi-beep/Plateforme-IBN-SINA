@@ -197,39 +197,41 @@
                     onclick="saveAlumniProfile()">Enregistrer les modifications</button>
             </div>
         </div>
-    </div>
-    </div>
 
-    <!-- Vue Annuaire [NEW] -->
-    <div id="directory-view" class="tab-content hidden">
-        <!-- Reusing same structure as student dashboard -->
-        <div class="card" style="margin-bottom: var(--spacing-md);">
-            <div class="flex" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <h3 style="font-weight: 600;">📂 Annuaire des Anciens</h3>
-                    <p style="color: var(--text-secondary);">Retrouvez vos camarades</p>
-                </div>
-                <!-- Search Controls -->
-                <div class="flex gap-1" style="flex: 1; min-width: 250px; justify-content: flex-end;">
-                    <input type="text" id="dir-search" class="form-input" placeholder="🔍 Nom, École, Entreprise..."
-                        oninput="handleDirectorySearch()" style="max-width: 200px;">
-                    <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
-                        style="max-width: 150px;">
-                        <option value="all">Toutes Filières</option>
-                        <option value="STE">STE - Sciences et Technologies Électriques</option>
-                        <option value="STM">STM - Sciences et Technologies Mécaniques</option>
-                        <option value="AA">AA - Arts Appliqués</option>
-                        <option value="ECO">ECO - Économie</option>
-                        <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
-                    </select>
+        <!-- Vue Annuaire [NEW] -->
+        <div id="directory-view" class="tab-content hidden">
+            <!-- Reusing same structure as student dashboard -->
+            <div class="card" style="margin-bottom: var(--spacing-md);">
+                <div class="flex"
+                    style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="font-weight: 600;">📂 Annuaire des Anciens</h3>
+                        <p style="color: var(--text-secondary);">Retrouvez vos camarades</p>
+                        <!-- TEST BUTTON -->
+                        <button class="btn btn-small btn-secondary" onclick="openAlumniModal('test-open')">Test
+                            Modal</button>
+                    </div>
+                    <!-- Search Controls -->
+                    <div class="flex gap-1" style="flex: 1; min-width: 250px; justify-content: flex-end;">
+                        <input type="text" id="dir-search" class="form-input" placeholder="🔍 Nom, École, Entreprise..."
+                            oninput="handleDirectorySearch()" style="max-width: 200px;">
+                        <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
+                            style="max-width: 150px;">
+                            <option value="all">Toutes Filières</option>
+                            <option value="STE">STE - Sciences et Technologies Électriques</option>
+                            <option value="STM">STM - Sciences et Technologies Mécaniques</option>
+                            <option value="AA">AA - Arts Appliqués</option>
+                            <option value="ECO">ECO - Économie</option>
+                            <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="directory-grid" class="grid grid-2" style="gap: 15px;">
-            <!-- Loaded by JS -->
+            <div id="directory-grid" class="grid grid-2" style="gap: 15px;">
+                <!-- Loaded by JS -->
+            </div>
         </div>
-    </div>
     </div>
 
 

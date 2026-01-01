@@ -129,6 +129,8 @@ body {
 
 /* Cartes avec glassmorphism */
 .card {
+    position: relative;
+    /* Important for z-index context */
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
@@ -136,11 +138,20 @@ body {
     padding: var(--spacing-lg);
     box-shadow: var(--glass-shadow);
     transition: all var(--transition-normal);
+    z-index: 1;
 }
 
 .card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+    z-index: 5;
+}
+
+/* Ensure buttons inside cards are clickable */
+.card button,
+.card .btn {
+    position: relative;
+    z-index: 10;
 }
 
 .card-header {
@@ -1297,10 +1308,12 @@ body {
 }
 
 .scrollable-text::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
+    background-color: var(--text-light);
+    /* Better visibility in dark mode */
     border-radius: 4px;
 }
 
 .scrollable-text::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.05);
+    /* Slight track visibility */
 }

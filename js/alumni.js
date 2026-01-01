@@ -60,6 +60,8 @@ async function saveAlumniProfile() {
 
     try {
         await usersRef.doc(currentUser.uid).update({
+            // Ensure role is preserved just in case
+            role: 'alumni',
             fullName: name,
             promo: promo,
             filiere: filiere,
@@ -95,7 +97,7 @@ async function saveAlumniProfile() {
 }
 
 // Basculer entre les vues
-function showAlumniView(view) {
+async function showAlumniView(view) {
     const views = ['dashboard', 'events', 'mentor', 'profile', 'directory'];
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
@@ -117,7 +119,9 @@ function showAlumniView(view) {
 
     if (view === 'events') loadEvents('events-list');
     if (view === 'mentor') updateMentorStatusDisplay();
-    if (view === 'directory' && typeof initDirectory === 'function') initDirectory();
+    if (view === 'directory' && typeof initDirectory === 'function') {
+        await initDirectory();
+    }
 }
 
 // Charger les événements depuis Firestore

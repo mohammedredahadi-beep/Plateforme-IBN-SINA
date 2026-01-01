@@ -5,7 +5,7 @@ let directoryList = []; // Store list for modal access
 // Initialize Directory
 async function initDirectory() {
     console.log("Initializing Directory...");
-    // Load default: all alumni
+
     await loadDirectory();
 }
 
@@ -55,8 +55,8 @@ async function loadDirectory(filiereFilter = 'all', searchTerm = '') {
             const lowerTerm = searchTerm.toLowerCase();
             alumni = alumni.filter(a =>
                 (a.fullName && a.fullName.toLowerCase().includes(lowerTerm)) ||
-                (a.currentJob && a.currentJob.toLowerCase().includes(lowerTerm)) || // Check 'currentJob'
-                (a.motivation && a.motivation.toLowerCase().includes(lowerTerm)) // Legacy check
+                (a.currentJob && a.currentJob.toLowerCase().includes(lowerTerm)) ||
+                (a.motivation && a.motivation.toLowerCase().includes(lowerTerm))
             );
         }
 
@@ -89,11 +89,9 @@ function renderDirectory(alumniList, container) {
         const job = user.currentJob || user.motivation || "Non renseigné";
         const filiere = user.filiere || 'Filière inconnue';
 
-        // Card is clickable to open modal
-        // We add stopPropagation to the button to avoid double triggering if nested, though here it's fine.
-        // Changing span to button for better accessibility and "clickability" feel.
+        // We use INLINE ONCLICK to be absolutely sure it fires
         html += `
-            <div class="card directory-card fade-in" 
+            <div class="card directory-card fade-in"
                  onclick="openAlumniModal('${user.id}')"
                  style="display: flex; gap: 15px; align-items: start; cursor: pointer; transition: transform 0.2s;">
                  <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
@@ -106,7 +104,9 @@ function renderDirectory(alumniList, container) {
                         ${job.substring(0, 50)}${job.length > 50 ? '...' : ''}
                     </p>
                     <div class="flex gap-1">
-                        <button class="btn btn-secondary btn-small" style="font-size: 0.75rem;" onclick="event.stopPropagation(); openAlumniModal('${user.id}')">Voir Profil</button>
+                        <button class="btn btn-secondary btn-small"
+                            onclick="event.stopPropagation(); openAlumniModal('${user.id}')"
+                            style="font-size: 0.75rem;">Voir Profil</button>
                     </div>
                 </div>
             </div>
@@ -117,64 +117,91 @@ function renderDirectory(alumniList, container) {
 }
 
 // Modal Logic
+// Modal Logic
 function openAlumniModal(userId) {
-    const user = directoryList.find(u => u.id === userId);
-    if (!user) return;
+    console.log("LOG: openAlumniModal triggered for:", userId);
 
-    // Fill Modal
-    const initials = user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    document.getElementById('modal-avatar').textContent = initials;
-    document.getElementById('modal-name').textContent = user.fullName;
-    document.getElementById('modal-job').textContent = user.currentJob || user.motivation || "Poste non renseigné";
+    try {
+        const modal = document.getElementById('alumni-modal');
+        if (!modal) {
+            console.error("CRITICAL: Modal element #alumni-modal not found!");
+            return;
+        }
 
-    document.getElementById('modal-filiere').textContent = user.filiere || "Non renseignée";
-    document.getElementById('modal-promo').textContent = user.promo || "Non renseignée";
-    document.getElementById('modal-parcours').innerHTML = user.bio ? user.bio.replace(/\n/g, '<br>') : "Aucune information sur le parcours.";
+        // TEST MODE
+        if (userId === 'test-open') {
+            const mbName = document.getElementById('modal-name');
+            if (mbName) mbName.textContent = "Test Modal Fonctionnel";
 
-    // Contact Buttons
-    const btnLinkedin = document.getElementById('btn-linkedin');
-    const btnWhatsapp = document.getElementById('btn-whatsapp');
-    const btnEmail = document.getElementById('btn-email');
+            const mbJob = document.getElementById('modal-job');
+            if (mbJob) mbJob.textContent = "Si vous voyez ceci, la modale fonctionne.";
 
-    // LinkedIn
-    if (user.linkedin) {
-        btnLinkedin.href = user.linkedin;
-        btnLinkedin.classList.remove('hidden');
-        btnLinkedin.style.display = 'flex'; // Restore if hidden
-    } else {
-        btnLinkedin.style.display = 'none';
+            const mbParcours = document.getElementById('modal-parcours');
+            if (mbParcours) mbParcours.innerHTML = "Ceci est un test manuel. Le bouton Voir Profil fonctionne.";
+
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            return;
+        }
+
+        // Normal Mode
+        const user = directoryList.find(u => u.id === userId);
+
+        if (!user) {
+            console.error("User ID not found in list:", userId);
+            return;
+        }
+
+        // Fill Modal Data
+        const initials = user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+
+        if (document.getElementById('modal-avatar')) document.getElementById('modal-avatar').textContent = initials;
+        if (document.getElementById('modal-name')) document.getElementById('modal-name').textContent = user.fullName || "Inconnu";
+        if (document.getElementById('modal-job')) document.getElementById('modal-job').textContent = user.currentJob || user.motivation || "Poste non renseigné";
+
+        if (document.getElementById('modal-filiere')) document.getElementById('modal-filiere').textContent = user.filiere || "Non renseignée";
+        if (document.getElementById('modal-promo')) document.getElementById('modal-promo').textContent = user.promo || "Non renseignée";
+
+        const bioContent = user.bio ? user.bio.replace(/\n/g, '<br>') : "Aucune information sur le parcours.";
+        if (document.getElementById('modal-parcours')) document.getElementById('modal-parcours').innerHTML = bioContent;
+
+        // Buttons
+        const btnLink = document.getElementById('btn-linkedin');
+        if (btnLink) {
+            btnLink.style.display = user.linkedin ? 'flex' : 'none';
+            if (user.linkedin) btnLink.href = user.linkedin;
+        }
+
+        const btnWa = document.getElementById('btn-whatsapp');
+        if (btnWa) {
+            const wa = user.whatsapp || user.phone;
+            btnWa.style.display = wa ? 'flex' : 'none';
+            if (wa) btnWa.href = `https://wa.me/${wa.replace(/[^\d]/g, '')}`;
+        }
+
+        const btnMail = document.getElementById('btn-email');
+        if (btnMail) {
+            btnMail.style.display = user.email ? 'flex' : 'none';
+            if (user.email) btnMail.href = `mailto:${user.email}`;
+        }
+
+        // Show Modal
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        console.log("Modal opened successfully for:", user.fullName);
+
+    } catch (e) {
+        console.error("CRITICAL ERROR in openAlumniModal:", e);
     }
-
-    // WhatsApp / Phone
-    // Use whatsapp field if available, else fallback to phone if it looks like mobile? 
-    // User requested "contact via whatssap".
-    const waNumber = user.whatsapp || user.phone;
-    if (waNumber) {
-        // Clean number for WA link: remove spaces, ensure it has country code if possible. 
-        // Assuming user enters +212...
-        const cleanVal = waNumber.replace(/[^\d+]/g, '');
-        btnWhatsapp.href = `https://wa.me/${cleanVal}`;
-        btnWhatsapp.style.display = 'flex';
-    } else {
-        btnWhatsapp.style.display = 'none';
-    }
-
-    // Email
-    if (user.email) {
-        btnEmail.href = `mailto:${user.email}`;
-        btnEmail.style.display = 'flex';
-    } else {
-        btnEmail.style.display = 'none'; // Unlikely
-    }
-
-    // Show Modal
-    document.getElementById('alumni-modal').classList.remove('hidden');
-    document.getElementById('alumni-modal').classList.add('active'); // For flex display
 }
 
 function closeAlumniModal() {
-    document.getElementById('alumni-modal').classList.add('hidden');
-    document.getElementById('alumni-modal').classList.remove('active');
+    const modal = document.getElementById('alumni-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
 }
 
 // Event Listeners for search inputs
@@ -191,11 +218,14 @@ window.handleDirectorySearch = handleDirectorySearch;
 window.openAlumniModal = openAlumniModal;
 window.closeAlumniModal = closeAlumniModal;
 
-// Close modal when clicking outside content
+// Close modal when clicking outside
 document.addEventListener('click', (e) => {
     const modal = document.getElementById('alumni-modal');
-    if (e.target === modal) {
-        closeAlumniModal();
+    // Check if modal exists and is NOT hidden
+    if (modal && !modal.classList.contains('hidden')) {
+        // If click is ON the modal background (container) but NOT inside modal-content
+        if (e.target === modal) {
+            closeAlumniModal();
+        }
     }
 });
-
