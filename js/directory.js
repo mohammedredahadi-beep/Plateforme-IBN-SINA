@@ -159,22 +159,6 @@ function openAlumniModal(userId) {
             return;
         }
 
-        // TEST MODE
-        if (userId === 'test-open') {
-            const mbName = document.getElementById('modal-name');
-            if (mbName) mbName.textContent = "Test Modal Fonctionnel";
-
-            const mbJob = document.getElementById('modal-job');
-            if (mbJob) mbJob.textContent = "Si vous voyez ceci, la modale fonctionne.";
-
-            const mbParcours = document.getElementById('modal-parcours');
-            if (mbParcours) mbParcours.innerHTML = "Ceci est un test manuel. Le bouton Voir Profil fonctionne.";
-
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
-            return;
-        }
-
         // Normal Mode
         const user = directoryList.find(u => u.id === userId);
 
