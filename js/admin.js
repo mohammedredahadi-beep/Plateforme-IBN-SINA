@@ -294,6 +294,7 @@ async function initAdminDashboard() {
         visibleLog("Fetching Users...");
         await loadAllUsers(); // Nécessaire pour afficher les noms des délégués dans les filières
         visibleLog(`Users loaded: ${allUsers.length}`);
+        if (allUsers.length > 0) visibleLog(`First User: ${JSON.stringify(allUsers[0]).substring(0, 50)}...`);
     } catch (e) {
         console.error("Admin Init: Error loading users", e);
         visibleLog(`Error loading users: ${e.message}`, 'error');
@@ -303,6 +304,7 @@ async function initAdminDashboard() {
         visibleLog("Fetching Filieres...");
         await loadAllFilieres();
         visibleLog(`Filieres loaded: ${allFilieres.length}`);
+        if (allFilieres.length > 0) visibleLog(`First Filiere: ${allFilieres[0].id}`);
     } catch (e) {
         console.error("Admin Init: Error loading filieres", e);
         visibleLog(`Error loading filieres: ${e.message}`, 'error');
