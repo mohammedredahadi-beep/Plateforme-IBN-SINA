@@ -52,7 +52,11 @@ service cloud.firestore {
 
     // Messages / Announcements
     match /messages/{messageId} {
-      allow read: if isSignedIn();
+      // Allow read if broadcast ('all', 'students', etc) OR if user is in target list
+      allow read: if isSignedIn() && (
+        resource.data.target in ['all', 'students', 'alumni', 'delegates'] ||
+        (resource.data.targetUserIds is list && resource.data.targetUserIds.hasAny([request.auth.uid]))
+      );
       allow create, update, delete: if isAdmin();
     }
   }

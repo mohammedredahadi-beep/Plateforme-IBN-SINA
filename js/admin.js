@@ -3,8 +3,14 @@
 let currentUser = null;
 let allFilieres = [];
 let allUsers = [];
-let allRequests = [];
+let allDelegateRequests = [];
+let allMentorRequests = [];
 const logsRef = db.collection('logs');
+
+// --- SIDEBAR TOGGLE ---
+function toggleSidebar() {
+    document.querySelector('.admin-sidebar').classList.toggle('open');
+}
 
 // --- DEBUG HELPER ---
 function visibleLog(msg, type = 'info') {
@@ -310,10 +316,11 @@ async function initAdminDashboard() {
         visibleLog(`Error loading filieres: ${e.message}`, 'error');
     }
 
-    // Initialiser l'écouteur des demandes
+    // Initialiser l'écouteur des demandes (Délégué + Mentorat)
     try {
         visibleLog("Starting Requests Listener...");
-        loadAllRequests(); // C'est non-bloquant car c'est un listener, mais on le garde safe
+        loadAllRequests();
+        loadMentorRequests();
     } catch (e) {
         console.error("Admin Init: Error starting requests listener", e);
         visibleLog(`Error requesting listener: ${e.message}`, 'error');
@@ -327,8 +334,11 @@ async function initAdminDashboard() {
         visibleLog(`Error displaying stats: ${e.message}`, 'error');
     }
 
-    // Afficher la vue par défaut
-    showAdminView('filieres');
+    // Afficher la vue par défaut (Home)
+    showAdminView('home');
+
+    // Charger le planning d'accueil
+    loadHomePlanning();
 
     // Gestion de la fermeture des dropdowns
     document.addEventListener('click', (e) => {
@@ -435,48 +445,132 @@ async function loadAllUsers() {
     displayStats(); // Update KPIs regardless of error (might be partial or empty)
 }
 
-// Charger toutes les demandes
+// Charger les demandes de rôle Délégué
 async function loadAllRequests() {
     try {
-        // On retire orderBy pour éviter les blocages d'index si la collection est nouvelle
         requestsRef.onSnapshot(snapshot => {
-            allRequests = [];
+            allDelegateRequests = [];
             snapshot.forEach(doc => {
-                allRequests.push({ id: doc.id, ...doc.data() });
+                allDelegateRequests.push({ id: doc.id, type: 'DELEGATE_REQUEST', ...doc.data() });
             });
-
-            // Tri client-side
-            allRequests.sort((a, b) => {
-                const timeA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : 0) : 0;
-                const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : 0) : 0;
-                return timeB - timeA;
-            });
-
-            displayStats();
+            renderCombinedRequests();
         }, error => {
-            console.error("Erreur écouteur demandes:", error);
-            const container = document.getElementById('requests-all-list');
-            if (container) {
-                container.innerHTML = `
-                    <div class="card text-center">
-                        <p class="text-error">Erreur chargement demandes: ${error.message}</p>
-                    </div>`;
-            }
+            console.error("Erreur écouteur demandes délégué:", error);
         });
     } catch (error) {
-        console.error('Erreur lors du chargement des demandes:', error);
+        console.error('Erreur loading delegate requests:', error);
     }
+}
+
+// Charger les demandes de Mentorat
+async function loadMentorRequests() {
+    try {
+        db.collection('support_alerts').where('type', '==', 'MENTOR_REQUEST')
+            .onSnapshot(snapshot => {
+                allMentorRequests = [];
+                snapshot.forEach(doc => {
+                    allMentorRequests.push({ id: doc.id, ...doc.data() });
+                });
+                renderCombinedRequests();
+            }, error => {
+                console.error("Erreur écouteur demandes mentor:", error);
+            });
+    } catch (error) {
+        console.error('Erreur loading mentor requests:', error);
+    }
+}
+
+function renderCombinedRequests() {
+    const container = document.getElementById('requests-all-list');
+    if (!container) return;
+
+    // Combiner
+    const combined = [...allDelegateRequests, ...allMentorRequests];
+
+    // Trier
+    combined.sort((a, b) => {
+        const timeA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : 0) : (a.timestamp ? (a.timestamp.toMillis ? a.timestamp.toMillis() : 0) : 0);
+        const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : 0) : (b.timestamp ? (b.timestamp.toMillis ? b.timestamp.toMillis() : 0) : 0);
+        return timeB - timeA;
+    });
+
+    displayStats(); // Update counters
+
+    if (combined.length === 0) {
+        container.innerHTML = '<div class="card text-center"><p>Aucune demande en attente.</p></div>';
+        return;
+    }
+
+    let html = '';
+    combined.forEach(req => {
+        const isMentorRef = req.type === 'MENTOR_REQUEST';
+        const dateObj = req.createdAt || req.timestamp;
+        const dateStr = dateObj ? (dateObj.toDate ? dateObj.toDate().toLocaleString('fr-FR') : 'Date inconnue') : 'N/A';
+        const user = allUsers.find(u => u.uid === req.userId) || { fullName: req.userName || 'Inconnu' };
+
+        let actions = '';
+        if (isMentorRef) {
+            if (req.status !== 'resolved') {
+                // Mentor Actions
+                actions += `<button class="btn btn-small btn-success" onclick="approveMentor('${req.userId}', '${req.id}')">✅ Approuver</button>`;
+                actions += `<button class="btn btn-small btn-secondary" onclick="openReplyModal('${req.id}', '${req.userId}')">↩️ Répondre</button>`;
+            } else {
+                actions += `<span class="badge badge-approved">Traité</span>`;
+            }
+        } else {
+            // Delegate Actions (supposons qu'elles existent ou sont gérées via les dropdowns habituels)
+            if (req.status === 'pending') {
+                actions += `<button class="btn btn-small btn-success" onclick="adminApproveRequest('${req.id}')">✅ Accepter</button>`;
+                actions += `<button class="btn btn-small btn-danger" onclick="adminRejectRequest('${req.id}')">❌ Refuser</button>`;
+            } else {
+                actions += `<span class="badge badge-approved">${req.status}</span>`;
+            }
+        }
+
+        html += `
+            <div class="card" style="margin-bottom: 15px; border-left: 4px solid ${isMentorRef ? 'var(--primary-color)' : 'var(--warning-color)'};">
+                <div class="flex" style="justify-content: space-between; align-items: start;">
+                    <div>
+                        <div class="flex" style="gap: 10px; margin-bottom: 5px;">
+                            <span class="badge" style="background: ${isMentorRef ? '#e0f2fe' : '#fef3c7'}; color: ${isMentorRef ? '#0369a1' : '#d97706'}">
+                                ${isMentorRef ? 'MENTORAT' : 'DÉLÉGUÉ'}
+                            </span>
+                            <small>${dateStr}</small>
+                        </div>
+                        <h4 style="font-weight: 600;">${user.fullName}</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">
+                            ${req.message || req.reason || 'Aucun message'}
+                        </p>
+                    </div>
+                    <div class="flex" style="gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
+                        ${actions}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
 }
 
 // Afficher les statistiques
 function displayStats() {
+    const combinedRequests = [...allDelegateRequests, ...allMentorRequests];
+    const pendingCount = combinedRequests.filter(r => r.status === 'pending' || r.status === undefined).length; // undefined for new mentor requests?
+
     document.getElementById('stat-users').textContent = allUsers.length;
     document.getElementById('stat-filieres').textContent = allFilieres.length;
-    document.getElementById('stat-requests').textContent = allRequests.length;
+    document.getElementById('stat-requests').textContent = combinedRequests.length;
 
-    const pendingCount = allRequests.filter(r => r.status === 'pending').length;
     if (document.getElementById('stat-pending')) {
         document.getElementById('stat-pending').textContent = pendingCount;
+    }
+
+    // Badger Sidebar
+    const badgeReq = document.getElementById('sidebar-badge-requests');
+    if (badgeReq) {
+        badgeReq.textContent = pendingCount;
+        badgeReq.classList.toggle('hidden', pendingCount === 0);
     }
 }
 
@@ -514,7 +608,7 @@ function renderActionDropdown(items) {
 // Basculer entre les vues
 // Basculer entre les vues
 function showAdminView(view) {
-    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support', 'backup', 'marketing'];
+    const views = ['home', 'filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support', 'backup', 'marketing'];
 
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
@@ -536,11 +630,61 @@ function showAdminView(view) {
     });
 
     if (view === 'users') displayUsers();
-    if (view === 'requests') displayAllRequests();
+    if (view === 'requests') renderCombinedRequests();
     if (view === 'alumni') displayPendingAlumni();
     if (view === 'logs') loadLogs();
     if (view === 'support') loadSupportAlerts();
     if (view === 'events') loadAdminEvents();
+    if (view === 'home') {
+        displayStats();
+        loadHomePlanning();
+    }
+}
+
+// Charger le planning simplifié (Home View)
+async function loadHomePlanning() {
+    const container = document.getElementById('home-events-list');
+    if (!container) return;
+
+    try {
+        const snapshot = await db.collection('events')
+            .where('date', '>=', firebase.firestore.Timestamp.now())
+            .get();
+
+        if (snapshot.empty) {
+            container.innerHTML = '<p style="color: var(--text-secondary);">Aucun événement à venir.</p>';
+            return;
+        }
+
+        let events = [];
+        snapshot.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+
+        // Tri par date croissante (le plus proche en premier)
+        events.sort((a, b) => a.date.toMillis() - b.date.toMillis());
+        events = events.slice(0, 5); // Max 5
+
+        let html = '<div class="flex" style="flex-direction: column; gap: 10px;">';
+        events.forEach(ev => {
+            const date = ev.date.toDate().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+            html += `
+                <div class="card" style="padding: 10px; display: flex; align-items: center; gap: 15px; border-left: 3px solid var(--primary-color);">
+                    <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-color); text-align: center; line-height: 1;">
+                        ${date.split(' ')[0]}<br><span style="font-size: 0.8rem; color: var(--text-secondary);">${date.split(' ')[1]}</span>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">${ev.title}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${ev.type}</div>
+                    </div>
+                </div>
+             `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+    } catch (e) {
+        console.error("Erreur chargement planning home:", e);
+        container.innerHTML = '<p class="text-error">Erreur de chargement.</p>';
+    }
 }
 
 // Ajouter un événement
@@ -642,6 +786,7 @@ async function loadSupportAlerts() {
 
     try {
         // Retrait de l'orderBy pour éviter l'erreur d'index Firestore
+        // Filtrer pour ne PAS afficher les demandes de Mentorat ici (elles sont dans "Demandes")
         const snapshot = await db.collection('support_alerts').get();
 
         if (snapshot.empty) {
@@ -651,7 +796,10 @@ async function loadSupportAlerts() {
 
         let alerts = [];
         snapshot.forEach(doc => {
-            alerts.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            if (data.type !== 'MENTOR_REQUEST') {
+                alerts.push({ id: doc.id, ...data });
+            }
         });
 
         // Tri côté client par timestamp descendant
@@ -678,7 +826,10 @@ async function loadSupportAlerts() {
             if (alert.type === 'MENTOR_REQUEST') {
                 dropdownActions.push({ label: 'Approuver le Mentor', icon: '🎓', onclick: `approveMentor('${alert.userId}', '${alert.id}')` });
             }
-            dropdownActions.push({ label: 'Marquer Résolu', icon: '✓', onclick: `resolveAlert('${alert.id}')` });
+            if (alert.status !== 'resolved') {
+                dropdownActions.push({ label: 'Répondre', icon: '↩️', onclick: `openReplyModal('${alert.id}', '${alert.userId}')` });
+                dropdownActions.push({ label: 'Marquer Résolu', icon: '✓', onclick: `resolveAlert('${alert.id}')` });
+            }
             dropdownActions.push({ label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteAlert('${alert.id}')` });
 
             html += `
@@ -732,6 +883,55 @@ async function deleteAlert(id) {
         loadSupportAlerts();
     } catch (error) {
         alert('Erreur lors de la suppression.');
+    }
+}
+
+// --- REPLY SYSTEM ---
+function openReplyModal(alertId, userId) {
+    document.getElementById('reply-alert-id').value = alertId;
+    document.getElementById('reply-user-id').value = userId;
+    document.getElementById('reply-message').value = '';
+    document.getElementById('reply-modal').classList.remove('hidden');
+}
+
+function closeReplyModal() {
+    document.getElementById('reply-modal').classList.add('hidden');
+}
+
+async function sendReply(e) {
+    e.preventDefault();
+    const alertId = document.getElementById('reply-alert-id').value;
+    const userId = document.getElementById('reply-user-id').value;
+    const message = document.getElementById('reply-message').value;
+
+    if (!message) return;
+
+    try {
+        // 1. Mettre à jour l'alerte
+        await db.collection('support_alerts').doc(alertId).update({
+            status: 'resolved',
+            reply: message,
+            repliedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Envoyer un message privé à l'utilisateur
+        await db.collection('messages').add({
+            target: JSON.stringify([userId]), // Specific format for logic or just userId if simplified
+            targetUserIds: [userId], // Better practice
+            title: "Réponse du Support",
+            content: message,
+            senderId: auth.currentUser.uid,
+            senderName: currentUser.fullName || 'Admin',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            readBy: []
+        });
+
+        showSuccess('admin-message', 'Réponse envoyée avec succès !');
+        closeReplyModal();
+        loadSupportAlerts();
+    } catch (error) {
+        console.error("Erreur réponse:", error);
+        showError('admin-message', 'Erreur lors de l\'envoi de la réponse.');
     }
 }
 
@@ -812,50 +1012,7 @@ function displayUsers() {
     container.innerHTML = html;
 }
 
-// Afficher toutes les demandes
-async function displayAllRequests() {
-    const container = document.getElementById('requests-all-list');
 
-    if (allRequests.length === 0) {
-        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucune demande</p></div>';
-        return;
-    }
-
-    let html = '<div class="table-container"><table class="table">';
-    html += '<thead><tr><th>Étudiant</th><th>Filière</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-
-    for (const request of allRequests) {
-        let filiereName = 'N/A';
-        const filiere = allFilieres.find(f => f.id === request.filiereId);
-        if (filiere) filiereName = filiere.name;
-
-        const statusBadge =
-            request.status === 'pending' ? '<span class="badge badge-pending">En attente</span>' :
-                request.status === 'approved' ? '<span class="badge badge-approved">Approuvée</span>' :
-                    '<span class="badge badge-rejected">Rejetée</span>';
-
-        const date = request.createdAt ? new Date(request.createdAt.toDate()).toLocaleDateString('fr-FR') : 'N/A';
-
-        const dropdownActions = [];
-        if (request.status === 'pending') {
-            dropdownActions.push({ label: 'Approuver', icon: '✓', onclick: `adminApproveRequest('${request.id}')` });
-            dropdownActions.push({ label: 'Rejeter', icon: '✗', class: 'danger', onclick: `adminRejectRequest('${request.id}')` });
-        }
-
-        html += `
-            <tr>
-                <td><strong>${request.userName}</strong></td>
-                <td>${filiereName}</td>
-                <td>${statusBadge}</td>
-                <td>${date}</td>
-                <td>${renderActionDropdown(dropdownActions)}</td>
-            </tr>
-        `;
-    }
-
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-}
 
 // Promouvoir un utilisateur en délégué
 async function promoteToDelegate(userId) {
@@ -984,25 +1141,25 @@ async function displayPendingAlumni() {
             ];
 
             html += `
-                <div class="card fade-in" style="border-left: 4px solid var(--accent-color);">
-                    <div class="flex" style="justify-content: space-between; align-items: start;">
-                        <div>
-                            <h4 style="font-weight: 600;">🎓 ${user.fullName}</h4>
-                            <p style="font-size: 0.85rem; color: var(--text-secondary);">
-                                <strong>Promo ${user.promo || 'N/A'}</strong>
-                            </p>
-                            <p style="font-size: 0.75rem; color: var(--text-secondary);">${user.email}</p>
-                        </div>
-                        ${renderActionDropdown(dropdownActions)}
-                    </div>
-                </div>
-            `;
+    < div class="card fade-in" style = "border-left: 4px solid var(--accent-color);" >
+        <div class="flex" style="justify-content: space-between; align-items: start;">
+            <div>
+                <h4 style="font-weight: 600;">🎓 ${user.fullName}</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <strong>Promo ${user.promo || 'N/A'}</strong>
+                </p>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">${user.email}</p>
+            </div>
+            ${renderActionDropdown(dropdownActions)}
+        </div>
+                </div >
+    `;
         });
         html += '</div>';
         container.innerHTML = html;
 
     } catch (error) {
-        container.innerHTML = `<div class="card text-center"><p class="text-error">Erreur de chargement : ${error.message}</p></div>`;
+        container.innerHTML = `< div class="card text-center" > <p class="text-error">Erreur de chargement : ${error.message}</p></div > `;
     }
 }
 
@@ -1085,7 +1242,7 @@ async function adminRejectRequest(requestId) {
     try {
         await requestsRef.doc(requestId).update({
             status: 'rejected',
-            delegateComment: `[ADMIN] ${reason || 'Refusé par l\'administrateur.'}`,
+            delegateComment: `[ADMIN] ${reason || 'Refusé par l\'administrateur.'} `,
             processedBy: auth.currentUser.uid,
             processedAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1222,7 +1379,7 @@ async function importData() {
                         batch = db.batch();
                         opCount = 0;
                         batchCount++;
-                        statusDiv.textContent = `Progression : ${processedDocs} / ${totalDocs} documents traités...`;
+                        statusDiv.textContent = `Progression: ${processedDocs} / ${totalDocs} documents traités...`;
                     }
                 }
             }
