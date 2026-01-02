@@ -354,6 +354,7 @@ async function loadAllFilieres() {
         allFilieres.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         displayFilieres();
+        displayStats(); // Update KPIs
     } catch (error) {
         console.error('Erreur lors du chargement des filières:', error);
         document.getElementById('filieres-list').innerHTML = `
@@ -429,6 +430,7 @@ async function loadAllUsers() {
                 <button class="btn btn-secondary mt-2" onclick="loadAllUsers()">Réessayer</button>
             </div>`;
     }
+    displayStats(); // Update KPIs regardless of error (might be partial or empty)
 }
 
 // Charger toutes les demandes
