@@ -8,100 +8,126 @@
 // -----------------------------------------------------------------------------
 
 async function runDiagnostics(mode = 'quick') {
+    console.log(`[Diagnostics] Running in ${mode} mode...`);
     const resultsContainer = document.getElementById('diag-results');
     const statusText = document.getElementById('diag-status-text');
 
     // UI Reset
-    resultsContainer.innerHTML = '<div class="loading" style="margin: 20px auto;"></div>';
-    statusText.textContent = "Analyse en cours...";
+    if (resultsContainer) resultsContainer.innerHTML = '<div class="loading" style="margin: 20px auto;"></div>';
+    if (statusText) statusText.textContent = "Analyse en cours...";
 
-    // Simulate thinking time for "AI" feel
-    await new Promise(r => setTimeout(r, mode === 'full' ? 1500 : 500));
-
-    const issues = [];
-
-    // --- 1. DATA INTEGRITY CHECKS (Quick & Full) ---
-
-    // Check 1: Filieres without delegates
-    allFilieres.forEach(filiere => {
-        if (!filiere.delegateId) {
-            issues.push({
-                severity: 'medium',
-                title: `Filière sans délégué : ${filiere.name}`,
-                desc: `Cette filière n'a pas de délégué assigné, ce qui peut bloquer les approbations.`,
-                action: 'Assigner un délégué'
-            });
-        } else {
-            // Check if delegate actually exists
-            const delegateExists = allUsers.find(u => u.uid === filiere.delegateId || u.id === filiere.delegateId);
-            if (!delegateExists) {
-                issues.push({
-                    severity: 'high',
-                    title: `Délégué fantôme : ${filiere.name}`,
-                    desc: `L'ID de délégué ${filiere.delegateId} ne correspond à aucun utilisateur actif.`,
-                    action: 'Corriger le délégué'
-                });
-            }
+    try {
+        // Safety Check: Data loaded?
+        if (typeof allFilieres === 'undefined' || typeof allUsers === 'undefined' || typeof allRequests === 'undefined') {
+            throw new Error("Les données (Utilisateurs/Filières) ne sont pas encore chargées. Veuillez patienter ou rafraîchir la page.");
         }
-    });
 
-    // Check 2: Profiles with missing data
-    allUsers.forEach(user => {
-        const missingFields = [];
-        if (!user.email) missingFields.push('Email');
-        if (!user.role) missingFields.push('Rôle');
+        // Simulate thinking time for "AI" feel
+        await new Promise(r => setTimeout(r, mode === 'full' ? 1500 : 500));
 
-        if (missingFields.length > 0) {
-            issues.push({
-                severity: 'low',
-                title: `Profil incomplet : ${user.fullName || 'Utilisateur inconnu'}`,
-                desc: `Champs manquants : ${missingFields.join(', ')}.`,
-                action: 'Éditer l\'utilisateur'
-            });
-        }
-    });
+        const issues = [];
 
-    // --- 2. ADVANCED HEURISTICS ("AI" Mode) ---
-    if (mode === 'full') {
+        // --- 1. DATA INTEGRITY CHECKS (Quick & Full) ---
 
-        // AI Check 1: Bottleneck Detection
-        const pendingRequests = allRequests.filter(r => r.status === 'pending');
-        if (pendingRequests.length > 5) {
-            const requestsByFiliere = {};
-            pendingRequests.forEach(r => {
-                const fName = r.filiereName || 'Inconnue';
-                requestsByFiliere[fName] = (requestsByFiliere[fName] || 0) + 1;
-            });
-
-            for (const [fName, count] of Object.entries(requestsByFiliere)) {
-                if (count > 3) {
+        // Check 1: Filieres without delegates
+        if (Array.isArray(allFilieres)) {
+            allFilieres.forEach(filiere => {
+                if (!filiere.delegateId) {
                     issues.push({
-                        severity: 'high',
-                        title: `Goulot d'étranglement détecté : ${fName}`,
-                        desc: `L'IA a détecté une accumulation anormale de ${count} demandes pour cette filière. Le délégué est peut-être inactif.`,
-                        action: 'Contacter le délégué'
+                        severity: 'medium',
+                        title: `Filière sans délégué : ${filiere.name}`,
+                        desc: `Cette filière n'a pas de délégué assigné, ce qui peut bloquer les approbations.`,
+                        action: 'Assigner un délégué'
+                    });
+                } else {
+                    // Check if delegate actually exists
+                    const delegateExists = allUsers.find(u => u.uid === filiere.delegateId || u.id === filiere.delegateId);
+                    if (!delegateExists) {
+                        issues.push({
+                            severity: 'high',
+                            title: `Délégué fantôme : ${filiere.name}`,
+                            desc: `L'ID de délégué ${filiere.delegateId} ne correspond à aucun utilisateur actif.`,
+                            action: 'Corriger le délégué'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Check 2: Profiles with missing data
+        if (Array.isArray(allUsers)) {
+            allUsers.forEach(user => {
+                const missingFields = [];
+                if (!user.email) missingFields.push('Email');
+                if (!user.role) missingFields.push('Rôle');
+
+                if (missingFields.length > 0) {
+                    issues.push({
+                        severity: 'low',
+                        title: `Profil incomplet : ${user.fullName || 'Utilisateur inconnu'}`,
+                        desc: `Champs manquants : ${missingFields.join(', ')}.`,
+                        action: 'Éditer l\'utilisateur'
+                    });
+                }
+            });
+        }
+
+        // --- 2. ADVANCED HEURISTICS ("AI" Mode) ---
+        if (mode === 'full') {
+
+            // AI Check 1: Bottleneck Detection
+            const pendingRequests = (allRequests || []).filter(r => r.status === 'pending');
+            if (pendingRequests.length > 5) {
+                const requestsByFiliere = {};
+                pendingRequests.forEach(r => {
+                    const fName = r.filiereName || 'Inconnue';
+                    requestsByFiliere[fName] = (requestsByFiliere[fName] || 0) + 1;
+                });
+
+                for (const [fName, count] of Object.entries(requestsByFiliere)) {
+                    if (count > 3) {
+                        issues.push({
+                            severity: 'high',
+                            title: `Goulot d'étranglement détecté : ${fName}`,
+                            desc: `L'IA a détecté une accumulation anormale de ${count} demandes pour cette filière. Le délégué est peut-être inactif.`,
+                            action: 'Contacter le délégué'
+                        });
+                    }
+                }
+            }
+
+            // AI Check 2: Role Consistency
+            if (Array.isArray(allUsers)) {
+                const studentsWithAdminPriv = allUsers.filter(u => u.role === 'student' && u.isAdmin);
+                if (studentsWithAdminPriv.length > 0) {
+                    issues.push({
+                        severity: 'critical',
+                        title: `Risque de Sécurité : Privilèges contradictoires`,
+                        desc: `${studentsWithAdminPriv.length} utilisateurs ont le rôle 'student' mais le flag 'isAdmin'.`,
+                        action: 'Révoquer les droits'
                     });
                 }
             }
+
+            // AI Check 3: Data Staleness
+            // (Assuming we might have timestamps, otherwise skip)
         }
 
-        // AI Check 2: Role Consistency
-        const studentsWithAdminPriv = allUsers.filter(u => u.role === 'student' && u.isAdmin);
-        if (studentsWithAdminPriv.length > 0) {
-            issues.push({
-                severity: 'critical',
-                title: `Risque de Sécurité : Privilèges contradictoires`,
-                desc: `${studentsWithAdminPriv.length} utilisateurs ont le rôle 'student' mais le flag 'isAdmin'.`,
-                action: 'Révoquer les droits'
-            });
-        }
+        // --- RENDER RESULTS ---
+        renderDiagnosticResults(issues, mode);
 
-        // AI Check 3: Data Staleness
-        // (Assuming we might have timestamps, otherwise skip)
+    } catch (error) {
+        console.error("[Diagnostics Error]", error);
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `
+                <div class="card alert-error">
+                    <h3>Erreur d'analyse</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+        if (statusText) statusText.textContent = "Erreur";
     }
-
-    // --- RENDER RESULTS ---
-    renderDiagnosticResults(issues, mode);
 }
 
 function renderDiagnosticResults(issues, mode) {
