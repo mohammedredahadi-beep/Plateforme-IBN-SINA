@@ -542,8 +542,17 @@ function renderActionDropdown(items) {
 // Basculer entre les vues
 // Basculer entre les vues
 function showAdminView(viewId) {
+    // Liste explicite de toutes les vues pour garantir qu'elles sont cachées
+    const views = [
+        'dashboard', 'filieres', 'users', 'events', 'requests',
+        'alumni', 'logs', 'support', 'backup', 'marketing', 'diagnostics'
+    ];
+
     // Masquer toutes les vues
-    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    views.forEach(v => {
+        const el = document.getElementById(`${v}-view`);
+        if (el) el.classList.add('hidden');
+    });
 
     // Afficher la vue demandée
     const targetView = document.getElementById(`${viewId}-view`);
