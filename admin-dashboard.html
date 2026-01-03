@@ -22,10 +22,7 @@
             </div>
 
             <nav class="admin-nav">
-                <button class="admin-nav-item active" data-view="home" onclick="showAdminView('home')">
-                    <span class="icon">🏠</span> Accueil
-                </button>
-                <button class="admin-nav-item" data-view="filieres" onclick="showAdminView('filieres')">
+                <button class="admin-nav-item active" data-view="filieres" onclick="showAdminView('filieres')">
                     <span class="icon">📚</span> Filières
                 </button>
                 <button class="admin-nav-item" data-view="users" onclick="showAdminView('users')">
@@ -80,76 +77,39 @@
         <main class="admin-main">
             <!-- Header Mobile / Title -->
             <div class="admin-header">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="sidebar-toggle" class="btn btn-secondary btn-small mobile-only"
-                        onclick="toggleSidebar()">
-                        ☰
-                    </button>
-                    <div>
-                        <h2 style="font-size: 1.8rem; font-weight: 700;">Tableau de Bord</h2>
-                        <p style="color: var(--text-secondary);">Gérer la plateforme Ibn Sina</p>
-                    </div>
+                <div>
+                    <h2 style="font-size: 1.8rem; font-weight: 700;">Tableau de Bord</h2>
+                    <p style="color: var(--text-secondary);">Gérer la plateforme Ibn Sina</p>
                 </div>
                 <div id="admin-message"></div>
             </div>
 
+            <!-- Statistiques globales KPI -->
+            <div class="kpi-grid" style="margin-bottom: 30px;">
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-value" id="stat-users">0</div>
+                    <div class="kpi-label">Utilisateurs</div>
+                </div>
+                <div class="kpi-card secondary">
+                    <div class="kpi-icon">📚</div>
+                    <div class="kpi-value" id="stat-filieres">0</div>
+                    <div class="kpi-label">Filières</div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-value" id="stat-requests">0</div>
+                    <div class="kpi-label">Demandes</div>
+                </div>
+                <div class="kpi-card danger">
+                    <div class="kpi-icon">⏳</div>
+                    <div class="kpi-value" id="stat-pending">0</div>
+                    <div class="kpi-label">En attente</div>
+                </div>
+            </div>
+
             <!-- VIEWS CONTAINER -->
             <div id="admin-views-container">
-
-                <!-- VUE ACCUEIL (KPIs + Planning) -->
-                <div id="home-view">
-                    <!-- Statistiques globales KPI -->
-                    <div class="kpi-grid" style="margin-bottom: 30px;">
-                        <div class="kpi-card">
-                            <div class="kpi-icon">👥</div>
-                            <div class="kpi-value" id="stat-users">0</div>
-                            <div class="kpi-label">Utilisateurs</div>
-                        </div>
-                        <div class="kpi-card secondary">
-                            <div class="kpi-icon">📚</div>
-                            <div class="kpi-value" id="stat-filieres">0</div>
-                            <div class="kpi-label">Filières</div>
-                        </div>
-                        <div class="kpi-card warning">
-                            <div class="kpi-icon">📋</div>
-                            <div class="kpi-value" id="stat-requests">0</div>
-                            <div class="kpi-label">Demandes</div>
-                        </div>
-                        <div class="kpi-card danger">
-                            <div class="kpi-icon">⏳</div>
-                            <div class="kpi-value" id="stat-pending">0</div>
-                            <div class="kpi-label">En attente</div>
-                        </div>
-                    </div>
-
-                    <!-- Section Planning / Quick Actions -->
-                    <div class="grid grid-2">
-                        <!-- Quick Actions -->
-                        <div class="card">
-                            <h3 style="font-weight: 600; margin-bottom: 15px;">🚀 Actions Rapides</h3>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button class="btn btn-secondary"
-                                    onclick="showAdminView('filieres'); showAddFiliereForm()">
-                                    + Filière
-                                </button>
-                                <button class="btn btn-secondary" onclick="showAdminView('events');">
-                                    + Événement
-                                </button>
-                                <button class="btn btn-primary" onclick="showAdminView('marketing')">
-                                    📢 Annonce
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Mini Planning (Placeholder) -->
-                        <div class="card">
-                            <h3 style="font-weight: 600; margin-bottom: 15px;">📅 Prochains Événements</h3>
-                            <div id="home-events-list">
-                                <p style="color: var(--text-secondary);">Chargement...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Vue Gestion des filières -->
                 <div id="filieres-view">
@@ -294,12 +254,12 @@
                         <div class="grid grid-2" style="margin-top: var(--spacing-md);">
                             <div
                                 style="background: var(--bg-tertiary); padding: var(--spacing-sm); border-radius: var(--radius-sm);">
-                                <strong>En attente:</strong> <span id="stat-pending"
+                                <strong>En attente:</strong> <span id="stat-pending-view"
                                     style="color: var(--warning-color);">0</span>
                             </div>
                             <div
                                 style="background: var(--bg-tertiary); padding: var(--spacing-sm); border-radius: var(--radius-sm);">
-                                <strong>Approuvées:</strong> <span id="stat-approved"
+                                <strong>Approuvées:</strong> <span id="stat-approved-view"
                                     style="color: var(--success-color);">0</span>
                             </div>
                         </div>
@@ -444,6 +404,9 @@
                 </div>
 
             </div> <!-- End Views Container -->
+            <div id="debug-console"
+                style="display:none; background: #000; color: lime; padding: 10px; margin-top: 20px; border-radius: 5px; font-family: monospace; max-height: 200px; overflow-y: auto;">
+            </div>
         </main>
     </div>
 
@@ -544,33 +507,6 @@
                     <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
                     <button type="button" class="btn btn-secondary" style="flex: 1;"
                         onclick="closeEditUserModal()">Annuler</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de Réponse Support -->
-    <div id="reply-modal" class="modal hidden">
-        <div class="modal-content card">
-            <div class="flex"
-                style="justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
-                <h3 style="font-weight: 600;">Répondre à l'utilisateur</h3>
-                <button class="btn btn-secondary btn-small" onclick="closeReplyModal()">✕</button>
-            </div>
-            <form id="reply-form" onsubmit="sendReply(event)">
-                <input type="hidden" id="reply-alert-id">
-                <input type="hidden" id="reply-user-id">
-
-                <div class="form-group">
-                    <label class="form-label">Votre réponse</label>
-                    <textarea id="reply-message" class="form-textarea" rows="4"
-                        placeholder="Bonjour, concernant votre demande..." required></textarea>
-                </div>
-
-                <div class="flex gap-1">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Envoyer la réponse</button>
-                    <button type="button" class="btn btn-secondary" style="flex: 1;"
-                        onclick="closeReplyModal()">Annuler</button>
                 </div>
             </form>
         </div>
