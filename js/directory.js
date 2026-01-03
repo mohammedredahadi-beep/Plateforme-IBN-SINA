@@ -89,57 +89,71 @@ function renderDirectory(alumniList, container) {
         const job = user.currentJob || user.motivation || "Non renseigné";
         const filiere = user.filiere || 'Filière inconnue';
 
-        // Social Buttons Logic (moved from Modal to Card)
-        let socialBtns = '';
+        // Contact Buttons
+        let contactActions = `
+            <div class="flex flex-col gap-1" style="width: 100%; margin-top: auto;">
+        `;
+
+        let hasContact = false;
+
+        if (user.whatsapp || user.phone) {
+            const waNum = (user.whatsapp || user.phone).replace(/[^\d]/g, '');
+            contactActions += `
+                <a href="https://wa.me/${waNum}" target="_blank" 
+                   onclick="event.stopPropagation()"
+                   class="btn" 
+                   style="background: #25D366; color: white; justify-content: center; width: 100%;">
+                   WhatsApp
+                </a>`;
+            hasContact = true;
+        }
 
         if (user.linkedin) {
-            socialBtns += `
+            contactActions += `
                 <a href="${user.linkedin}" target="_blank" 
                    onclick="event.stopPropagation()"
-                   class="btn btn-small" 
-                   title="LinkedIn"
-                   style="background: #0077b5; color: white; min-width: 32px; justify-content: center; padding: 4px 8px; border-radius: 4px;">
-                   IN
+                   class="btn" 
+                   style="background: #0077b5; color: white; justify-content: center; width: 100%;">
+                   LinkedIn
                 </a>`;
+            hasContact = true;
         }
 
-        const waNum = user.whatsapp || user.phone;
-        if (waNum) {
-            const cleanWa = waNum.replace(/[^\d]/g, '');
-            socialBtns += `
-                <a href="https://wa.me/${cleanWa}" target="_blank" 
-                   onclick="event.stopPropagation()"
-                   class="btn btn-small" 
-                   title="WhatsApp"
-                   style="background: #25D366; color: white; min-width: 32px; justify-content: center; padding: 4px 8px; border-radius: 4px;">
-                   WA
-                </a>`;
+        if (!hasContact) {
+            contactActions += `
+                <button class="btn btn-secondary" disabled style="width: 100%; justify-content: center;">
+                    Aucun contact
+                </button>
+            `;
         }
 
-        // We use INLINE ONCLICK to be absolutely sure it fires
+        contactActions += `</div>`;
+
         html += `
             <div class="card directory-card fade-in"
-                 onclick="openAlumniModal('${user.id}')"
-                 style="display: flex; gap: 15px; align-items: start; cursor: pointer; transition: transform 0.2s;">
-                 <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
-                    ${initials}
-                </div>
-                <div style="flex: 1; display: flex; flex-direction: column;">
-                    <h4 style="font-weight: 600; font-size: 1rem; color: var(--text-main); margin-bottom: 2px;">${user.fullName}</h4>
-                    <span class="badge" style="font-size: 0.7em; background: var(--bg-secondary); color: var(--text-secondary); margin-bottom: 5px; display: inline-block; align-self: flex-start;">${filiere}</span>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.4;">
-                        ${job.substring(0, 50)}${job.length > 50 ? '...' : ''}
-                    </p>
-                    <div class="flex gap-1" style="align-items: center; margin-top: auto; justify-content: space-between;">
-                        <button class="btn btn-secondary btn-small"
-                            onclick="event.stopPropagation(); openAlumniModal('${user.id}')"
-                            style="font-size: 0.75rem;">Voir Profil</button>
-                        
-                        <div class="flex gap-1">
-                            ${socialBtns}
-                        </div>
+                 style="display: flex; flex-direction: column; gap: 15px; cursor: default; transition: transform 0.2s;">
+                 
+                 <!-- Header -->
+                 <div style="display: flex; gap: 15px; align-items: start;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; cursor: pointer;"
+                         onclick="openAlumniModal('${user.id}')">
+                        ${initials}
                     </div>
-                </div>
+                    <div style="flex: 1;" onclick="openAlumniModal('${user.id}')" style="cursor: pointer;">
+                        <h4 style="font-weight: 600; font-size: 1rem; color: var(--text-main); margin-bottom: 2px;">${user.fullName}</h4>
+                        <span class="badge" style="font-size: 0.7em; background: var(--bg-secondary); color: var(--text-secondary); margin-bottom: 5px; display: inline-block;">${filiere}</span>
+                    </div>
+                 </div>
+
+                 <!-- Body -->
+                 <div style="flex: 1;">
+                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px; line-height: 1.4;">
+                        ${job.substring(0, 80)}${job.length > 80 ? '...' : ''}
+                    </p>
+                 </div>
+
+                 <!-- Footer Actions -->
+                 ${contactActions}
             </div>
         `;
     });

@@ -70,7 +70,6 @@
                 <button class="btn btn-secondary nav-tab" onclick="showStudentView('mentorship')">🤝 Mentorat <span
                         class="badge"
                         style="background: var(--accent-color); font-size: 0.6em; margin-left: 5px;">NEW</span></button>
-                <button class="btn btn-secondary nav-tab" onclick="showStudentView('forum')">💬 Forum</button>
                 <button class="btn btn-secondary nav-tab" onclick="showStudentView('directory')">📂 Annuaire</button>
             </div>
         </div>
@@ -164,38 +163,6 @@
 
             <!-- Grid des mentors -->
             <div id="mentors-grid" class="grid grid-3" style="gap: 20px;">
-                <!-- Injecté par JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Vue Forum [NEW] -->
-    <div id="forum-view" class="tab-content hidden">
-        <div class="card" style="margin-bottom: var(--spacing-md); background: white;">
-            <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div>
-                    <h2 style="font-size: 1.5rem; font-weight: 700;">Forum de discussion</h2>
-                    <p style="color: var(--text-secondary);">Posez vos questions et échangez avec la communauté.</p>
-                </div>
-                <button class="btn btn-primary" onclick="openNewPostModal()">
-                    <span>+ Nouveau Post</span>
-                </button>
-            </div>
-
-            <!-- Filters -->
-            <div class="flex gap-1" style="margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;">
-                <button class="btn btn-secondary btn-small filter-btn active" data-category="all"
-                    onclick="loadForumPosts('all')">Tout</button>
-                <button class="btn btn-secondary btn-small filter-btn" data-category="Orientation"
-                    onclick="loadForumPosts('Orientation')">Orientation</button>
-                <button class="btn btn-secondary btn-small filter-btn" data-category="Stage"
-                    onclick="loadForumPosts('Stage')">Stage & Emploi</button>
-                <button class="btn btn-secondary btn-small filter-btn" data-category="Campus"
-                    onclick="loadForumPosts('Campus')">Vie du Campus</button>
-            </div>
-
-            <!-- Feed -->
-            <div id="forum-feed" class="flex flex-col" style="gap: 15px;">
                 <!-- Injecté par JS -->
             </div>
         </div>
@@ -306,7 +273,6 @@
     <script src="js/chatbot-ui.js"></script>
     <script src="js/student.js"></script>
     <script src="js/mentorship.js"></script>
-    <script src="js/forum.js"></script>
     <script src="js/announcements.js"></script>
     <script src="js/directory.js"></script>
     <script src="js/events.js"></script>
@@ -344,8 +310,6 @@
                     btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
                 } else if (view === 'dashboard' && btnText.includes('tableau')) {
                     btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-                } else if (view === 'forum' && btnText.includes('forum')) {
-                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
                 } else if (view === 'directory' && btnText.includes('annuaire')) {
                     btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
                 } else if (view === 'events' && btnText.includes('événements')) {
@@ -357,7 +321,6 @@
                 if (dashboardSection) dashboardSection.classList.remove('hidden');
                 if (laheuatSection && currentUser && currentUser.niveau === 'Lauréat') laheuatSection.classList.remove('hidden');
                 if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (forumSection) forumSection.classList.add('hidden');
                 if (directorySection) directorySection.classList.add('hidden');
                 const eventsSection = document.getElementById('events-view');
                 if (eventsSection) eventsSection.classList.add('hidden');
@@ -365,7 +328,6 @@
                 if (dashboardSection) dashboardSection.classList.add('hidden');
                 if (laheuatSection) laheuatSection.classList.add('hidden');
                 if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (forumSection) forumSection.classList.add('hidden');
                 if (directorySection) directorySection.classList.add('hidden');
                 const eventsSection = document.getElementById('events-view');
                 if (eventsSection) eventsSection.classList.remove('hidden');
@@ -376,35 +338,19 @@
                 if (dashboardSection) dashboardSection.classList.remove('hidden');
                 if (laheuatSection) laheuatSection.classList.add('hidden');
                 if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (forumSection) forumSection.classList.add('hidden');
             } else if (view === 'mentorship') {
                 if (dashboardSection) dashboardSection.classList.add('hidden');
                 if (laheuatSection) laheuatSection.classList.add('hidden');
                 if (mentorshipSection) mentorshipSection.classList.remove('hidden');
-                if (forumSection) forumSection.classList.add('hidden');
 
                 // Charger les mentors si pas encore fait
                 if (typeof initMentorship === 'function') {
                     initMentorship();
                 }
-            } else if (view === 'forum') {
-                if (dashboardSection) dashboardSection.classList.add('hidden');
-                if (laheuatSection) laheuatSection.classList.add('hidden');
-                if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (forumSection) forumSection.classList.remove('hidden');
-                if (directorySection) directorySection.classList.add('hidden');
-
-                if (typeof initForum === 'function') {
-                    initForum();
-                }
-                if (typeof initForum === 'function') {
-                    initForum();
-                }
             } else if (view === 'directory') {
                 if (dashboardSection) dashboardSection.classList.add('hidden');
                 if (laheuatSection) laheuatSection.classList.add('hidden');
                 if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (forumSection) forumSection.classList.add('hidden');
                 const directorySection = document.getElementById('directory-view');
                 if (directorySection) directorySection.classList.remove('hidden');
 

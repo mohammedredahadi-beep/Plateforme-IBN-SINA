@@ -541,34 +541,51 @@ function renderActionDropdown(items) {
 
 // Basculer entre les vues
 // Basculer entre les vues
-function showAdminView(view) {
-    const views = ['filieres', 'users', 'events', 'requests', 'alumni', 'logs', 'support', 'backup', 'marketing'];
+function showAdminView(viewId) {
+    // Masquer toutes les vues
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
 
-    views.forEach(v => {
-        const el = document.getElementById(`${v}-view`);
-        if (el) el.classList.add('hidden');
-    });
+    // Afficher la vue demandée
+    const targetView = document.getElementById(`${viewId}-view`);
+    if (targetView) {
+        targetView.classList.remove('hidden');
+    }
 
-    const activeView = document.getElementById(`${view}-view`);
-    if (activeView) activeView.classList.remove('hidden');
+    // Gestion du Header Title
+    const headerTitle = document.getElementById('header-title');
+    if (viewId === 'dashboard') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Tableau de Bord</h1><p style="color: var(--text-secondary);">Gérer la plateforme Ibn Sina</p>';
+    } else if (viewId === 'filieres') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Filières</h1><p style="color: var(--text-secondary);">Gérer les départements et délégués</p>';
+    } else if (viewId === 'users') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Utilisateurs</h1><p style="color: var(--text-secondary);">Gérer les comptes étudiants et lauréats</p>';
+    } else if (viewId === 'requests') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Demandes</h1><p style="color: var(--text-secondary);">Accès aux groupes WhatsApp</p>';
+    } else if (viewId === 'events') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Événements</h1><p style="color: var(--text-secondary);">Publier des actualités</p>';
+    } else if (viewId === 'logs') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Logs Système</h1><p style="color: var(--text-secondary);">Historique des actions</p>';
+    } else if (viewId === 'diagnostics') {
+        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Diagnostic Système</h1><p style="color: var(--text-secondary);">Détection d\'anomalies et Maintenance IA</p>';
+    }
 
     // Mettre à jour l'état actif des boutons de la sidebar
     document.querySelectorAll('.admin-nav-item').forEach(btn => {
         // Check if the button's onclick contains the view name
         const onclickAttr = btn.getAttribute('onclick');
-        if (onclickAttr && onclickAttr.includes(`'${view}'`)) {
+        if (onclickAttr && onclickAttr.includes(`'${viewId}'`)) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
         }
     });
 
-    if (view === 'users') displayUsers();
-    if (view === 'requests') displayAllRequests();
-    if (view === 'alumni') displayPendingAlumni();
-    if (view === 'logs') loadLogs();
-    if (view === 'support') loadSupportAlerts();
-    if (view === 'events') loadAdminEvents();
+    if (viewId === 'users') displayUsers();
+    if (viewId === 'requests') displayAllRequests();
+    if (viewId === 'alumni') displayPendingAlumni();
+    if (viewId === 'logs') loadLogs();
+    if (viewId === 'support') loadSupportAlerts();
+    if (viewId === 'events') loadAdminEvents();
 }
 
 // Ajouter un événement
