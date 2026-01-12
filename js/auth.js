@@ -1,7 +1,16 @@
 // Gestion de l'authentification
 
+// Configuration de l'environnement : Détermine si le mode dev est autorisé
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Si vous devez absolument tester le mode dev en ligne, passez ceci à true temporairement
+const forceDevMode = false;
+const canUseDevMode = isLocalhost || forceDevMode;
+
 // --- DEV MODE MOCK ---
 function getDevMockProfile() {
+    // Sécurité : On ignore le mode dev si on n'est pas en local (et pas forcé)
+    if (!canUseDevMode) return null;
+
     if (localStorage.getItem('dev_mode_enabled') !== 'true') return null;
     const role = localStorage.getItem('dev_mode_role');
     let niveau = 'TC';
@@ -23,7 +32,8 @@ function getDevMockProfile() {
 // ----------------------
 
 // --- MONKEY PATCH FIREBASE AUTH FOR DEV MODE ---
-if (localStorage.getItem('dev_mode_enabled') === 'true') {
+// Sécurité : même vérification ici
+if (canUseDevMode && localStorage.getItem('dev_mode_enabled') === 'true') {
     const mockRole = localStorage.getItem('dev_mode_role');
     const mockUid = 'mock-' + mockRole;
 
