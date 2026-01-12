@@ -793,13 +793,12 @@ function showAdminView(viewId) {
         }
     });
 
+
     if (viewId === 'users') displayUsers();
     if (viewId === 'requests') displayAllRequests();
     if (viewId === 'alumni') displayPendingAlumni();
     if (viewId === 'logs') loadLogs();
     if (viewId === 'support') loadSupportAlerts();
-    if (viewId === 'events') loadAdminEvents();
-    if (viewId === 'events') loadAdminEvents();
     if (viewId === 'events') loadAdminEvents();
     if (viewId === 'validations') displayValidations();
     if (viewId === 'notifications' && typeof initAdminNotificationsView === 'function') initAdminNotificationsView();

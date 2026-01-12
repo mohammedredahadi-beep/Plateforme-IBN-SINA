@@ -8,7 +8,7 @@
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     // Si vous voulez forcer l'affichage même en ligne pour démo, mettez à true
-    const forceShow = false;
+    const forceShow = true;
 
     if (!isLocalhost && !forceShow) return;
 

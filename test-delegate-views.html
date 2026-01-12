@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delegate Views</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div style="padding: 2rem;">
+        <h1>Test des vues Délégué</h1>
+
+        <div style="margin: 2rem 0;">
+            <button onclick="testShowView('pending')" class="btn btn-primary">Pending</button>
+            <button onclick="testShowView('validations')" class="btn btn-primary">Validations</button>
+            <button onclick="testShowView('announcements')" class="btn btn-primary">Annonces</button>
+            <button onclick="testShowView('settings')" class="btn btn-primary">Paramètres</button>
+        </div>
+
+        <div id="pending-view" style="border: 2px solid blue; padding: 1rem; margin: 1rem 0;">
+            <h2>Vue Pending</h2>
+            <p>Contenu de la vue pending</p>
+        </div>
+
+        <div id="validations-view" class="hidden" style="border: 2px solid green; padding: 1rem; margin: 1rem 0;">
+            <h2>Vue Validations</h2>
+            <p>Contenu de la vue validations</p>
+        </div>
+
+        <div id="announcements-view" class="hidden" style="border: 2px solid orange; padding: 1rem; margin: 1rem 0;">
+            <h2>Vue Annonces</h2>
+            <p>Contenu de la vue annonces</p>
+        </div>
+
+        <div id="settings-view" class="hidden" style="border: 2px solid purple; padding: 1rem; margin: 1rem 0;">
+            <h2>Vue Paramètres</h2>
+            <p>Contenu de la vue paramètres</p>
+        </div>
+    </div>
+
+    <script>
+        function testShowView(view) {
+            console.log('testShowView called with:', view);
+
+            // Masquer toutes les vues
+            const allViews = ['pending-view', 'validations-view', 'announcements-view', 'settings-view'];
+            allViews.forEach(viewId => {
+                const el = document.getElementById(viewId);
+                if (el) {
+                    el.classList.add('hidden');
+                    console.log('Hiding:', viewId);
+                }
+            });
+
+            // Afficher la vue demandée
+            const targetView = document.getElementById(view + '-view');
+            if (targetView) {
+                targetView.classList.remove('hidden');
+                console.log('Showing:', view + '-view');
+            } else {
+                console.error('View not found:', view + '-view');
+            }
+        }
+    </script>
+</body>
+
+</html>

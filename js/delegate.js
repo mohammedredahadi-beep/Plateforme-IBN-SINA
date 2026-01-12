@@ -23,11 +23,11 @@ async function initDelegateDashboard() {
     // Charger la filière du délégué
     await loadDelegateFiliere();
 
-    // Charger les demandes en attente
-    await loadPendingRequests();
+    // Charger les paramètres WhatsApp
+    await loadSettings();
 
-    // Charger les statistiques
-    await loadStats();
+    // Charger les statistiques (optionnel, peut être supprimé si non utilisé)
+    // await loadStats();
 
     // Initialiser les notifications
     if (typeof initNotificationSystem === 'function') {
@@ -273,44 +273,64 @@ async function rejectRequest(requestId) {
 
 // Basculer entre les vues
 function showView(view) {
+    console.log('showView called with:', view); // Debug
+
     // Masquer toutes les vues
-    document.getElementById('pending-view').classList.add('hidden');
-    document.getElementById('history-view').classList.add('hidden');
-    document.getElementById('settings-view').classList.add('hidden');
-    document.getElementById('announcements-view').classList.add('hidden');
-    const validationsView = document.getElementById('validations-view');
-    if (validationsView) validationsView.classList.add('hidden');
-
-    // Gérer l'en-tête global des demandes (Stats + Recherche)
-    // Visible uniquement pour 'pending' et 'history'
-    const header = document.getElementById('requests-header');
-    if (header) {
-        if (view === 'pending' || view === 'history') {
-            header.classList.remove('hidden');
-        } else {
-            header.classList.add('hidden');
+    const allViews = ['pending-view', 'history-view', 'settings-view', 'announcements-view', 'validations-view', 'my-class-view'];
+    allViews.forEach(viewId => {
+        const el = document.getElementById(viewId);
+        if (el) {
+            el.classList.add('hidden');
+            console.log('Hiding:', viewId); // Debug
         }
-    }
+    });
 
+    // Afficher la vue demandée
     if (view === 'pending') {
-        document.getElementById('pending-view').classList.remove('hidden');
+        const pendingView = document.getElementById('pending-view');
+        if (pendingView) {
+            pendingView.classList.remove('hidden');
+            console.log('Showing pending-view'); // Debug
+        }
+        loadSettings(); // Charger le lien WhatsApp existant
     } else if (view === 'history') {
-        document.getElementById('history-view').classList.remove('hidden');
+        const historyView = document.getElementById('history-view');
+        if (historyView) {
+            historyView.classList.remove('hidden');
+            console.log('Showing history-view'); // Debug
+        }
         displayHistory();
     } else if (view === 'settings') {
-        document.getElementById('settings-view').classList.remove('hidden');
+        const settingsView = document.getElementById('settings-view');
+        if (settingsView) {
+            settingsView.classList.remove('hidden');
+            console.log('Showing settings-view'); // Debug
+        }
         loadSettings();
     } else if (view === 'announcements') {
-        document.getElementById('announcements-view').classList.remove('hidden');
+        const announcementsView = document.getElementById('announcements-view');
+        if (announcementsView) {
+            announcementsView.classList.remove('hidden');
+            console.log('Showing announcements-view'); // Debug
+        }
         if (typeof loadDelegateHistory === 'function') loadDelegateHistory();
     } else if (view === 'validations') {
         const validationsView = document.getElementById('validations-view');
         if (validationsView) {
             validationsView.classList.remove('hidden');
+            console.log('Showing validations-view'); // Debug
             displayDelegateValidations();
+        }
+    } else if (view === 'my-class') {
+        const myClassView = document.getElementById('my-class-view');
+        if (myClassView) {
+            myClassView.classList.remove('hidden');
+            console.log('Showing my-class-view'); // Debug
+            if (typeof loadMyClass === 'function') loadMyClass();
         }
     }
 }
+
 
 // ---- ANNOUNCEMENT FUNCTIONS ----
 
@@ -363,7 +383,13 @@ async function loadSettings() {
         const doc = await filieresRef.doc(delegateFiliereId).get();
         if (doc.exists) {
             const data = doc.data();
-            document.getElementById('setting-whatsapp').value = data.whatsappLink || '';
+            const link = data.whatsappLink || '';
+
+            const input1 = document.getElementById('setting-whatsapp');
+            if (input1) input1.value = link;
+
+            const input2 = document.getElementById('setting-whatsapp-2');
+            if (input2) input2.value = link;
         }
     } catch (error) {
         console.error('Erreur chargement paramètres:', error);
@@ -375,13 +401,27 @@ async function updateFiliereSettings(e) {
     e.preventDefault();
     if (!delegateFiliereId) return;
 
-    const whatsappLink = document.getElementById('setting-whatsapp').value;
+    // Déterminer quel input a été utilisé
+    let whatsappLink = '';
+    if (e.target.id === 'whatsapp-link-form') {
+        whatsappLink = document.getElementById('setting-whatsapp').value;
+    } else {
+        whatsappLink = document.getElementById('setting-whatsapp-2').value;
+    }
 
     try {
         await filieresRef.doc(delegateFiliereId).update({
             whatsappLink: whatsappLink,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        // Mettre à jour l'autre input pour la cohérence
+        const input1 = document.getElementById('setting-whatsapp');
+        if (input1) input1.value = whatsappLink;
+
+        const input2 = document.getElementById('setting-whatsapp-2');
+        if (input2) input2.value = whatsappLink;
+
         showSuccess('delegate-message', 'Lien WhatsApp mis à jour avec succès !');
     } catch (error) {
         console.error('Erreur mise à jour paramètres:', error);
@@ -497,12 +537,19 @@ async function runAIAnalysis(requestId, motivation, containerId) {
 
 // Charger le badge de validations
 async function loadValidationsBadge() {
-    if (!currentUser || !currentUser.filiere) return;
+    if (!delegateFiliereId) return;
 
     try {
+        // Récupérer le nom de la filière
+        const filiereDoc = await filieresRef.doc(delegateFiliereId).get();
+        if (!filiereDoc.exists) return;
+
+        const filiereName = filiereDoc.data().name;
+
+        // Compter les étudiants non approuvés
         const snapshot = await usersRef
             .where('role', '==', 'student')
-            .where('filiere', '==', currentUser.filiere)
+            .where('filiere', '==', filiereName)
             .where('isApproved', '==', false)
             .get();
 
@@ -525,17 +572,27 @@ async function loadValidationsBadge() {
 async function displayDelegateValidations() {
     const container = document.getElementById('validation-list');
 
-    if (!currentUser || !currentUser.filiere) {
-        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Erreur: Filière non définie</p></div>';
+    if (!delegateFiliereId) {
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">⚠️ Aucune filière assignée. Contactez l\'administration.</p></div>';
         return;
     }
 
     container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Chargement...</p></div>';
 
     try {
+        // Récupérer le nom de la filière
+        const filiereDoc = await filieresRef.doc(delegateFiliereId).get();
+        if (!filiereDoc.exists) {
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">❌ Filière non trouvée</p></div>';
+            return;
+        }
+
+        const filiereName = filiereDoc.data().name;
+
+        // Chercher les étudiants non approuvés de cette filière
         const snapshot = await usersRef
             .where('role', '==', 'student')
-            .where('filiere', '==', currentUser.filiere)
+            .where('filiere', '==', filiereName)
             .where('isApproved', '==', false)
             .get();
 
@@ -544,45 +601,56 @@ async function displayDelegateValidations() {
             return;
         }
 
-        let html = '';
+        let html = '<div class="student-grid">';
         snapshot.forEach(doc => {
             const student = doc.data();
+            const photoUrl = student.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.fullName) + '&background=random&color=fff';
             const createdDate = student.createdAt ? new Date(student.createdAt.toDate()).toLocaleDateString('fr-FR', {
                 day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            }) : 'Date inconnue';
+                month: 'long'
+            }) : 'Récemment';
 
             html += `
-                <div class="card">
-                    <div style="margin-bottom: var(--spacing-md);">
-                        <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-xs);">${student.fullName}</h3>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                <div class="student-card">
+                    <span class="status-badge status-pending">En attente</span>
+                    <div class="student-header">
+                        <img src="${photoUrl}" alt="${student.fullName}" class="student-avatar">
+                        <div class="student-info">
+                            <h4>${student.fullName}</h4>
                             <p>📧 ${student.email}</p>
                             <p>📱 ${student.phone || 'Non renseigné'}</p>
-                            <p>📚 Niveau: ${student.niveau || 'Non spécifié'}</p>
-                            <p>🗂️ Filière: ${student.filiere}</p>
-                            <p>🕒 Inscription: ${createdDate}</p>
                         </div>
                     </div>
                     
-                    <div class="flex gap-1">
-                        <button class="btn btn-success" onclick="delegateApproveStudent('${student.uid}')" style="flex: 1;">
+                    <div class="student-details">
+                        <div class="detail-item">
+                            Niveau
+                            <span>${student.niveau || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            Demandé le
+                            <span>${createdDate}</span>
+                        </div>
+                    </div>
+
+                    <div class="student-actions">
+                        <button class="btn btn-success btn-sm" onclick="delegateApproveStudent('${student.uid}')">
                             ✓ Valider
                         </button>
-                        <button class="btn btn-danger" onclick="delegateRejectStudent('${student.uid}')" style="flex: 1;">
+                        <button class="btn btn-danger btn-sm" onclick="delegateRejectStudent('${student.uid}')">
                             ✗ Refuser
                         </button>
                     </div>
                 </div>
             `;
         });
+        html += '</div>';
 
         container.innerHTML = html;
 
     } catch (error) {
         console.error('Erreur chargement validations:', error);
-        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-error);">Erreur de chargement</p></div>';
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-error);">❌ Erreur de chargement</p></div>';
     }
 }
 
@@ -632,5 +700,84 @@ async function delegateRejectStudent(userId) {
     } catch (error) {
         console.error('Erreur refus:', error);
         showError('delegate-message', 'Erreur lors du refus: ' + error.message);
+    }
+}
+
+// Charger et afficher la liste "Ma Classe"
+async function loadMyClass() {
+    const container = document.getElementById('class-list');
+
+    if (!delegateFiliereId) {
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">⚠️ Aucune filière assignée. Contactez l\'administration.</p></div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Chargement de la liste des étudiants...</p></div>';
+
+    try {
+        // Récupérer le nom de la filière
+        const filiereDoc = await filieresRef.doc(delegateFiliereId).get();
+        if (!filiereDoc.exists) {
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">❌ Filière non trouvée</p></div>';
+            return;
+        }
+
+        const filiereName = filiereDoc.data().name;
+
+        // Chercher les étudiants approuvés de cette filière
+        let query = usersRef
+            .where('role', '==', 'student')
+            .where('filiere', '==', filiereName)
+            .where('isApproved', '==', true);
+
+        // Si le délégué a un niveau spécifique, filtrer aussi par niveau
+        if (delegateNiveau) {
+            query = query.where('niveau', '==', delegateNiveau);
+        }
+
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucun étudiant trouvé dans votre classe.</p></div>';
+            return;
+        }
+
+        let html = '<div class="student-grid">';
+        snapshot.forEach(doc => {
+            const student = doc.data();
+            const photoUrl = student.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.fullName) + '&background=random&color=fff';
+
+            html += `
+                <div class="student-card">
+                    <span class="status-badge status-approved">Inscrit</span>
+                    <div class="student-header">
+                        <img src="${photoUrl}" alt="${student.fullName}" class="student-avatar">
+                        <div class="student-info">
+                            <h4>${student.fullName}</h4>
+                            <p>📧 ${student.email}</p>
+                            <p>📱 ${student.phone || 'Non renseigné'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="student-details">
+                         <div class="detail-item">
+                            Niveau
+                            <span>${student.niveau || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            Statut
+                            <span>Actif</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Erreur chargement Ma Classe:', error);
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-error);">❌ Erreur de chargement</p></div>';
     }
 }

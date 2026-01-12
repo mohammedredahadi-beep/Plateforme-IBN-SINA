@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord Délégué - Ibn Sina</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-icon">IS</div>
+                    <span>Espace Délégué</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active" data-view="pending"
+                    onclick="handleDelegateView('pending'); return false;">
+                    📋 <span class="nav-label">Groupe WP</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="validations"
+                    onclick="handleDelegateView('validations'); return false;">
+                    🛡️ <span class="nav-label">Validations</span>
+                    <span id="sidebar-badge-validations" class="badge badge-error hidden">0</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="announcements"
+                    onclick="handleDelegateView('announcements'); return false;">
+                    📢 <span class="nav-label">Annonces</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="history"
+                    onclick="handleDelegateView('history'); return false;">
+                    📊 <span class="nav-label">Historique</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="settings"
+                    onclick="handleDelegateView('settings'); return false;">
+                    ⚙️ <span class="nav-label">Paramètres</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="notifications"
+                    onclick="handleDelegateView('notifications'); return false;">
+                    🔔 <span class="nav-label">Notifications</span>
+                    <span id="sidebar-badge-notif" class="badge badge-warning hidden">0</span>
+                </a>
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+                <button class="btn btn-secondary w-full" onclick="exportApprovedToCSV()">
+                    📥 Export CSV
+                </button>
+            </nav>
+
+            <div style="margin-top: auto; padding: 1rem 0; border-top: 1px solid var(--border);">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
+                        <div
+                            style="width: 38px; height: 38px; background: var(--bg-alt); border-radius: var(--rad-full); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary);">
+                            D
+                        </div>
+                        <div>
+                            <div id="user-name" style="font-size: 0.9rem; font-weight: 600;">Chargement...</div>
+                            <div id="delegate-filiere" style="font-size: 0.75rem; color: var(--text-dim);">Chargement...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 notification-container">
+                        <!-- Notification Bell Removed -->
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème"
+                            style="padding: 5px; border-radius: 5px; background: var(--bg-alt); border: none; cursor: pointer;">🌓</button>
+                    </div>
+                </div>
+                <button class="btn btn-secondary w-full" onclick="logout()">Déconnexion</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="flex justify-between items-center mb-2">
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Gestion Filière</h1>
+                    <p style="color: var(--text-muted);">Gérez les accès WhatsApp pour votre classe</p>
+                </div>
+                <div id="delegate-message" class="hidden"></div>
+                <script>
+                    function toggleTheme() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                    }
+                    // Init theme
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                </script>
+            </header>
+
+            <!-- Header pour les demandes (Stats + Recherche) -->
+            <div id="requests-header" class="hidden">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-total">0</span>
+                            <span class="stat-label">Total Demandes</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">⏳
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-pending">0</span>
+                            <span class="stat-label">En attente</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary);">✅
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-approved">0</span>
+                            <span class="stat-label">Approuvées</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="card" style="margin-bottom: var(--sp-md); padding: var(--sp-sm);">
+                    <div class="flex gap-1 items-center">
+                        <span style="font-size: 1.2rem;">🔍</span>
+                        <input type="text" id="search-requests" class="form-input"
+                            placeholder="Rechercher un étudiant par nom..." oninput="filterRequests()"
+                            style="margin-bottom: 0; border: none; background: transparent;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue de gestion WhatsApp -->
+            <div id="pending-view">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">💬 Lien du Groupe WhatsApp</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Configurez le lien WhatsApp de votre classe. Les étudiants validés y auront accès
+                        automatiquement.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <form id="whatsapp-link-form" onsubmit="updateFiliereSettings(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="setting-whatsapp">Lien du groupe WhatsApp *</label>
+                            <input type="url" id="setting-whatsapp" class="form-input"
+                                placeholder="https://chat.whatsapp.com/..." required>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                Ce lien sera affiché automatiquement aux étudiants validés de votre filière.
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            💾 Enregistrer le lien
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card" style="margin-top: var(--spacing-lg);">
+                    <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Information</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                        Les étudiants n'ont plus besoin de faire de demande. Une fois que vous validez leur compte dans
+                        l'onglet
+                        <strong>Validations</strong>, ils voient automatiquement le lien WhatsApp que vous avez
+                        configuré ici.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Vue de l'historique -->
+            <div id="history-view" class="hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Historique des demandes</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Consultez toutes les demandes traitées
+                    </p>
+                </div>
+
+                <div id="history-list">
+                    <div class="card text-center">
+                        <p style="color: var(--text-secondary);">Chargement...</p>
+                    </div>
+                </div>
+                <!-- Vue Validations [NEW] -->
+                <div id="validations-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">🛡️ Validation des Inscriptions
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Vous devez valider les étudiants de votre filière pour qu'ils puissent accéder à la
+                            plateforme.
+                        </p>
+                    </div>
+
+                    <div id="validation-list" class="grid grid-2">
+                        <div class="card text-center">
+                            <p style="color: var(--text-secondary);">Chargement des inscriptions en attente...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vue des paramètres -->
+                <div id="settings-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Paramètres de la filière</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Configurez les informations d'accès
+                            pour
+                            les
+                            étudiants</p>
+                    </div>
+
+                    <div class="card">
+                        <form id="settings-form" onsubmit="updateFiliereSettings(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="setting-whatsapp">Lien du groupe WhatsApp</label>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">
+                                    C'est le lien que les étudiants recevront par l'IA une fois leur PIN vérifié.
+                                </p>
+                                <input type="url" id="setting-whatsapp" class="form-input"
+                                    placeholder="https://chat.whatsapp.com/..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Vue des Communications / Messages [UPDATED] -->
+                <div id="announcements-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <div class="flex" style="justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">📢 Communication avec
+                                    les
+                                    Étudiants
+                                </h3>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem;">Envoyez des messages à votre
+                                    filière
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Form -->
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h4 style="margin-bottom: 15px;">Nouveau Message</h4>
+                        <form id="delegate-message-form" onsubmit="sendDelegateMessage(event)">
+
+
+                            <!-- Title -->
+                            <div class="form-group">
+                                <label class="form-label">Titre</label>
+                                <input type="text" id="delegate-msg-title" class="form-input"
+                                    placeholder="Ex: Changement d'emploi du temps" required>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="form-group">
+                                <label class="form-label">Message</label>
+                                <textarea id="delegate-msg-content" class="form-textarea" rows="5"
+                                    placeholder="Écrivez votre message ici..." required></textarea>
+                            </div>
+
+                            <!-- Priority -->
+                            <div class="form-group">
+                                <label class="form-label">Priorité</label>
+                                <select id="delegate-msg-priority" class="form-select">
+                                    <option value="communicative">📢 Communicatif</option>
+                                    <option value="warning">⚠️ Avertissement</option>
+                                    <option value="urgent">🚨 Urgent</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Envoyer le
+                                message</button>
+                        </form>
+                    </div>
+
+                    <!-- Message History -->
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h4 style="margin-bottom: 15px;">📋 Historique de mes messages</h4>
+                        <div id="my-announcements-list">
+                            <!-- Loaded by JS -->
+                            <div class="card text-center">
+                                <p>Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guide -->
+                    <div class="card" style="margin-top: var(--spacing-xl);">
+                        <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Guide du délégué</h4>
+                        <ul style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
+                            <li style="margin-bottom: var(--spacing-xs);"><strong>Approuver:</strong> Vous pourrez
+                                fournir
+                                un lien
+                                WhatsApp ou ajouter manuellement l'étudiant au groupe</li>
+                            <li style="margin-bottom: var(--spacing-xs);"><strong>Rejeter:</strong> Expliquez brièvement
+                                la
+                                raison
+                                du rejet à l'étudiant</li>
+                            <li style="margin-bottom: var(--spacing-xs);"><strong>Notifications:</strong> Les étudiants
+                                voient les
+                                mises à jour en temps réel</li>
+                            <li>Les coordonnées des étudiants (email, téléphone) sont disponibles pour faciliter la
+                                communication
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- Vue Notifications -->
+                <div id="notifications-view" class="tab-content hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600;">🔔 Notifications</h3>
+                        <p style="color: var(--text-secondary);">Vos messages et alertes</p>
+                    </div>
+
+                    <div id="notifications-feed">
+                        <div class="card text-center">
+                            <p style="color: var(--text-secondary);">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
+        </main>
+    </div> <!-- End Dashboard Layout -->
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+
+
+    <!-- Scripts personnalisés -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/ui-core.js"></script>
+    <script src="js/delegate.js"></script>
+    <script src="js/announcements.js"></script>
+    <script src="js/delegate-messaging.js"></script>
+    <script src="js/notifications.js?v=1.1"></script>
+    <script src="js/chatbot-ui.js"></script>
+
+    <script>
+        function handleDelegateView(view) {
+            // Mise à jour de l'UI de la Sidebar
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.toggle('active', link.dataset.view === view);
+            });
+
+            // Hide all special views
+            const notifView = document.getElementById('notifications-view');
+            if (notifView) notifView.classList.add('hidden');
+
+            if (view === 'notifications') {
+                // Hide others handled by delegate.js usually
+                // delegate.js showView logic likely handles pending/announcements/history/settings by ID
+                // we need to hide them to be safe
+                ['pending-view', 'announcements-view', 'history-view', 'settings-view'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+
+                const header = document.getElementById('requests-header');
+                if (header) header.classList.add('hidden');
+
+                if (notifView) notifView.classList.remove('hidden');
+                if (typeof initNotificationsView === 'function') initNotificationsView();
+                return;
+            }
+
+            // Appel de la fonction originale de delegate.js pour changer de vue
+            if (typeof showView === 'function') {
+                showView(view);
+            }
+        }
+    </script>
+
+
+
+
+    <script>
+        // Initialiser le tableau de bord au chargement de la page
+        window.addEventListener('DOMContentLoaded', function () {
+            initDelegateDashboard();
+            // Afficher la vue par défaut après un court délai
+            setTimeout(() => {
+                if (typeof showView === 'function') {
+                    showView('pending');
+                }
+            }, 500);
+        });
+
+    </script>
+    <script src="js/dev-switcher.js"></script>
+</body>
+
+</html>
