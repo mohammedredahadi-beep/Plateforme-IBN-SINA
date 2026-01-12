@@ -1,5 +1,54 @@
 // Gestion de l'authentification
 
+// --- DEV MODE MOCK ---
+function getDevMockProfile() {
+    if (localStorage.getItem('dev_mode_enabled') !== 'true') return null;
+    const role = localStorage.getItem('dev_mode_role');
+    let niveau = 'TC';
+    if (['alumni', 'mentor'].includes(role)) niveau = 'Lauréat';
+    if (role === 'admin') niveau = 'Administration';
+
+    return {
+        uid: 'mock-' + role,
+        fullName: 'Mode Dev (' + role.toUpperCase() + ')',
+        email: 'dev@ibnsina.test',
+        role: role === 'mentor' ? 'alumni' : role,
+        mentorStatus: role === 'mentor' ? 'approved' : 'none',
+        isApproved: true,
+        isSuspended: false,
+        niveau: niveau,
+        filiere: 'DEV'
+    };
+}
+// ----------------------
+
+// --- MONKEY PATCH FIREBASE AUTH FOR DEV MODE ---
+if (localStorage.getItem('dev_mode_enabled') === 'true') {
+    const mockRole = localStorage.getItem('dev_mode_role');
+    const mockUid = 'mock-' + mockRole;
+
+    try {
+        const mockUser = {
+            uid: mockUid,
+            email: 'dev@ibnsina.test',
+            emailVerified: true,
+            displayName: 'Mode Dev (' + mockRole.toUpperCase() + ')',
+            getIdToken: async () => 'mock-token',
+            sendEmailVerification: async () => console.log("Mock: Email verification sent")
+        };
+
+        Object.defineProperty(auth, 'currentUser', {
+            get: () => mockUser,
+            configurable: true
+        });
+
+        console.log("Dev Mode: Simulated Auth active for role " + mockRole);
+    } catch (e) {
+        console.warn("Dev Mode: Could not redefine auth.currentUser directly.", e);
+    }
+}
+// -----------------------------------------------
+
 // Fonction d'inscription
 async function signup(email, password, fullName, phone, role = 'student', niveau = null, promo = null, filiere = null) {
     try {
@@ -65,6 +114,20 @@ async function login(email, password) {
     }
 }
 
+// Fonction de réinitialisation du mot de passe
+async function resetPassword(email) {
+    try {
+        await auth.sendPasswordResetEmail(email);
+        return {
+            success: true,
+            message: 'Un email de réinitialisation a été envoyé à votre adresse. Vérifiez votre boîte de réception et vos spams.'
+        };
+    } catch (error) {
+        console.error('Erreur lors de la réinitialisation:', error);
+        return { success: false, error: error.code || error.message };
+    }
+}
+
 // Fonction de déconnexion
 async function logout() {
     try {
@@ -77,6 +140,10 @@ async function logout() {
 
 // Obtenir le profil utilisateur actuel
 async function getCurrentUserProfile() {
+    // Check Dev Mode first
+    const mockProfile = getDevMockProfile();
+    if (mockProfile) return mockProfile;
+
     const user = auth.currentUser;
     if (!user) return null;
 
@@ -94,6 +161,12 @@ async function getCurrentUserProfile() {
 
 // Vérifier l'authentification et rediriger
 async function checkAuthAndRedirect() {
+    // Check Dev Mode first
+    const mockProfile = getDevMockProfile();
+    if (mockProfile) {
+        return mockProfile;
+    }
+
     return new Promise((resolve) => {
         auth.onAuthStateChanged(async (user) => {
             if (!user) {

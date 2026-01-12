@@ -53,7 +53,23 @@ service cloud.firestore {
     // Messages / Announcements
     match /messages/{messageId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'delegate');
+      allow delete: if isAdmin();
+      // Allow users to update only the 'readBy' and 'readByWithTime' fields (to mark as read), admins can update everything
+      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy', 'readByWithTime']));
+    }
+
+    // Announcements (separate collection used by Announcements module)
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'delegate');
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+    
+    // System Configuration
+    match /system/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

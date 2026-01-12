@@ -28,6 +28,11 @@ async function initDelegateDashboard() {
 
     // Charger les statistiques
     await loadStats();
+
+    // Initialiser les notifications
+    if (typeof initNotificationSystem === 'function') {
+        initNotificationSystem();
+    }
 }
 
 /**
@@ -90,7 +95,14 @@ async function loadDelegateFiliere() {
 
 // Charger les demandes en attente
 async function loadPendingRequests() {
-    if (!delegateFiliereId) return;
+    if (!delegateFiliereId) {
+        document.getElementById('requests-list').innerHTML = `
+            <div class="card text-center">
+                <p style="color: var(--text-secondary);">En attente d'assignation à une filière...</p>
+            </div>
+        `;
+        return;
+    }
 
     try {
         // Écouter les changements en temps réel
@@ -211,7 +223,8 @@ async function loadStats() {
     document.getElementById('stat-total').textContent = total;
     document.getElementById('stat-pending').textContent = pending;
     document.getElementById('stat-approved').textContent = approved;
-    document.getElementById('stat-rejected').textContent = rejected;
+    const statRejected = document.getElementById('stat-rejected');
+    if (statRejected) statRejected.textContent = rejected;
 }
 
 // Approuver une demande avec génération de PIN sécurisé
@@ -257,10 +270,22 @@ async function rejectRequest(requestId) {
 
 // Basculer entre les vues
 function showView(view) {
+    // Masquer toutes les vues
     document.getElementById('pending-view').classList.add('hidden');
     document.getElementById('history-view').classList.add('hidden');
     document.getElementById('settings-view').classList.add('hidden');
     document.getElementById('announcements-view').classList.add('hidden');
+
+    // Gérer l'en-tête global des demandes (Stats + Recherche)
+    // Visible uniquement pour 'pending' et 'history'
+    const header = document.getElementById('requests-header');
+    if (header) {
+        if (view === 'pending' || view === 'history') {
+            header.classList.remove('hidden');
+        } else {
+            header.classList.add('hidden');
+        }
+    }
 
     if (view === 'pending') {
         document.getElementById('pending-view').classList.remove('hidden');

@@ -159,18 +159,27 @@ function openEditUserModal(userId) {
     document.getElementById('edit-user-linkedin').value = user.linkedin || '';
     document.getElementById('edit-user-bio').value = user.bio || user.parcours || '';
 
+    // Status Checkboxes
     document.getElementById('edit-user-approved').checked = user.isApproved === true;
     document.getElementById('edit-user-suspended').checked = user.isSuspended === true;
+    document.getElementById('edit-user-mentor').checked = user.mentorStatus === 'approved';
 
+    // Show/Hide Fields based on Role/Niveau
     const promoGroup = document.getElementById('edit-promo-group');
+    const bgGroup = document.getElementById('edit-user-mentor').parentElement; // Label parent
     const promoInput = document.getElementById('edit-user-promo');
 
-    if (user.niveau === 'Lauréat') {
+    // Logic: Mentor logic applies if Role is Alumni OR Niveau is Lauréat
+    const isAlumni = (user.role === 'alumni' || user.niveau === 'Lauréat');
+
+    if (isAlumni) {
         promoGroup.classList.remove('hidden');
         promoInput.value = user.promo || '';
+        if (bgGroup) bgGroup.classList.remove('hidden'); // Show Mentor checkbox
     } else {
         promoGroup.classList.add('hidden');
         promoInput.value = '';
+        if (bgGroup) bgGroup.classList.add('hidden'); // Hide Mentor checkbox
     }
 
     document.getElementById('edit-user-modal').classList.remove('hidden');
@@ -183,11 +192,17 @@ function closeEditUserModal() {
 
 // Basculer le champ promo dans le modal
 function toggleEditPromoField(val) {
+    // This is triggered by onchange of the Niveau dropdown
+    // We might need to update this logic to check Role as well if they are separate
     const promoGroup = document.getElementById('edit-promo-group');
+    const mentorCheckbox = document.getElementById('edit-user-mentor').parentElement;
+
     if (val === 'Lauréat') {
         promoGroup.classList.remove('hidden');
+        if (mentorCheckbox) mentorCheckbox.classList.remove('hidden');
     } else {
         promoGroup.classList.add('hidden');
+        if (mentorCheckbox) mentorCheckbox.classList.add('hidden');
     }
 }
 
@@ -206,6 +221,7 @@ async function updateUser(e) {
 
     const isApproved = document.getElementById('edit-user-approved').checked;
     const isSuspended = document.getElementById('edit-user-suspended').checked;
+    const isMentor = document.getElementById('edit-user-mentor').checked;
 
     try {
         const updateData = {
@@ -222,6 +238,11 @@ async function updateUser(e) {
 
         if (niveau === 'Lauréat') {
             updateData.promo = promo;
+            // Update Mentor Status based on checkbox
+            updateData.mentorStatus = isMentor ? 'approved' : 'none';
+        } else {
+            // Remove mentor status if not Alumni
+            updateData.mentorStatus = firebase.firestore.FieldValue.delete();
         }
 
         await usersRef.doc(userId).update(updateData);
@@ -230,6 +251,7 @@ async function updateUser(e) {
             name: fullName,
             role: role,
             niveau: niveau,
+            isMentor: isMentor,
             status: isSuspended ? 'Suspended' : 'Active'
         });
 
@@ -243,35 +265,137 @@ async function updateUser(e) {
     }
 }
 
-// Envoyer un message marketing/annonce
+// Track selected users for individual targeting
+let selectedIndividualUsers = [];
+
+// Search users for individual selection
+async function searchUsers(query) {
+    const resultsContainer = document.getElementById('user-search-results');
+
+    if (!query || query.length < 2) {
+        resultsContainer.classList.add('hidden');
+        return;
+    }
+
+    const searchLower = query.toLowerCase();
+    const filtered = allUsers.filter(u =>
+        u.fullName.toLowerCase().includes(searchLower) ||
+        u.email.toLowerCase().includes(searchLower)
+    ).filter(u => !selectedIndividualUsers.find(s => s.uid === u.uid)).slice(0, 10);
+
+    if (filtered.length === 0) {
+        resultsContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: var(--text-secondary);">Aucun utilisateur trouvé</div>';
+        resultsContainer.classList.remove('hidden');
+        return;
+    }
+
+    let html = '';
+    filtered.forEach(user => {
+        html += `
+            <div onclick="selectUser('${user.uid}')" 
+                style="padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s;"
+                onmouseover="this.style.background='var(--bg-secondary)'" 
+                onmouseout="this.style.background='transparent'">
+                <strong>${user.fullName}</strong>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">${user.email} • ${user.role}</div>
+            </div>
+        `;
+    });
+    resultsContainer.innerHTML = html;
+    resultsContainer.classList.remove('hidden');
+}
+
+// Select user for individual targeting
+function selectUser(userId) {
+    const user = allUsers.find(u => u.uid === userId);
+    if (!user || selectedIndividualUsers.find(s => s.uid === userId)) return;
+
+    selectedIndividualUsers.push(user);
+    renderSelectedUsers();
+
+    // Clear search
+    document.getElementById('user-search').value = '';
+    document.getElementById('user-search-results').classList.add('hidden');
+}
+
+// Remove selected user
+function removeSelectedUser(userId) {
+    selectedIndividualUsers = selectedIndividualUsers.filter(u => u.uid !== userId);
+    renderSelectedUsers();
+}
+
+// Render selected users as chips
+function renderSelectedUsers() {
+    const container = document.getElementById('selected-users');
+    if (selectedIndividualUsers.length === 0) {
+        container.innerHTML = '<small style="color: var(--text-secondary);">Aucun utilisateur sélectionné</small>';
+        return;
+    }
+
+    let html = '';
+    selectedIndividualUsers.forEach(user => {
+        html += `
+            <span class="badge" style="background: var(--primary-color); color: white; padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px;">
+                ${user.fullName}
+                <button type="button" onclick="removeSelectedUser('${user.uid}')" 
+                    style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; line-height: 1;">&times;</button>
+            </span>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Envoyer un message marketing/annonce (Enhanced)
 async function sendMarketingMessage(e) {
     e.preventDefault();
+
+    const priority = document.getElementById('msg-priority').value;
     const target = document.getElementById('msg-target').value;
     const title = document.getElementById('msg-title').value;
     const content = document.getElementById('msg-content').value;
 
-    if (!title || !content) return;
+    if (!title || !content) {
+        showError('admin-message', 'Veuillez remplir tous les champs requis.');
+        return;
+    }
+
+    if (!target && selectedIndividualUsers.length === 0) {
+        showError('admin-message', 'Veuillez sélectionner au moins un groupe ou un utilisateur.');
+        return;
+    }
 
     try {
         const messageData = {
             title: title,
             content: content,
-            target: target,
+            priority: priority, // urgent, communicative, warning
+            target: target || 'custom',
             senderId: auth.currentUser.uid,
             senderName: currentUser.fullName,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            readBy: []
+            readBy: [],
+            // Additional targeting
+            individualUserIds: selectedIndividualUsers.map(u => u.uid)
         };
 
-        // On enregistre dans une collection principale 'messages'
+        // Save to Firestore (Platform Notification)
         await db.collection('messages').add(messageData);
 
-        await logAction('SEND_MESSAGE', target, { title: title });
-        showSuccess('admin-message', 'Message envoyé avec succès !');
+        await logAction('SEND_MESSAGE', target || 'custom', {
+            title: title,
+            individualRecipients: selectedIndividualUsers.length,
+            priority: priority
+        });
+
+        showSuccess('admin-message', `Message envoyé avec succès ! (Priorité: ${priority})`);
         document.getElementById('marketing-form').reset();
+        selectedIndividualUsers = [];
+        renderSelectedUsers();
+        // Reset priority to default
+        document.getElementById('msg-priority').value = 'communicative';
     } catch (error) {
         console.error('Erreur envoi message:', error);
-        showError('admin-message', 'Erreur lors de l\'envoi du message.');
+        showError('admin-message', 'Erreur lors de l\'envoi du message: ' + error.message);
     }
 }
 
@@ -279,10 +403,12 @@ async function sendMarketingMessage(e) {
 async function initAdminDashboard() {
     currentUser = await checkAuthAndRedirect();
 
-    if (!currentUser || currentUser.role !== 'admin') {
+    const allowedRoles = ['admin'];
+    if (!currentUser || !allowedRoles.includes(currentUser.role)) {
         window.location.href = 'index.html';
         return;
     }
+
 
     // Afficher les informations de l'utilisateur
     displayUserInfo();
@@ -327,8 +453,27 @@ async function initAdminDashboard() {
         visibleLog(`Error displaying stats: ${e.message}`, 'error');
     }
 
+    // Initialiser les notifications
+    if (typeof initNotificationSystem === 'function') {
+        initNotificationSystem();
+    }
+
+    // Initialiser les graphiques du dashboard
+    if (typeof initDashboardCharts === 'function') {
+        // Wait a bit for data to load before initializing charts
+        setTimeout(() => {
+            try {
+                initDashboardCharts();
+                visibleLog("Dashboard charts initialized");
+            } catch (e) {
+                console.error("Error initializing charts:", e);
+                visibleLog(`Error initializing charts: ${e.message}`, 'error');
+            }
+        }, 1000);
+    }
+
     // Afficher la vue par défaut
-    showAdminView('filieres');
+    showAdminView('dashboard');
 
     // Gestion de la fermeture des dropdowns
     document.addEventListener('click', (e) => {
@@ -340,7 +485,8 @@ async function initAdminDashboard() {
 
 // Afficher les informations de l'utilisateur
 function displayUserInfo() {
-    document.getElementById('user-name').textContent = currentUser.fullName;
+    const el = document.getElementById('sidebar-user-name');
+    if (el && currentUser) el.textContent = currentUser.fullName;
 }
 
 // Charger toutes les filières
@@ -506,6 +652,15 @@ function displayStats() {
         if (pendingAlumniCount > 0) sidebarAlumniBadge.classList.remove('hidden');
         else sidebarAlumniBadge.classList.add('hidden');
     }
+
+    // 4. Mise à jour des graphiques si disponibles
+    if (typeof updateAllCharts === 'function' && chartsInitialized) {
+        try {
+            updateAllCharts();
+        } catch (e) {
+            console.error("Error updating charts:", e);
+        }
+    }
 }
 
 // Helper pour les dropdowns d'actions
@@ -539,13 +694,32 @@ function renderActionDropdown(items) {
     `;
 }
 
+// Gérer l'affichage du menu d'actions
+function toggleActionMenu(button, event) {
+    event.stopPropagation();
+    const menu = button.nextElementSibling;
+    const isVisible = menu.classList.contains('show');
+
+    // Fermer tous les autres menus
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+
+    if (!isVisible) {
+        menu.classList.add('show');
+    }
+}
+
+// Fermer les menus lors d'un clic ailleurs
+document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+});
+
 // Basculer entre les vues
 // Basculer entre les vues
 function showAdminView(viewId) {
     // Liste explicite de toutes les vues pour garantir qu'elles sont cachées
     const views = [
         'dashboard', 'filieres', 'users', 'events', 'requests',
-        'alumni', 'logs', 'support', 'backup', 'marketing', 'diagnostics'
+        'alumni', 'logs', 'support', 'backup', 'marketing', 'diagnostics', 'notifications'
     ];
 
     // Masquer toutes les vues
@@ -562,27 +736,43 @@ function showAdminView(viewId) {
 
     // Gestion du Header Title
     const headerTitle = document.getElementById('header-title');
-    if (viewId === 'dashboard') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Tableau de Bord</h1><p style="color: var(--text-secondary);">Gérer la plateforme Ibn Sina</p>';
-    } else if (viewId === 'filieres') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Filières</h1><p style="color: var(--text-secondary);">Gérer les départements et délégués</p>';
-    } else if (viewId === 'users') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Utilisateurs</h1><p style="color: var(--text-secondary);">Gérer les comptes étudiants et lauréats</p>';
-    } else if (viewId === 'requests') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Demandes</h1><p style="color: var(--text-secondary);">Accès aux groupes WhatsApp</p>';
-    } else if (viewId === 'events') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Événements</h1><p style="color: var(--text-secondary);">Publier des actualités</p>';
-    } else if (viewId === 'logs') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Logs Système</h1><p style="color: var(--text-secondary);">Historique des actions</p>';
-    } else if (viewId === 'diagnostics') {
-        headerTitle.innerHTML = '<h1 style="font-size: 1.8rem; font-weight: 700;">Diagnostic Système</h1><p style="color: var(--text-secondary);">Détection d\'anomalies et Maintenance IA</p>';
+    const headerSubtitle = document.getElementById('header-subtitle');
+
+    if (headerTitle) {
+        if (viewId === 'dashboard') {
+            headerTitle.textContent = 'Tableau de Bord';
+            if (headerSubtitle) headerSubtitle.textContent = 'Gérer la plateforme Ibn Sina';
+        } else if (viewId === 'filieres') {
+            headerTitle.textContent = 'Filières';
+            if (headerSubtitle) headerSubtitle.textContent = 'Gérer les départements et délégués';
+        } else if (viewId === 'users') {
+            headerTitle.textContent = 'Utilisateurs';
+            if (headerSubtitle) headerSubtitle.textContent = 'Gérer les comptes étudiants et lauréats';
+        } else if (viewId === 'requests') {
+            headerTitle.textContent = 'Demandes';
+            if (headerSubtitle) headerSubtitle.textContent = 'Accès aux groupes WhatsApp';
+        } else if (viewId === 'events') {
+            headerTitle.textContent = 'Événements';
+            if (headerSubtitle) headerSubtitle.textContent = 'Publier des actualités';
+        } else if (viewId === 'logs') {
+            headerTitle.textContent = 'Logs Système';
+            if (headerSubtitle) headerSubtitle.textContent = 'Historique des actions';
+        } else if (viewId === 'diagnostics') {
+            headerTitle.textContent = 'Diagnostic Système';
+            if (headerSubtitle) headerSubtitle.textContent = 'Détection d\'anomalies et Maintenance IA';
+        } else if (viewId === 'marketing') {
+            headerTitle.textContent = 'Communication';
+            if (headerSubtitle) headerSubtitle.textContent = 'Envoyer des messages aux utilisateurs';
+        } else if (viewId === 'notifications') {
+            headerTitle.textContent = 'Notifications';
+            if (headerSubtitle) headerSubtitle.textContent = 'Gérer les notifications push';
+        }
     }
 
     // Mettre à jour l'état actif des boutons de la sidebar
-    document.querySelectorAll('.admin-nav-item').forEach(btn => {
-        // Check if the button's onclick contains the view name
-        const onclickAttr = btn.getAttribute('onclick');
-        if (onclickAttr && onclickAttr.includes(`'${viewId}'`)) {
+    document.querySelectorAll('.sidebar-link').forEach(btn => {
+        // Check if the button's data-view matches the viewId
+        if (btn.dataset.view === viewId) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
@@ -595,6 +785,8 @@ function showAdminView(viewId) {
     if (viewId === 'logs') loadLogs();
     if (viewId === 'support') loadSupportAlerts();
     if (viewId === 'events') loadAdminEvents();
+    if (viewId === 'events') loadAdminEvents();
+    if (viewId === 'notifications' && typeof initAdminNotificationsView === 'function') initAdminNotificationsView();
 }
 
 // Ajouter un événement
@@ -729,9 +921,8 @@ async function loadSupportAlerts() {
             }
 
             const dropdownActions = [];
-            if (alert.type === 'MENTOR_REQUEST') {
-                dropdownActions.push({ label: 'Approuver le Mentor', icon: '🎓', onclick: `approveMentor('${alert.userId}', '${alert.id}')` });
-            }
+            // MENTOR_REQUEST logic moved to Requests Tab
+
             dropdownActions.push({ label: 'Marquer Résolu', icon: '✓', onclick: `resolveAlert('${alert.id}')` });
             dropdownActions.push({ label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteAlert('${alert.id}')` });
 
@@ -789,6 +980,192 @@ async function deleteAlert(id) {
     }
 }
 
+// ------------------------------------------------------------------
+// GESTION AVANCÉE DES NOTIFICATIONS & CONFIGURATION (Admin Override)
+// ------------------------------------------------------------------
+
+async function initAdminNotificationsView() {
+    const container = document.getElementById('notifications-view');
+    if (!container) return;
+
+    // 1. Get Current Config
+    let currentDuration = 24;
+    try {
+        const configDoc = await db.collection('system').doc('config').get();
+        if (configDoc.exists && configDoc.data().messageDuration) {
+            currentDuration = configDoc.data().messageDuration;
+        }
+    } catch (e) {
+        console.warn("Config load error", e);
+    }
+
+    // 2. Build Admin Interface
+    container.innerHTML = `
+        <div class="grid grid-2" style="margin-bottom: 20px;">
+            <!-- Configuration Card -->
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">⚙️ Configuration Système</h3>
+                <div class="form-group">
+                    <label class="form-label">Durée de vie des messages lus (heures)</label>
+                    <div class="flex gap-1">
+                        <input type="number" id="config-duration" class="form-input" value="${currentDuration}" min="1" max="720">
+                        <button class="btn btn-primary" onclick="saveMessageConfig()">Enregistrer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Actions Card -->
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">🗑️ Nettoyage</h3>
+                <p style="margin-bottom: 15px; font-size: 0.9rem;">Supprimer définitivement tous les messages du système.</p>
+                <button class="btn btn-danger" style="background: var(--danger); color: white;" onclick="deleteAllMessages()">
+                    ⚠️ Supprimer TOUS les messages
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="card">
+            <h3 style="margin-bottom: 15px;">📨 Tous les messages système</h3>
+            <div id="admin-messages-list">
+                <div class="text-center"><div class="loading"></div></div>
+            </div>
+        </div>
+    `;
+
+    loadAdminMessagesList();
+}
+
+async function saveMessageConfig() {
+    const duration = document.getElementById('config-duration').value;
+
+    if (!duration || duration < 1) {
+        alert("Veuillez entrer une durée valide.");
+        return;
+    }
+
+    try {
+        await db.collection('system').doc('config').set({
+            messageDuration: Number(duration),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedBy: auth.currentUser.uid
+        }, { merge: true });
+
+        // Update local global config if strictly needed immediately, but reload does it
+        if (window.SYSTEM_CONFIG) window.SYSTEM_CONFIG.messageDuration = Number(duration);
+
+        alert("Configuration enregistrée avec succès !");
+    } catch (e) {
+        console.error("Save config error:", e);
+        alert("Erreur lors de l'enregistrement.");
+    }
+}
+
+async function deleteAllMessages() {
+    if (!confirm("ATTENTION: Vous êtes sur le point de supprimer TOUS les messages de la plateforme. Cette action est irréversible. Continuer ?")) {
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="deleteAllMessages()"]');
+    const originalText = btn.textContent;
+    btn.textContent = "Suppression en cours...";
+    btn.disabled = true;
+
+    try {
+        const snapshot = await db.collection('messages').get();
+        const batchSize = 400;
+        let batch = db.batch();
+        let count = 0;
+        let totalDeleted = 0;
+
+        for (const doc of snapshot.docs) {
+            batch.delete(doc.ref);
+            count++;
+            if (count >= batchSize) {
+                await batch.commit();
+                batch = db.batch();
+                totalDeleted += count;
+                count = 0;
+            }
+        }
+        if (count > 0) {
+            await batch.commit();
+            totalDeleted += count;
+        }
+
+        alert(`${totalDeleted} messages supprimés.`);
+        loadAdminMessagesList();
+    } catch (e) {
+        console.error("Delete all error:", e);
+        alert("Erreur lors de la suppression massive.");
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function loadAdminMessagesList() {
+    const container = document.getElementById('admin-messages-list');
+
+    try {
+        const snapshot = await db.collection('messages').orderBy('createdAt', 'desc').limit(50).get();
+
+        if (snapshot.empty) {
+            container.innerHTML = '<p class="text-center text-secondary">Aucun message dans le système.</p>';
+            return;
+        }
+
+        let html = '<div class="table-container"><table class="table">';
+        html += '<thead><tr><th>Titre</th><th>Envoyé par</th><th>Vues</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString() : '-';
+            const readCount = data.readBy ? data.readBy.length : 0;
+
+            html += `
+                <tr>
+                    <td><strong>${data.title}</strong><br><small class="text-secondary">${data.content.substring(0, 30)}...</small></td>
+                    <td>${data.senderName || '?'}</td>
+                    <td>${readCount}</td>
+                    <td>${date}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-small" onclick="deleteMessage('${doc.id}')" style="color: var(--danger); padding: 5px 10px;">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+
+    } catch (e) {
+        container.innerHTML = `<p class="text-error">Erreur chargement: ${e.message}</p>`;
+    }
+}
+
+async function deleteMessage(id) {
+    if (!confirm("Supprimer ce message ?")) return;
+    try {
+        await db.collection('messages').doc(id).delete();
+        loadAdminMessagesList(); // Reload list
+    } catch (e) {
+        alert("Erreur suppression: " + e.message);
+    }
+}
+
+// Override initNotificationsView for Admin context (called by showAdminView)
+// But wait, showAdminView calls initNotificationsView. We should rename this or change the call in showAdminView.
+// Since we can't easily jump to showAdminView in this Tool call without replacing the whole file,
+// we will export initAdminNotificationsView and I will do a second pass to update showAdminView logic if needed
+// OR I can overwrite `initNotificationsView` specifically for the admin scope if this file loads AFTER notifications.js?
+// Safer: I will update the `showAdminView` function in the file to call `initAdminNotificationsView` appropriately.
+
+window.initAdminNotificationsView = initAdminNotificationsView;
+window.saveMessageConfig = saveMessageConfig;
+window.deleteAllMessages = deleteAllMessages;
+window.deleteMessage = deleteMessage;
+
+
 // Afficher tous les utilisateurs
 // Afficher tous les utilisateurs avec recherche
 function displayUsers() {
@@ -831,6 +1208,11 @@ function displayUsers() {
             ? `🎓 Lauréat (${user.promo || '?'})`
             : user.niveau || 'N/A';
 
+        // Add Mentor Badge if applicable
+        const mentorBadge = (user.niveau === 'Lauréat' && user.mentorStatus === 'approved')
+            ? '<span class="badge" style="background:gold; color:black; margin-left:5px;">🏅 Mentor</span>'
+            : '';
+
         const dropdownActions = [
             { label: 'Modifier Infos', icon: '📝', onclick: `openEditUserModal('${user.uid}')` }
         ];
@@ -855,7 +1237,7 @@ function displayUsers() {
             <tr class="fade-in">
                 <td><strong>${user.fullName}</strong></td>
                 <td style="font-size: 0.85rem;">${user.email}</td>
-                <td><span class="badge" style="background: rgba(0,0,0,0.05); color: var(--text-main);">${displayNiveau}</span></td>
+                <td><span class="badge" style="background: rgba(0,0,0,0.05); color: var(--text-main);">${displayNiveau}</span>${mentorBadge}</td>
                 <td>${roleBadge}</td>
                 <td>${renderActionDropdown(dropdownActions)}</td>
             </tr>
@@ -876,12 +1258,19 @@ async function displayAllRequests() {
     }
 
     let html = '<div class="table-container"><table class="table">';
-    html += '<thead><tr><th>Étudiant</th><th>Filière</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+    html += '<thead><tr><th>Utilisateur</th><th>Type / Filière</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
 
     for (const request of allRequests) {
+        let reqType = 'Étudiant';
         let filiereName = 'N/A';
-        const filiere = allFilieres.find(f => f.id === request.filiereId);
-        if (filiere) filiereName = filiere.name;
+
+        if (request.type === 'MENTOR_REQUEST') {
+            reqType = '<span class="badge" style="background: var(--accent-color); color: white;">MENTORAT</span>';
+            filiereName = 'Demande Mentor';
+        } else {
+            const filiere = allFilieres.find(f => f.id === request.filiereId);
+            if (filiere) filiereName = filiere.name;
+        }
 
         const statusBadge =
             request.status === 'pending' ? '<span class="badge badge-pending">En attente</span>' :
@@ -892,14 +1281,21 @@ async function displayAllRequests() {
 
         const dropdownActions = [];
         if (request.status === 'pending') {
-            dropdownActions.push({ label: 'Approuver', icon: '✓', onclick: `adminApproveRequest('${request.id}')` });
-            dropdownActions.push({ label: 'Rejeter', icon: '✗', class: 'danger', onclick: `adminRejectRequest('${request.id}')` });
+            if (request.type === 'MENTOR_REQUEST') {
+                dropdownActions.push({ label: 'Valider Mentor', icon: '🎓', onclick: `approveMentorFromRequest('${request.id}', '${request.userId}')` });
+                dropdownActions.push({ label: 'Rejeter', icon: '✗', class: 'danger', onclick: `adminRejectRequest('${request.id}')` });
+            } else {
+                dropdownActions.push({ label: 'Approuver', icon: '✓', onclick: `adminApproveRequest('${request.id}')` });
+                dropdownActions.push({ label: 'Rejeter', icon: '✗', class: 'danger', onclick: `adminRejectRequest('${request.id}')` });
+            }
         }
 
         html += `
             <tr>
                 <td><strong>${request.userName}</strong></td>
-                <td>${filiereName}</td>
+                <td>
+                    ${request.type === 'MENTOR_REQUEST' ? reqType : filiereName}
+                </td>
                 <td>${statusBadge}</td>
                 <td>${date}</td>
                 <td>${renderActionDropdown(dropdownActions)}</td>
@@ -1151,6 +1547,35 @@ async function adminRejectRequest(requestId) {
     } catch (error) {
         console.error('Erreur Admin Rejet:', error);
         showError('admin-message', 'Erreur lors du rejet Admin.');
+    }
+}
+
+// Approuver un Mentor depuis l'onglet Demandes
+async function approveMentorFromRequest(requestId, userId) {
+    if (!confirm('Voulez-vous approuver ce lauréat en tant que Mentor officiel et clore la demande ?')) return;
+
+    try {
+        // 1. Mettre à jour l'utilisateur
+        await usersRef.doc(userId).update({
+            mentorStatus: 'approved',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Mettre à jour la demande comme "approved"
+        await requestsRef.doc(requestId).update({
+            status: 'approved',
+            processedBy: auth.currentUser.uid,
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await logAction('APPROVE_MENTOR_REQUEST', requestId, { userId: userId });
+
+        showSuccess('admin-message', 'Mentor approuvé et demande clôturée avec succès !');
+        loadAllRequests(); // Recharger la liste
+    } catch (error) {
+        console.error('Erreur approbation mentor (Request):', error);
+        showError('admin-message', 'Erreur lors de l\'approbation.');
     }
 }
 

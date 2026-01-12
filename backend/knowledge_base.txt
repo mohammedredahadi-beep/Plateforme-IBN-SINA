@@ -1,0 +1,64 @@
+
+GUIDE UTILISATEUR - PLATEFORME IBN SINA
+
+ROLE: ÉTUDIANT
+1. Inscription et Connexion:
+- Utilisez l'onglet "Inscription" pour créer un compte avec Email, Mot de passe, Filière et Niveau.
+- Une vérification email est requise.
+- Connectez-vous ensuite pour accéder au tableau de bord.
+
+2. Rejoindre un Groupe WhatsApp:
+- Allez dans l'onglet "Ma Demande".
+- Soumettez une demande (Filière et Niveau sont automatiques).
+- Attendez l'approbation du Délégué.
+- Une fois approuvé, le délégué génère un Code PIN.
+- Vous recevez ce PIN par Email ou Notification.
+- Entrez le PIN dans "Validation PIN".
+- Le lien du groupe WhatsApp s'affiche.
+
+3. Fonctionnalités:
+- Historique des demandes.
+- Profil personnel modifiable.
+- Espace Lauréat (si applicable) pour le mentorat.
+
+ROLE: DÉLÉGUÉ
+1. Gestion des Demandes:
+- Accédez à l'onglet "Gestion des Demandes".
+- Voir les demandes en attente (Email, Message).
+- Cliquez sur "Détails" pour examiner.
+
+2. Approbation:
+- Cliquez sur "Approuver".
+- Le système génère automatiquement un PIN unique.
+- Le PIN est envoyé à l'étudiant.
+
+3. Rejet:
+- Cliquez sur "Rejeter" en fournissant une raison (ex: Groupe complet).
+
+4. Export:
+- Possibilité d'exporter la liste des membres approuvés en CSV/Excel.
+
+5. Responsabilités:
+- Gérer le lien du groupe WhatsApp.
+- Modérer les demandes sous 48h.
+
+ROLE: ADMINISTRATEUR
+1. Gestion Globale:
+- Vue d'ensemble des statistiques (KPIs).
+- Gestion des Filières (Créer, Modifier, Supprimer).
+- Gestion des Utilisateurs (Promouvoir Délégué, Suspendre, Valider Lauréat).
+
+2. Gestion des Demandes:
+- Vue de toutes les demandes de la plateforme.
+- Possibilité d'intervenir (Approuver/Rejeter) au nom d'un délégué en cas de blocage.
+- Gestion des demandes de Mentorat (Validation des profils alumni).
+
+3. Système:
+- Journaux d'activité (Logs).
+- Alertes de support et maintenance.
+- Sauvegarde et Restauration des données (JSON).
+
+FONCTIONNALITÉS GÉNÉRALES
+- Chatbot IA (Gemini): Assistant virtuel pour aider à la navigation et répondre aux questions.
+- Mode Sombre/Clair.
+- Système de Notifications temps réel.

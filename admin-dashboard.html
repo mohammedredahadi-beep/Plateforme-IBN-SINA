@@ -9,114 +9,212 @@
 </head>
 
 <body>
-    <!-- Layout Admin avec Sidebar -->
-    <div class="admin-layout">
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle menu">
+            ☰
+        </button>
 
         <!-- Sidebar -->
-        <aside class="admin-sidebar">
-            <div class="admin-sidebar-header">
-                <a href="#" class="admin-logo">
-                    <div class="admin-logo-icon">IS</div>
+        <aside class="sidebar" id="admin-sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-icon">IS</div>
                     <span>Admin Panel</span>
                 </a>
             </div>
 
-            <nav class="admin-nav">
-                <button class="admin-nav-item active" data-view="filieres" onclick="showAdminView('filieres')">
-                    <span class="icon">📚</span> Filières
-                </button>
-                <button class="admin-nav-item" data-view="users" onclick="showAdminView('users')">
-                    <span class="icon">👥</span> Utilisateurs
-                </button>
-                <button class="admin-nav-item" data-view="events" onclick="showAdminView('events')">
-                    <span class="icon">📅</span> Événements
-                </button>
-                <button class="admin-nav-item" data-view="requests" onclick="showAdminView('requests')">
-                    <span class="icon">📋</span> Demandes <span id="sidebar-badge-requests"
-                        class="badge badge-pending hidden">0</span>
-                </button>
-                <button class="admin-nav-item" data-view="alumni" onclick="showAdminView('alumni')">
-                    <span class="icon">🎓</span> Lauréats <span id="sidebar-badge-alumni"
-                        class="badge badge-warning hidden">0</span>
-                </button>
-                <button class="admin-nav-item" data-view="marketing" onclick="showAdminView('marketing')">
-                    <span class="icon">📢</span> Communication
-                </button>
-                <button class="admin-nav-item" data-view="logs" onclick="showAdminView('logs')">
-                    <span class="icon">📜</span> Audit
-                </button>
-                <button class="admin-nav-item" data-view="support" onclick="showAdminView('support')">
-                    <span class="icon">🚨</span> Alertes
-                </button>
-                <button class="admin-nav-item" data-view="backup" onclick="showAdminView('backup')">
-                    <span class="icon">💾</span> Sauvegarde
-                </button>
-                <button class="admin-nav-item" data-view="diagnostics" onclick="showAdminView('diagnostics')">
-                    <span class="icon">🩺</span> Diagnostic <span class="badge"
-                        style="background: var(--accent-color); font-size: 0.6em; margin-left: 5px;">AI</span>
-                </button>
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active" data-view="dashboard" onclick="showAdminView('dashboard')">
+                    🏠 <span class="nav-label">Tableau de bord</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="filieres" onclick="showAdminView('filieres')">
+                    📚 <span class="nav-label">Filières</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="users" onclick="showAdminView('users')">
+                    👥 <span class="nav-label">Utilisateurs</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="events" onclick="showAdminView('events')">
+                    📅 <span class="nav-label">Événements</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="requests" onclick="showAdminView('requests')">
+                    📋 <span class="nav-label">Demandes</span>
+                    <span id="sidebar-badge-requests" class="badge badge-pending hidden">0</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="alumni" onclick="showAdminView('alumni')">
+                    🎓 <span class="nav-label">Lauréats</span>
+                    <span id="sidebar-badge-alumni" class="badge badge-warning hidden">0</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="marketing" onclick="showAdminView('marketing')">
+                    📢 <span class="nav-label">Communication</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="notifications" onclick="showAdminView('notifications')">
+                    🔔 <span class="nav-label">Notifications</span>
+                </a>
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+                <a href="#" class="sidebar-link" data-view="logs" onclick="showAdminView('logs')">
+                    📜 <span class="nav-label">Audit</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="support" onclick="showAdminView('support')">
+                    🚨 <span class="nav-label">Alertes Chatbot</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="backup" onclick="showAdminView('backup')">
+                    💾 <span class="nav-label">Sauvegarde</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="diagnostics" onclick="showAdminView('diagnostics')">
+                    🩺 <span class="nav-label">Diagnostic AI</span>
+                </a>
             </nav>
 
-            <div style="padding: 20px; border-top: 1px solid var(--border-color);">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <div
-                        style="width: 30px; height: 30px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary-color);">
-                        A
+            <div style="margin-top: auto; padding: 1rem 0; border-top: 1px solid var(--border);">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
+                        <div
+                            style="width: 38px; height: 38px; background: var(--bg-alt); border-radius: var(--rad-full); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary);">
+                            A
+                        </div>
+                        <div>
+                            <div id="sidebar-user-name" style="font-size: 0.9rem; font-weight: 600;">Admin</div>
+                            <div style="font-size: 0.75rem; color: var(--text-dim);">Administrateur</div>
+                        </div>
                     </div>
-                    <div style="overflow: hidden;">
-                        <div id="sidebar-user-name"
-                            style="font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            Admin</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrateur</div>
+                    <div class="flex gap-1 notification-container">
+                        <!-- Notification Bell moved to Sidebar Tab -->
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème"
+                            style="padding: 5px; border-radius: 5px; background: var(--bg-alt); border: none; cursor: pointer;">🌓</button>
                     </div>
                 </div>
-                <button class="btn btn-secondary btn-small" style="width: 100%; justify-content: center;"
-                    onclick="logout()">
-                    Déconnexion
-                </button>
+                <button class="btn btn-secondary w-full" onclick="logout()">Déconnexion</button>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="admin-main">
-            <!-- Header Mobile / Title -->
-            <div class="admin-header">
+        <main class="main-content">
+            <header class="flex justify-between items-center mb-2">
                 <div>
-                    <h2 style="font-size: 1.8rem; font-weight: 700;">Tableau de Bord</h2>
-                    <p style="color: var(--text-secondary);">Gérer la plateforme Ibn Sina</p>
+                    <h1 id="header-title" style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Général
+                    </h1>
+                    <p id="header-subtitle" style="color: var(--text-muted);">Gestion de la plateforme Ibn Sina</p>
                 </div>
-                <div id="admin-message"></div>
-            </div>
+                <div id="admin-message" class="hidden"></div>
+                <script>
+                    function toggleTheme() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                    }
+                    // Init theme
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
 
-            <!-- Statistiques globales KPI -->
-            <div class="kpi-grid" style="margin-bottom: 30px;">
-                <div class="kpi-card">
-                    <div class="kpi-icon">👥</div>
-                    <div class="kpi-value" id="stat-users">0</div>
-                    <div class="kpi-label">Utilisateurs</div>
+                    // Mobile sidebar toggle
+                    function toggleMobileSidebar() {
+                        const sidebar = document.getElementById('admin-sidebar');
+                        sidebar.classList.toggle('open');
+                    }
+
+                    // Close sidebar when clicking outside on mobile
+                    document.addEventListener('click', (e) => {
+                        const sidebar = document.getElementById('admin-sidebar');
+                        const toggle = document.querySelector('.mobile-menu-toggle');
+                        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                            if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                                sidebar.classList.remove('open');
+                            }
+                        }
+                    });
+                </script>
+            </header>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-users">0</span>
+                        <span class="stat-label">Utilisateurs</span>
+                    </div>
                 </div>
-                <div class="kpi-card secondary">
-                    <div class="kpi-icon">📚</div>
-                    <div class="kpi-value" id="stat-filieres">0</div>
-                    <div class="kpi-label">Filières</div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary);">📚
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-filieres">0</span>
+                        <span class="stat-label">Filières</span>
+                    </div>
                 </div>
-                <div class="kpi-card warning">
-                    <div class="kpi-icon">📋</div>
-                    <div class="kpi-value" id="stat-requests">0</div>
-                    <div class="kpi-label">Demandes</div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">📋</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-requests">0</span>
+                        <span class="stat-label">Demandes</span>
+                    </div>
                 </div>
-                <div class="kpi-card danger">
-                    <div class="kpi-icon">⏳</div>
-                    <div class="kpi-value" id="stat-pending">0</div>
-                    <div class="kpi-label">En attente</div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">⏳</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-pending">0</span>
+                        <span class="stat-label">En attente</span>
+                    </div>
                 </div>
             </div>
 
             <!-- VIEWS CONTAINER -->
             <div id="admin-views-container">
 
+                <!-- Vue Dashboard / Accueil -->
+                <div id="dashboard-view">
+                    <!-- Dashboard Charts Section -->
+                    <div class="grid grid-3" style="margin-bottom: var(--sp-xl);">
+                        <!-- User Stats Chart -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">📈 Croissance</h3>
+                            </div>
+                            <canvas id="user-stats-chart" class="chart-canvas"></canvas>
+                        </div>
+
+                        <!-- Role Distribution Chart -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">👥 Répartition</h3>
+                            </div>
+                            <canvas id="role-dist-chart" class="chart-canvas"></canvas>
+                        </div>
+
+                        <!-- Requests Chart -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title">📋 Demandes</h3>
+                            </div>
+                            <canvas id="requests-chart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-md);">Actions rapides</h3>
+                        <div class="grid grid-4">
+                            <button class="btn btn-primary" onclick="showAdminView('filieres')">
+                                📚 Gérer Filières
+                            </button>
+                            <button class="btn btn-info" onclick="showAdminView('users')">
+                                👥 Gérer Utilisateurs
+                            </button>
+                            <button class="btn btn-success" onclick="showAdminView('events')">
+                                📅 Créer Événement
+                            </button>
+                            <button class="btn btn-warning" onclick="showAdminView('requests')">
+                                📋 Voir Demandes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Vue Gestion des filières -->
-                <div id="filieres-view">
+                <div id="filieres-view" class="hidden">
                     <!-- Formulaire d'ajout de filière -->
                     <div class="card" style="margin-bottom: var(--spacing-md);">
                         <h3 style="font-weight: 600; margin-bottom: var(--spacing-md);">Ajouter une nouvelle filière
@@ -301,17 +399,49 @@
                     </div>
 
                     <div class="card">
-                        <h4 style="margin-bottom: 15px;">Nouvelle Annonce</h4>
+                        <h4 style="margin-bottom: 15px;">Nouvelle Notification / Annonce</h4>
                         <form id="marketing-form" onsubmit="sendMarketingMessage(event)">
+                            <!-- Priority -->
                             <div class="form-group">
-                                <label class="form-label">Cible</label>
+                                <label class="form-label">Niveau de Priorité</label>
+                                <select id="msg-priority" class="form-select">
+                                    <option value="communicative">📢 Communicatif (Info)</option>
+                                    <option value="warning">⚠️ Avertissement</option>
+                                    <option value="urgent">🚨 Urgent</option>
+                                </select>
+                            </div>
+
+                            <!-- Target Group -->
+                            <div class="form-group">
+                                <label class="form-label">Groupe cible</label>
                                 <select id="msg-target" class="form-select">
+                                    <option value="">-- Aucun groupe (utilisateurs individuels uniquement) --</option>
                                     <option value="all">Tous les utilisateurs</option>
                                     <option value="students">Tous les étudiants</option>
                                     <option value="alumni">Tous les lauréats</option>
                                     <option value="delegates">Délégués uniquement</option>
                                 </select>
                             </div>
+
+                            <!-- Individual Users Selection -->
+                            <div class="form-group">
+                                <label class="form-label">Utilisateurs individuels (facultatif)</label>
+                                <div style="position: relative;">
+                                    <input type="text" id="user-search" class="form-input"
+                                        placeholder="🔍 Rechercher un utilisateur par nom ou email..."
+                                        oninput="searchUsers(this.value)">
+                                    <div id="user-search-results" class="hidden"
+                                        style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; z-index: 10; box-shadow: var(--shadow-md);">
+                                    </div>
+                                </div>
+                                <div id="selected-users" class="flex gap-1" style="margin-top: 10px; flex-wrap: wrap;">
+                                    <!-- Selected user chips will appear here -->
+                                </div>
+                                <small style="color: var(--text-secondary);">Ces utilisateurs recevront le message EN
+                                    PLUS du groupe sélectionné</small>
+                            </div>
+
+                            <!-- Title -->
                             <div class="form-group">
                                 <label class="form-label">Titre / Sujet</label>
                                 <input type="text" id="msg-title" class="form-input"
@@ -322,7 +452,7 @@
                                 <textarea id="msg-content" class="form-textarea" placeholder="Votre message..."
                                     required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">📨 Envoyer le message</button>
+                            <button type="submit" class="btn btn-primary">📨 Envoyer</button>
                         </form>
                     </div>
                 </div>
@@ -405,6 +535,48 @@
                             <div id="import-status" class="hidden" style="margin-top: 10px; font-size: 0.85rem;"></div>
                         </div>
                     </div>
+                </div> <!-- End Backup View -->
+
+                <!-- Vue Diagnostic Système [NEW] -->
+                <div id="diagnostics-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <div class="flex" style="justify-content: space-between; align-items: center;">
+                            <h3 style="font-weight: 600;">🩺 Diagnostic & Maintenance IA</h3>
+                            <span id="diag-status-text" style="font-size: 0.85rem; color: var(--text-secondary);">Prêt
+                                pour
+                                l'analyse...</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Analysez
+                            l'intégrité des données et optimisez la plateforme.</p>
+                        <div class="flex gap-1" style="margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="runDiagnostics('quick')">Analyse
+                                Rapide</button>
+                            <button class="btn btn-secondary" onclick="runDiagnostics('full')">Analyse Approfondie
+                                (AI)</button>
+                            <button class="btn btn-small" onclick="clearDiagnostics()">Effacer</button>
+                        </div>
+                    </div>
+
+                    <div id="diag-results">
+                        <div class="card text-center" style="padding: 40px;">
+                            <p style="color: var(--text-secondary);">En attente de lancement du diagnostic...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vue Notifications [NEW] -->
+                <div id="notifications-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">🔔 Centre de Notifications</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Historique de vos alertes et
+                            messages.</p>
+                    </div>
+
+                    <div id="notifications-feed">
+                        <div class="card text-center">
+                            <p style="color: var(--text-secondary);">Chargement...</p>
+                        </div>
+                    </div>
                 </div>
 
             </div> <!-- End Views Container -->
@@ -419,12 +591,19 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
+    <!-- Chart.js for Dashboard Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
     <!-- Scripts personnalisés -->
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/ui-core.js"></script>
+    <!-- Core JS -->
     <script src="js/admin.js"></script>
+    <script src="js/charts.js"></script>
     <script src="js/diagnostics.js"></script>
     <script src="js/ai.js"></script>
+    <script src="js/notifications.js?v=1.1"></script>
     <script src="js/chatbot-ui.js"></script>
 
     <!-- Modal d'édition d'utilisateur -->
@@ -448,6 +627,7 @@
                         <select id="edit-user-role" class="form-select" required>
                             <option value="student">Étudiant</option>
                             <option value="delegate">Délégué</option>
+                            <option value="alumni">Lauréat</option>
                             <option value="admin">Administrateur</option>
                         </select>
                     </div>
@@ -502,6 +682,10 @@
                             <span>Compte Approuvé</span>
                         </label>
                         <label class="flex gap-1" style="align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="edit-user-mentor">
+                            <span>🏅 Mentor Officiel</span>
+                        </label>
+                        <label class="flex gap-1" style="align-items: center; cursor: pointer;">
                             <input type="checkbox" id="edit-user-suspended">
                             <span style="color: var(--danger-color);">Suspendu</span>
                         </label>
@@ -517,43 +701,6 @@
         </div>
     </div>
 
-    <style>
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-content {
-            width: 100%;
-            max-width: 500px;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-    </style>
 
 
 
@@ -577,6 +724,7 @@
 
 
     </script>
+    <script src="js/dev-switcher.js"></script>
 </body>
 
 </html>

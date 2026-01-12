@@ -1,21 +1,25 @@
-﻿# Firebase
-.firebase/
-.firebaserc
-firebase.json
-firebase-debug.log
+﻿# Backups et fichiers temporaires
+BACKUP_*
+RESTORE_*.md
+*.tmp
+*.temp
+*.log
 
-# Système
-node_modules/
-dist/
-.env
+# Fichiers système et IDE
 .DS_Store
 Thumbs.db
-
-# IDE
 .vscode/
 .idea/
 *.swp
-*.swo
 
-# Logs
-*.log
+# Dépendances et build (si futur ajout de npm)
+node_modules/
+dist/
+build/
+
+# Fichiers de configuration locale (si présents)
+.env
+.env.local
+
+# Dossier Artifacts IA
+.gemini/

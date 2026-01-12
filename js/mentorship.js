@@ -105,10 +105,20 @@ function displayMentors(mentors) {
                     "${bio}"
                 </div>
                 
-                <div class="mentor-actions">
-                    <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="contactMentor('${mentor.email}', '${name.replace(/'/g, "\\'")}')">
-                        📧 Contacter
+                <div class="mentor-actions" style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" style="flex: 1; justify-content: center;" onclick="contactMentor('${mentor.email}', '${name.replace(/'/g, "\\'")}')">
+                        📧 Email
                     </button>
+                    
+                    ${(mentor.whatsapp || mentor.phone) ? `
+                    <button class="btn btn-whatsapp" style="width: 40px; display: flex; align-items: center; justify-content: center;" onclick="window.open('https://wa.me/${(mentor.whatsapp || mentor.phone).replace(/\D/g, '')}?text=Bonjour ${name}, je suis étudiant à Ibn Sina...', '_blank')" title="WhatsApp">
+                        📱
+                    </button>` : ''}
+
+                    ${mentor.linkedin ? `
+                    <button class="btn btn-linkedin" style="width: 40px; display: flex; align-items: center; justify-content: center;" onclick="window.open('${mentor.linkedin}', '_blank')" title="LinkedIn">
+                        👔
+                    </button>` : ''}
                 </div>
             </div>
         `;

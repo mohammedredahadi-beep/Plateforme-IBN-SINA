@@ -7,22 +7,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await checkAuthAndRedirect();
 
     // Sécurité supplémentaire : vérifier le rôle
-    if (currentUser && currentUser.role !== 'alumni') {
+    const allowedRoles = ['alumni'];
+    if (currentUser && !allowedRoles.includes(currentUser.role)) {
         redirectByRole(currentUser.role);
         return;
     }
 
     if (currentUser) {
+        setupRoleSpecificUI();
         displayAlumniInfo();
         loadDashboardEventsPreview();
         updateMentorStatusDisplay();
 
         // Initialiser les notifications
-        if (typeof initNotifications === 'function') {
-            initNotifications();
+        if (typeof initNotificationSystem === 'function') {
+            initNotificationSystem();
         }
     }
 });
+
+/**
+ * Ajuste l'interface selon le rôle spécifique (Alumni, Mentor, Bureau)
+ */
+function setupRoleSpecificUI() {
+    const tabMentor = document.getElementById('tab-mentor');
+
+    if (currentUser.mentorStatus === 'approved') {
+        if (tabMentor) tabMentor.textContent = '👨‍🏫 Mon Mentorat';
+    }
+}
 
 // Afficher les infos du lauréat
 function displayAlumniInfo() {
@@ -103,7 +116,7 @@ async function saveAlumniProfile() {
 
 // Basculer entre les vues
 async function showAlumniView(view) {
-    const views = ['dashboard', 'events', 'mentor', 'profile', 'directory'];
+    const views = ['dashboard', 'events', 'mentor', 'profile', 'directory', 'notifications'];
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
         if (el) el.classList.add('hidden');
@@ -123,11 +136,108 @@ async function showAlumniView(view) {
     if (activeView) activeView.classList.remove('hidden');
 
     if (view === 'events') loadEvents('events-list');
-    if (view === 'mentor') updateMentorStatusDisplay();
+    if (view === 'mentor') {
+        if (currentUser.mentorStatus === 'approved') {
+            document.getElementById('mentor-request-section').classList.add('hidden');
+            document.getElementById('mentor-active-dashboard').classList.remove('hidden');
+            loadMentorDashboardData();
+        } else {
+            document.getElementById('mentor-request-section').classList.remove('hidden');
+            document.getElementById('mentor-active-dashboard').classList.add('hidden');
+            updateMentorStatusDisplay();
+        }
+    }
     if (view === 'directory' && typeof initDirectory === 'function') {
         await initDirectory();
     }
 }
+
+/**
+ * Fonctions pour le rôle MENTOR
+ */
+// Charger les données du dashboard Mentor
+async function loadMentorDashboardData() {
+    console.log("Loading Mentor Data...");
+
+    // Check Availability Toggle
+    const toggle = document.getElementById('mentor-availability-toggle');
+    if (toggle) {
+        toggle.checked = currentUser.isAvailable !== false; // Default to true
+        updateAvailabilityText(toggle.checked);
+    }
+
+    // Load Requests (Real Data Mock-up for now as we don't have the 'mentorship_requests' collection yet)
+    // In a real app, we would query: db.collection('mentorship_requests').where('mentorId', '==', currentUser.uid).where('status', '==', 'pending')
+    loadMockMentorData();
+}
+
+function updateAvailabilityText(isAvailable) {
+    const text = document.getElementById('mentor-availability-text');
+    if (isAvailable) {
+        text.textContent = "Actif : Visible dans l'annuaire";
+        text.style.color = "var(--success-color)";
+    } else {
+        text.textContent = "Inactif : Masqué pour le moment";
+        text.style.color = "var(--text-secondary)";
+    }
+}
+
+async function toggleMentorAvailability() {
+    const toggle = document.getElementById('mentor-availability-toggle');
+    const isAvailable = toggle.checked;
+    updateAvailabilityText(isAvailable);
+
+    try {
+        await usersRef.doc(currentUser.uid).update({
+            isAvailable: isAvailable
+        });
+        console.log("Availability updated:", isAvailable);
+    } catch (e) {
+        console.error("Error updating availability", e);
+        // Revert UI on error
+        toggle.checked = !isAvailable;
+        updateAvailabilityText(!isAvailable);
+    }
+}
+
+// Mock Data Loader for Demonstration
+function loadMockMentorData() {
+    const requestsList = document.getElementById('mentor-requests-list');
+    const menteesList = document.getElementById('my-mentees-list');
+
+    // Simulate Requests
+    requestsList.innerHTML = `
+        <div class="card bg-tertiary fade-in" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; margin-bottom: 8px;">
+            <div>
+                <strong style="display: block;">Yassine (2BAC)</strong>
+                <small style="color: var(--text-secondary);">Souhaite des conseils pour l'ENSA.</small>
+            </div>
+            <div class="flex gap-1">
+                <button class="btn btn-success btn-small" onclick="alert('Fonctionnalité à venir: Accepter')">✅</button>
+                <button class="btn btn-danger btn-small" onclick="alert('Fonctionnalité à venir: Refuser')">❌</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('mentor-requests-count').textContent = "1 en attente";
+
+    // Simulate Active Mentee
+    menteesList.innerHTML = `
+        <div class="card" style="border: 1px solid var(--border-color);">
+            <div class="flex items-center gap-2 mb-1">
+                <div style="width: 30px; height: 30px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">S</div>
+                <div>
+                    <h4 style="font-size: 0.95rem; font-weight: 600;">Sara El Alami</h4>
+                    <span class="badge badge-approved" style="font-size: 0.7rem;">Active</span>
+                </div>
+            </div>
+            <div class="flex gap-1 mt-2">
+                <button class="btn btn-secondary btn-small w-full" onclick="window.location.href='mailto:sara@student.com'">Message</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('total-mentees-count').textContent = "1";
+}
+
 
 // Charger les événements depuis Firestore
 // Charger les événements DEPRECATED -> Uses js/events.js now
@@ -188,15 +298,15 @@ async function requestMentorRole() {
             mentorRequestDate: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Créer aussi une alerte pour l'admin
-        await db.collection('support_alerts').add({
+        // Créer une demande formelle dans la collection 'requests'
+        await db.collection('requests').add({
             userId: currentUser.uid,
             userName: currentUser.fullName,
             userRole: 'alumni',
-            message: `Demande de mentorat : Je souhaite devenir mentor pour aider les étudiants d'Ibn Sina.`,
-            status: 'new',
             type: 'MENTOR_REQUEST',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         // Mettre à jour l'objet local
@@ -229,96 +339,5 @@ function showError(id, msg) {
 }
 
 // --- Notifications System ---
-
-let allMessages = [];
-let unreadCount = 0;
-
-async function initNotifications() {
-    // Listen for messages
-    db.collection('messages')
-        .orderBy('createdAt', 'desc')
-        .limit(20) // Limit to last 20 messages
-        .onSnapshot(snapshot => {
-            allMessages = [];
-            const readMessages = JSON.parse(localStorage.getItem('readMessages') || '[]');
-            unreadCount = 0;
-
-            snapshot.forEach(doc => {
-                const msg = doc.data();
-                const isTarget = msg.target === 'all' ||
-                    msg.target === 'alumni';
-
-                if (isTarget) {
-                    msg.id = doc.id;
-                    allMessages.push(msg);
-                    if (!readMessages.includes(doc.id)) {
-                        unreadCount++;
-                    }
-                }
-            });
-
-            updateNotificationUI();
-        }, error => {
-            console.error("Erreur notifications:", error);
-        });
-}
-
-function updateNotificationUI() {
-    const badge = document.getElementById('notif-badge');
-    const list = document.getElementById('notif-list');
-
-    if (unreadCount > 0) {
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
-
-    if (allMessages.length === 0) {
-        if (list) list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Aucune notification</div>';
-        return;
-    }
-
-    let html = '';
-    const readMessages = JSON.parse(localStorage.getItem('readMessages') || '[]');
-
-    allMessages.forEach(msg => {
-        const isRead = readMessages.includes(msg.id);
-        let dateStr = 'Date inconnue';
-        if (msg.createdAt) {
-            const d = msg.createdAt.toDate();
-            dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-        }
-
-        html += `
-            <div class="notification-item" style="padding: 15px; border-bottom: 1px solid var(--border-color); background: ${!isRead ? 'rgba(37, 99, 235, 0.05)' : 'transparent'}; transition: background 0.2s;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">${msg.title || 'Message'}</div>
-                    ${!isRead ? '<span style="width: 8px; height: 8px; background: var(--primary-color); border-radius: 50%;"></span>' : ''}
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.4;">${msg.content}</div>
-                <div style="font-size: 0.75rem; color: var(--text-light); text-align: right;">${dateStr}</div>
-            </div>
-        `;
-    });
-
-    if (list) list.innerHTML = html;
-}
-
-function toggleNotifications() {
-    const panel = document.getElementById('notification-panel');
-    if (panel) {
-        panel.classList.toggle('hidden');
-    }
-}
-
-function markAllRead() {
-    const readMessages = JSON.parse(localStorage.getItem('readMessages') || '[]');
-    allMessages.forEach(msg => {
-        if (!readMessages.includes(msg.id)) {
-            readMessages.push(msg.id);
-        }
-    });
-    localStorage.setItem('readMessages', JSON.stringify(readMessages));
-    unreadCount = 0;
-    updateNotificationUI();
-}
+// La logique des notifications est gérée centralement par js/notifications.js
+// qui met à jour #notifications-feed et les badges/toasts globaux.

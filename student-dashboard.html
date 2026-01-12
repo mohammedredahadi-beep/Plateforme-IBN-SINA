@@ -9,268 +9,341 @@
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="#" class="logo">
-                <div class="logo-icon">IS</div>
-                <span>Ibn Sina</span>
-            </a>
-            <div class="nav-menu" style="align-items: center; gap: 15px;">
-                <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">🌓</button>
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-icon">IS</div>
+                    <span>Espace Étudiant</span>
+                </a>
+            </div>
 
-                <!-- Notification Bell -->
-                <div class="notification-container" style="position: relative;">
-                    <button class="btn-icon" onclick="toggleNotifications()"
-                        style="background: none; border: none; font-size: 1.2rem; cursor: pointer; position: relative;">
-                        🔔
-                        <span id="notif-badge" class="badge-dot hidden"
-                            style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: red; border-radius: 50%; border: 2px solid var(--bg-primary);"></span>
-                    </button>
-                    <!-- Dropdown Panel -->
-                    <div id="notification-panel" class="card hidden"
-                        style="position: absolute; top: 40px; right: 0; width: 320px; z-index: 1000; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid var(--border-color);">
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active nav-tab" data-view="dashboard"
+                    onclick="showStudentView('dashboard')">
+                    🏠 <span class="nav-label">Tableau de Bord</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" data-view="events" onclick="showStudentView('events')">
+                    📅 <span class="nav-label">Événements</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" data-view="mentorship" onclick="showStudentView('mentorship')">
+                    🤝 <span class="nav-label">Mentorat</span>
+                    <span class="badge"
+                        style="background: var(--accent); font-size: 0.6em; margin-left: auto;">NEW</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" data-view="directory" onclick="showStudentView('directory')">
+                    📂 <span class="nav-label">Annuaire</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" data-view="notifications"
+                    onclick="showStudentView('notifications')">
+                    🔔 <span class="nav-label">Notifications</span>
+                    <span id="sidebar-badge-notif" class="badge badge-warning hidden">0</span>
+                </a>
+            </nav>
+
+            <div style="margin-top: auto; padding: 1rem 0; border-top: 1px solid var(--border);">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
                         <div
-                            style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary); border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">Notifications</h4>
-                            <button onclick="markAllRead()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 500;">Tout
-                                lire</button>
+                            style="width: 38px; height: 38px; background: var(--bg-alt); border-radius: var(--rad-full); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary);">
+                            S
                         </div>
-                        <div id="notif-list" style="max-height: 300px; overflow-y: auto;">
-                            <div
-                                style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
-                                Aucune nouvelle notification</div>
+                        <div>
+                            <div id="user-name" style="font-size: 0.9rem; font-weight: 600;">Chargement...</div>
+                            <div style="font-size: 0.75rem; color: var(--text-dim);">Étudiant</div>
                         </div>
                     </div>
-                </div>
-
-                <span id="user-name" style="font-weight: 500;">Chargement...</span>
-                <button class="btn btn-secondary btn-small" onclick="logout()">Déconnexion</button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Contenu principal -->
-    <div class="container" style="margin-top: var(--spacing-lg);">
-        <!-- Informations de l'utilisateur -->
-        <div class="card" style="margin-bottom: var(--spacing-lg);">
-            <div class="card-header">
-                <h2 class="card-title">👋 Bienvenue !</h2>
-                <p class="card-subtitle" id="user-email">Chargement...</p>
-            </div>
-        </div>
-
-        <!-- Navigation par onglets [NEW] -->
-        <div style="margin-bottom: var(--spacing-md);">
-            <div class="flex gap-1" style="flex-wrap: wrap;">
-                <button class="btn btn-primary nav-tab" onclick="showStudentView('dashboard')">🏠 Tableau de
-                    Bord</button>
-                <button class="btn btn-secondary nav-tab" onclick="showStudentView('events')">📅 Événements</button>
-                <button class="btn btn-secondary nav-tab" onclick="showStudentView('mentorship')">🤝 Mentorat <span
-                        class="badge"
-                        style="background: var(--accent-color); font-size: 0.6em; margin-left: 5px;">NEW</span></button>
-                <button class="btn btn-secondary nav-tab" onclick="showStudentView('directory')">📂 Annuaire</button>
-            </div>
-        </div>
-
-        <div class="grid grid-2">
-            <!-- Section Annonces [NEW] -->
-            <div id="announcements-section" class="card hidden"
-                style="grid-column: span 2; border-left: 4px solid var(--primary-color);">
-                <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">📢 Annonces</h3>
-                <div id="announcements-feed">
-                    <!-- Loaded via JS -->
-                </div>
-            </div>
-            <!-- Formulaire de demande -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">📝 Nouvelle demande</h3>
-                    <p class="card-subtitle">Demandez l'accès à un groupe WhatsApp</p>
-                </div>
-
-                <div id="request-message" class="hidden"></div>
-
-                <form id="request-form" onsubmit="submitRequest(event)">
-                    <div class="form-group">
-                        <label class="form-label" for="request-filiere">Filière *</label>
-                        <select id="request-filiere" class="form-select" required>
-                            <option value="">Chargement...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="request-niveau">Niveau / Statut</label>
-                        <select id="request-niveau" class="form-select" onchange="toggleLauratView(this.value)">
-                            <option value="">-- Sélectionnez --</option>
-                            <option value="TC">Tronc Commun (TC)</option>
-                            <option value="1BAC">1ère Année Bac (1BAC)</option>
-                            <option value="2BAC">2ème Année Bac (2BAC)</option>
-                            <option value="Lauréat">Lauréat (Diplômé)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="request-phone">Numéro WhatsApp *</label>
-                        <input type="tel" id="request-phone" class="form-input" placeholder="+212 6XX XXX XXX" required>
-                        <small style="color: var(--text-secondary); font-size: 0.85rem;">
-                            Ce numéro sera partagé avec le délégué pour vous ajouter au groupe
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="request-motivation">Motivation (optionnel)</label>
-                        <textarea id="request-motivation" class="form-textarea"
-                            placeholder="Pourquoi souhaitez-vous rejoindre ce groupe ?"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <span>Soumettre la demande</span>
-                        <span class="loading hidden"></span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Mes demandes -->
-            <div>
-                <div class="card" style="margin-bottom: var(--spacing-md);">
-                    <div class="card-header">
-                        <h3 class="card-title">📋 Mes demandes</h3>
-                        <p class="card-subtitle">Suivez l'état de vos demandes</p>
+                    <div class="flex gap-1 notification-container">
+                        <!-- Notification Bell Removed -->
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème"
+                            style="padding: 5px; border-radius: 5px; background: var(--bg-alt); border: none; cursor: pointer;">🌓</button>
                     </div>
                 </div>
-
-                <div id="requests-list">
-                    <div class="card">
-                        <div class="flex flex-center">
-                            <div class="loading"></div>
-                            <span style="margin-left: var(--spacing-sm); color: var(--text-secondary);">Chargement des
-                                demandes...</span>
-                        </div>
-                    </div>
-                </div>
+                <button class="btn btn-secondary w-full" onclick="logout()">Déconnexion</button>
             </div>
-        </div>
+        </aside>
 
-        <!-- Vue Mentorat [NEW] -->
-        <div id="mentorship-view" class="tab-content hidden">
-            <div class="card"
-                style="margin-bottom: var(--spacing-md); background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
-                <h3 class="card-title" style="color: white; margin-bottom: 5px;">🤝 Connectez-vous avec nos Anciens</h3>
-                <p style="opacity: 0.9;">Bénéficiez de l'expérience des lauréats pour guider votre avenir.</p>
-            </div>
-
-            <!-- Grid des mentors -->
-            <div id="mentors-grid" class="grid grid-3" style="gap: 20px;">
-                <!-- Injecté par JS -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Vue Événements [NEW] -->
-    <div id="events-view" class="tab-content hidden">
-        <div class="card" style="margin-bottom: var(--spacing-md);">
-            <div class="flex" style="justify-content: space-between; align-items: center;">
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="flex justify-between items-center mb-2">
                 <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Bonjour ! 👋</h1>
+                    <p id="user-email" style="color: var(--text-muted);">Chargement...</p>
+                </div>
+                <script>
+                    function toggleTheme() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                    }
+                    // Init theme
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                </script>
+            </header>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="tab-content">
+                <!-- Section Annonces [NEW] -->
+                <div id="announcements-section" class="card hidden"
+                    style="margin-bottom: 20px; border-left: 4px solid var(--primary-color);">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">📢 Annonces</h3>
+                    <div id="announcements-feed">
+                        <!-- Loaded via JS -->
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <!-- Formulaire de demande -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📝 Nouvelle demande</h3>
+                            <p class="card-subtitle">Demandez l'accès à un groupe WhatsApp</p>
+                        </div>
+
+                        <div id="request-message" class="hidden"></div>
+
+                        <form id="request-form" onsubmit="submitRequest(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="request-filiere">Filière *</label>
+                                <select id="request-filiere" class="form-select" required>
+                                    <option value="">Chargement...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="request-niveau">Niveau / Statut</label>
+                                <select id="request-niveau" class="form-select" onchange="toggleLauratView(this.value)">
+                                    <option value="">-- Sélectionnez --</option>
+                                    <option value="TC">Tronc Commun (TC)</option>
+                                    <option value="1BAC">1ère Année Bac (1BAC)</option>
+                                    <option value="2BAC">2ème Année Bac (2BAC)</option>
+                                    <option value="Lauréat">Lauréat (Diplômé)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="request-phone">Numéro WhatsApp *</label>
+                                <input type="tel" id="request-phone" class="form-input" placeholder="+212 6XX XXX XXX"
+                                    required>
+                                <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    Ce numéro sera partagé avec le délégué pour vous ajouter au groupe
+                                </small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="request-motivation">Motivation (optionnel)</label>
+                                <textarea id="request-motivation" class="form-textarea"
+                                    placeholder="Pourquoi souhaitez-vous rejoindre ce groupe ?"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <span>Soumettre la demande</span>
+                                <span class="loading hidden"></span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Mes demandes -->
+                    <div>
+                        <div class="card" style="margin-bottom: var(--spacing-md);">
+                            <div class="card-header">
+                                <h3 class="card-title">📋 Mes demandes</h3>
+                                <p class="card-subtitle">Suivez l'état de vos demandes</p>
+                            </div>
+                        </div>
+
+                        <div id="requests-list">
+                            <div class="card">
+                                <div class="flex flex-center">
+                                    <div class="loading"></div>
+                                    <span
+                                        style="margin-left: var(--spacing-sm); color: var(--text-secondary);">Chargement
+                                        des
+                                        demandes...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Espace Lauréat (Section Alumni Premium) -->
+                <div id="laureat-view" class="hidden" style="margin-top: 20px;">
+                    <div class="card fade-in"
+                        style="background: var(--glass-bg); border: 2px solid var(--primary-color); position: relative; overflow: hidden; margin-bottom: var(--spacing-lg);">
+                        <div
+                            style="position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.05; transform: rotate(15deg);">
+                            🎓</div>
+                        <div class="card-header">
+                            <h2 class="card-title"
+                                style="color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+                                <span>💎 Espace Lauréat Ibn Sina</span>
+                            </h2>
+                            <p class="card-subtitle">Bienvenue dans votre espace exclusif, cher ancien.</p>
+                        </div>
+
+                        <div class="grid grid-3" style="margin-top: var(--spacing-md); gap: 15px;">
+                            <div class="card"
+                                style="padding: 15px; background: rgba(var(--primary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                                onclick="joinMentorship()">
+                                <div style="font-size: 1.5rem; margin-bottom: 10px;">🤝</div>
+                                <h4 style="font-weight: 600; font-size: 0.95rem;">Devenir Mentor</h4>
+                                <p style="font-size: 0.75rem; color: var(--text-secondary);">Accompagnez les nouveaux
+                                    étudiants.
+                                </p>
+                            </div>
+                            <div class="card"
+                                style="padding: 15px; background: rgba(var(--secondary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                                onclick="shareResources()">
+                                <div style="font-size: 1.5rem; margin-bottom: 10px;">📚</div>
+                                <h4 style="font-weight: 600; font-size: 0.95rem;">Ressources</h4>
+                                <p style="font-size: 0.75rem; color: var(--text-secondary);">Partagez vos outils &
+                                    conseils.</p>
+                            </div>
+                            <div class="card"
+                                style="padding: 15px; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
+                                onclick="window.open('https://linkedin.com', '_blank')">
+                                <div style="font-size: 1.5rem; margin-bottom: 10px;"></div>
+                                <h4 style="font-weight: 600; font-size: 0.95rem;">Opportunités</h4>
+                                <p style="font-size: 0.75rem; color: var(--text-secondary);">Publiez ou trouvez une
+                                    offre.</p>
+                            </div>
+                        </div>
+
+                        <hr
+                            style="margin: var(--spacing-lg) 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
+
+                        <!-- Réseau de ma Promotion -->
+                        <div id="promo-network-section">
+                            <h3
+                                style="font-size: 1.1rem; font-weight: 600; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: 8px;">
+                                <span>👥 Réseau de ma Promotion</span>
+                                <span id="my-promo-badge" class="badge badge-approved"
+                                    style="font-size: 0.7rem;"></span>
+                            </h3>
+                            <div id="promo-users-list" class="grid grid-3" style="gap: 15px;">
+                                <div class="card text-center" style="grid-column: span 3;">
+                                    <p style="color: var(--text-secondary);">Chargement des contacts...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aide -->
+                <div class="card" style="margin-top: var(--spacing-lg);">
+                    <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Comment ça marche ?</h4>
+                    <ol style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
+                        <li style="margin-bottom: var(--spacing-xs);">Remplissez le formulaire avec la filière qui vous
+                            intéresse</li>
+                        <li style="margin-bottom: var(--spacing-xs);">Votre demande sera automatiquement transmise au
+                            délégué de
+                            cette filière</li>
+                        <li style="margin-bottom: var(--spacing-xs);">Le délégué examinera et approuvera/rejettera votre
+                            demande
+                        </li>
+                        <li>Si approuvée, vous recevrez le lien du groupe WhatsApp ou serez ajouté directement</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Vue Notifications -->
+            <div id="notifications-view" class="tab-content hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <h3 style="font-weight: 600;">🔔 Notifications</h3>
+                    <p style="color: var(--text-secondary);">Vos messages et alertes</p>
+                </div>
+
+                <div id="notifications-feed">
+                    <div class="card text-center">
+                        <p style="color: var(--text-secondary);">Chargement...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Événements -->
+            <div id="events-view" class="tab-content hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
                     <h3 style="font-weight: 600;">📅 Événements & Actualités</h3>
                     <p style="color: var(--text-secondary);">Ne manquez rien de la vie étudiante</p>
                 </div>
-            </div>
-        </div>
 
-        <div id="events-feed" class="grid grid-3" style="gap: 15px;">
-            <!-- Loaded by JS -->
-        </div>
-    </div>
-
-
-
-
-    <!-- Espace Lauréat (Section Alumni Premium) -->
-    <div id="laureat-view" class="hidden">
-        <div class="card fade-in"
-            style="background: var(--glass-bg); border: 2px solid var(--primary-color); position: relative; overflow: hidden; margin-bottom: var(--spacing-lg);">
-            <div
-                style="position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.05; transform: rotate(15deg);">
-                🎓</div>
-            <div class="card-header">
-                <h2 class="card-title"
-                    style="color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
-                    <span>💎 Espace Lauréat Ibn Sina</span>
-                </h2>
-                <p class="card-subtitle">Bienvenue dans votre espace exclusif, cher ancien.</p>
-            </div>
-
-            <div class="grid grid-3" style="margin-top: var(--spacing-md); gap: 15px;">
-                <div class="card"
-                    style="padding: 15px; background: rgba(var(--primary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
-                    onclick="joinMentorship()">
-                    <div style="font-size: 1.5rem; margin-bottom: 10px;">🤝</div>
-                    <h4 style="font-weight: 600; font-size: 0.95rem;">Devenir Mentor</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Accompagnez les nouveaux étudiants.
-                    </p>
-                </div>
-                <div class="card"
-                    style="padding: 15px; background: rgba(var(--secondary-rgb), 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
-                    onclick="shareResources()">
-                    <div style="font-size: 1.5rem; margin-bottom: 10px;">📚</div>
-                    <h4 style="font-weight: 600; font-size: 0.95rem;">Ressources</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Partagez vos outils & conseils.</p>
-                </div>
-                <div class="card"
-                    style="padding: 15px; background: rgba(245, 158, 11, 0.03); border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;"
-                    onclick="window.open('https://linkedin.com', '_blank')">
-                    <div style="font-size: 1.5rem; margin-bottom: 10px;">�</div>
-                    <h4 style="font-weight: 600; font-size: 0.95rem;">Opportunités</h4>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary);">Publiez ou trouvez une offre.</p>
-                </div>
-            </div>
-
-            <hr
-                style="margin: var(--spacing-lg) 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
-
-            <!-- Réseau de ma Promotion -->
-            <div id="promo-network-section">
-                <h3
-                    style="font-size: 1.1rem; font-weight: 600; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: 8px;">
-                    <span>👥 Réseau de ma Promotion</span>
-                    <span id="my-promo-badge" class="badge badge-approved" style="font-size: 0.7rem;"></span>
-                </h3>
-                <div id="promo-users-list" class="grid grid-3" style="gap: 15px;">
+                <div id="events-feed" class="grid grid-3" style="gap: 15px;">
                     <div class="card text-center" style="grid-column: span 3;">
-                        <p style="color: var(--text-secondary);">Chargement des contacts...</p>
+                        <p style="color: var(--text-secondary);">Chargement des événements...</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Aide -->
-    <div class="card" style="margin-top: var(--spacing-lg);">
-        <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Comment ça marche ?</h4>
-        <ol style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
-            <li style="margin-bottom: var(--spacing-xs);">Remplissez le formulaire avec la filière qui vous
-                intéresse</li>
-            <li style="margin-bottom: var(--spacing-xs);">Votre demande sera automatiquement transmise au délégué de
-                cette filière</li>
-            <li style="margin-bottom: var(--spacing-xs);">Le délégué examinera et approuvera/rejettera votre demande
-            </li>
-            <li>Si approuvée, vous recevrez le lien du groupe WhatsApp ou serez ajouté directement</li>
-        </ol>
-    </div>
-    </div>
+            <!-- Vue Mentorat -->
+            <div id="mentorship-view" class="tab-content hidden">
+                <div class="card"
+                    style="margin-bottom: var(--spacing-md); background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    <h3 class="card-title" style="color: white; margin-bottom: 5px;">🤝 Connectez-vous avec nos Anciens
+                    </h3>
+                    <p style="opacity: 0.9;">Bénéficiez de l'expérience des lauréats pour guider votre avenir.</p>
+                </div>
+
+                <div id="mentors-grid" class="grid grid-3" style="gap: 20px;">
+                    <div class="card text-center" style="grid-column: span 3;">
+                        <p style="color: var(--text-secondary);">Chargement des mentors...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Annuaire -->
+            <div id="directory-view" class="tab-content hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <div class="flex"
+                        style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="font-weight: 600;">📂 Annuaire des Anciens</h3>
+                            <p style="color: var(--text-secondary);">Retrouvez vos camarades</p>
+                        </div>
+                        <div class="flex gap-1" style="flex: 1; min-width: 250px; justify-content: flex-end;">
+                            <input type="text" id="dir-search" class="form-input"
+                                placeholder="🔍 Nom, École, Entreprise..." oninput="handleDirectorySearch()"
+                                style="max-width: 200px;">
+                            <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
+                                style="max-width: 150px;">
+                                <option value="all">Toutes Filières</option>
+                                <option value="STE">STE - Sciences et Technologies Électriques</option>
+                                <option value="STM">STM - Sciences et Technologies Mécaniques</option>
+                                <option value="AA">AA - Arts Appliqués</option>
+                                <option value="ECO">ECO - Économie</option>
+                                <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="directory-grid" class="grid grid-2" style="gap: 15px;">
+                    <div class="card text-center" style="grid-column: span 2;">
+                        <p style="color: var(--text-secondary);">Chargement de l'annuaire...</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div> <!-- End Dashboard Layout -->
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
+
+
     <!-- Scripts personnalisés -->
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/chatbot-ui.js"></script>
+    <script src="js/notifications.js?v=1.1"></script>
+    <script src="js/ui-core.js"></script>
     <script src="js/student.js"></script>
     <script src="js/mentorship.js"></script>
     <script src="js/announcements.js"></script>
@@ -286,81 +359,53 @@
 
         // Fonction pour gérer les onglets étudiants (Similaire à celle des autres dashboards)
         function showStudentView(view) {
-            // Masquer toutes les vues
-            // Note: student.js ne gère pas nativement les onglets comme alumni.js, 
-            // il affichait tout sur une page. On va adapter ça.
-
-            // Masquer les sections par défaut
-            const dashboardSection = document.querySelector('.grid.grid-2'); // Contient le form et la liste
-            const laheuatSection = document.getElementById('laureat-view');
-            const mentorshipSection = document.getElementById('mentorship-view');
-            const forumSection = document.getElementById('forum-view');
-            const directorySection = document.getElementById('directory-view');
-
-            // Reset tabs
-            document.querySelectorAll('.nav-tab').forEach(btn => {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-secondary');
-
-                const btnText = btn.innerHTML.toLowerCase(); // Utiliser innerHTML pour attraper le texte et les icones
-
-                if (view === 'requests' && btnText.includes('demandes')) {
-                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-                } else if (view === 'mentorship' && btnText.includes('mentorat')) {
-                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-                } else if (view === 'dashboard' && btnText.includes('tableau')) {
-                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-                } else if (view === 'directory' && btnText.includes('annuaire')) {
-                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-                } else if (view === 'events' && btnText.includes('événements')) {
-                    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
-                }
+            // Update UI Sidebar
+            document.querySelectorAll('.nav-tab').forEach(link => {
+                link.classList.toggle('active', link.dataset.view === view);
             });
 
-            if (view === 'dashboard') {
-                if (dashboardSection) dashboardSection.classList.remove('hidden');
-                if (laheuatSection && currentUser && currentUser.niveau === 'Lauréat') laheuatSection.classList.remove('hidden');
-                if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (directorySection) directorySection.classList.add('hidden');
-                const eventsSection = document.getElementById('events-view');
-                if (eventsSection) eventsSection.classList.add('hidden');
-            } else if (view === 'events') {
-                if (dashboardSection) dashboardSection.classList.add('hidden');
-                if (laheuatSection) laheuatSection.classList.add('hidden');
-                if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                if (directorySection) directorySection.classList.add('hidden');
-                const eventsSection = document.getElementById('events-view');
-                if (eventsSection) eventsSection.classList.remove('hidden');
+            // Map views to elements
+            const views = {
+                dashboard: document.getElementById('dashboard-view'),
+                laureat: document.getElementById('laureat-view'),
+                mentorship: document.getElementById('mentorship-view'),
+                directory: document.getElementById('directory-view'),
+                events: document.getElementById('events-view'),
+                notifications: document.getElementById('notifications-view')
+            };
 
+            // Hide all
+            Object.values(views).forEach(el => {
+                if (el) el.classList.add('hidden');
+            });
+
+            // Show target
+            if (view === 'dashboard' || view === 'requests') {
+                if (views.dashboard) views.dashboard.classList.remove('hidden');
+                if (views.laureat && currentUser && currentUser.niveau === 'Lauréat') views.laureat.classList.remove('hidden');
+            }
+            else if (view === 'events') {
+                if (views.events) views.events.classList.remove('hidden');
                 if (typeof loadEvents === 'function') loadEvents('events-feed');
-            } else if (view === 'requests') {
-                // Pour simplifier, 'requests' et 'dashboard' sont la même vue dans l'implémentation actuelle
-                if (dashboardSection) dashboardSection.classList.remove('hidden');
-                if (laheuatSection) laheuatSection.classList.add('hidden');
-                if (mentorshipSection) mentorshipSection.classList.add('hidden');
-            } else if (view === 'mentorship') {
-                if (dashboardSection) dashboardSection.classList.add('hidden');
-                if (laheuatSection) laheuatSection.classList.add('hidden');
-                if (mentorshipSection) mentorshipSection.classList.remove('hidden');
-
-                // Charger les mentors si pas encore fait
-                if (typeof initMentorship === 'function') {
-                    initMentorship();
-                }
-            } else if (view === 'directory') {
-                if (dashboardSection) dashboardSection.classList.add('hidden');
-                if (laheuatSection) laheuatSection.classList.add('hidden');
-                if (mentorshipSection) mentorshipSection.classList.add('hidden');
-                const directorySection = document.getElementById('directory-view');
-                if (directorySection) directorySection.classList.remove('hidden');
-
+            }
+            else if (view === 'mentorship') {
+                if (views.mentorship) views.mentorship.classList.remove('hidden');
+                if (typeof initMentorship === 'function') initMentorship();
+            }
+            else if (view === 'directory') {
+                if (views.directory) views.directory.classList.remove('hidden');
                 if (typeof initDirectory === 'function') initDirectory();
+            }
+            else if (view === 'notifications') {
+                if (views.notifications) views.notifications.classList.remove('hidden');
+                if (typeof initNotificationsView === 'function') initNotificationsView();
             }
         }
     </script>
 
 
 
+    <script src="js/dev-switcher.js"></script>
 </body>
 
 </html>

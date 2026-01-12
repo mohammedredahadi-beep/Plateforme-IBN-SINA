@@ -7,255 +7,445 @@
     <title>Dashboard Lauréat - Ibn Sina</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
+        /* Switch Toggle Style */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
         @media (max-width: 768px) {
             .show-desktop {
                 display: none !important;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr !important;
             }
         }
     </style>
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="#" class="logo">
-                <div class="logo-icon">IS</div>
-                <span>Ibn Sina</span>
-            </a>
-            <div class="nav-menu" style="align-items: center; gap: 15px;">
-                <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème">🌓</button>
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-icon">IS</div>
+                    <span>Espace Lauréat</span>
+                </a>
+            </div>
 
-                <!-- Notification Bell -->
-                <div class="notification-container" style="position: relative;">
-                    <button class="btn-icon" onclick="toggleNotifications()"
-                        style="background: none; border: none; font-size: 1.2rem; cursor: pointer; position: relative;">
-                        🔔
-                        <span id="notif-badge" class="badge-dot hidden"
-                            style="position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: red; border-radius: 50%; border: 2px solid var(--bg-primary);"></span>
-                    </button>
-                    <!-- Dropdown Panel -->
-                    <div id="notification-panel" class="card hidden"
-                        style="position: absolute; top: 40px; right: 0; width: 320px; z-index: 1000; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid var(--border-color);">
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active nav-tab" onclick="showAlumniView('dashboard')">
+                    🏠 <span class="nav-label">Tableau de Bord</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" onclick="showAlumniView('events')">
+                    📅 <span class="nav-label">Événements</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" id="tab-mentor" onclick="showAlumniView('mentor')">
+                    🤝 <span class="nav-label">Mon Mentorat</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" onclick="showAlumniView('directory')">
+                    📂 <span class="nav-label">Annuaire</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" onclick="showAlumniView('profile')">
+                    👤 <span class="nav-label">Mon Profil</span>
+                </a>
+                <a href="#" class="sidebar-link nav-tab" data-view="notifications"
+                    onclick="showAlumniView('notifications')">
+                    🔔 <span class="nav-label">Notifications</span>
+                    <span id="sidebar-badge-notif" class="badge badge-warning hidden">0</span>
+                </a>
+            </nav>
+
+            <div style="margin-top: auto; padding: 1rem 0; border-top: 1px solid var(--border);">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
                         <div
-                            style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary); border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">Notifications</h4>
-                            <button onclick="markAllRead()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 500;">Tout
-                                lire</button>
+                            style="width: 38px; height: 38px; background: var(--bg-alt); border-radius: var(--rad-full); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary);">
+                            L
                         </div>
-                        <div id="notif-list" style="max-height: 300px; overflow-y: auto;">
-                            <div
-                                style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
-                                Aucune nouvelle notification</div>
+                        <div>
+                            <div id="user-display-name" style="font-size: 0.9rem; font-weight: 600;">Chargement...</div>
+                            <div style="font-size: 0.75rem; color: var(--text-dim);">Lauréat Actif</div>
                         </div>
                     </div>
+                    <div class="flex gap-1 notification-container">
+                        <!-- Notification Bell Removed -->
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Changer le thème"
+                            style="padding: 5px; border-radius: 5px; background: var(--bg-alt); border: none; cursor: pointer;">🌓</button>
+                    </div>
                 </div>
-
-                <span id="user-display-name" style="font-weight: 500;">Chargement...</span>
-                <button class="btn btn-secondary btn-small" onclick="logout()">Déconnexion</button>
+                <button class="btn btn-secondary w-full" onclick="logout()">Déconnexion</button>
             </div>
-        </div>
-    </nav>
+        </aside>
 
-    <!-- Contenu principal -->
-    <div class="container" style="margin-top: var(--spacing-lg);">
-
-        <!-- En-tête -->
-        <div class="card" style="margin-bottom: var(--spacing-lg);">
-            <div class="flex" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="flex justify-between items-center mb-2">
                 <div>
-                    <h1 id="welcome-name" class="card-title">Bonjour, Lauréat</h1>
-                    <p class="card-subtitle">Espace dédié aux anciens d'Ibn Sina</p>
+                    <h1 id="welcome-name" style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Bonjour,
+                        Lauréat</h1>
+                    <p style="color: var(--text-muted);">Bienvenue dans votre réseau Ibn Sina</p>
                 </div>
                 <div id="alumni-status-badge">
-                    <span class="badge badge-approved">Lauréat Actif</span>
+                    <span class="badge badge-approved">Compte Validé ✅</span>
                 </div>
-            </div>
-        </div>
+                <script>
+                    function toggleTheme() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                    }
+                    // Init theme
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
 
-        <div id="alumni-message" class="hidden"></div>
+                    function showAlumniView(viewId) {
+                        // Update Sidebar
+                        document.querySelectorAll('.sidebar-link').forEach(link => {
+                            if (link.getAttribute('onclick')) {
+                                const isTarget = link.getAttribute('onclick').includes("'" + viewId + "'");
+                                link.classList.toggle('active', isTarget);
+                            }
+                        });
 
-        <!-- Navigation par onglets -->
-        <div style="margin-bottom: var(--spacing-md);">
-            <div class="flex gap-1" style="flex-wrap: wrap;">
-                <button class="btn btn-primary nav-tab" onclick="showAlumniView('dashboard')">🏠 Tableau de
-                    Bord</button>
-                <button class="btn btn-secondary nav-tab" onclick="showAlumniView('events')">📅 Événements</button>
-                <button class="btn btn-secondary nav-tab" onclick="showAlumniView('mentor')">🤝 Mentorat</button>
-                <button class="btn btn-secondary nav-tab" onclick="showAlumniView('directory')">📂 Annuaire</button>
-                <button class="btn btn-secondary nav-tab" onclick="showAlumniView('profile')">👤 Mon Profil</button>
-            </div>
-        </div>
+                        // Hide all views
+                        ['dashboard-view', 'events-view', 'mentor-view', 'profile-view', 'directory-view', 'notifications-view'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.classList.add('hidden');
+                        });
 
-        <!-- Vue Tableau de Bord -->
-        <div id="dashboard-view" class="tab-content">
-            <div class="grid grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">✨ Félicitations !</h3>
-                    </div>
-                    <p style="color: var(--text-secondary); line-height: 1.6;">
-                        Votre compte Lauréat a été approuvé. Vous faites désormais partie du réseau professionnel
-                        Ibn Sina. Votre expérience est précieuse pour nos étudiants actuels.
-                    </p>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">📅 Derniers Événements</h3>
-                    </div>
-                    <div id="events-preview-list">
-                        <p style="color: var(--text-light); font-size: 0.9rem;">Chargement des événements...</p>
-                    </div>
-                    <button class="btn btn-secondary btn-small mt-2" onclick="showAlumniView('events')">Voir
-                        tout</button>
-                </div>
-            </div>
+                        // Show target
+                        if (viewId === 'dashboard') document.getElementById('dashboard-view').classList.remove('hidden');
+                        if (viewId === 'events') document.getElementById('events-view').classList.remove('hidden');
+                        if (viewId === 'mentor') document.getElementById('mentor-view').classList.remove('hidden');
+                        if (viewId === 'directory') document.getElementById('directory-view').classList.remove('hidden');
+                        if (viewId === 'profile') document.getElementById('profile-view').classList.remove('hidden');
 
-            <div class="card" style="margin-top: var(--spacing-lg);">
-                <div class="flex" style="align-items: center; gap: var(--spacing-lg); flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 300px;">
-                        <h3 class="card-title">🌟 Le Mentorat</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
-                            Devenez un mentor et guidez les futurs diplômés d'Ibn Sina. Partagez votre parcours,
-                            donnez des conseils de carrière et aidez-les à s'insérer dans le monde professionnel.
+                        if (viewId === 'notifications') {
+                            const el = document.getElementById('notifications-view');
+                            if (el) el.classList.remove('hidden');
+                            if (typeof initNotificationsView === 'function') initNotificationsView();
+                        }
+                    }
+                </script>
+            </header>
+
+            <div id="alumni-message" class="hidden"></div>
+
+            <!-- Vue Tableau de Bord -->
+            <div id="dashboard-view" class="tab-content">
+                <div class="grid grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">✨ Félicitations !</h3>
+                        </div>
+                        <p style="color: var(--text-secondary); line-height: 1.6;">
+                            Votre compte Lauréat a été approuvé. Vous faites désormais partie du réseau professionnel
+                            Ibn Sina. Votre expérience est précieuse pour nos étudiants actuels.
                         </p>
-                        <button id="btn-mentor-request" class="btn btn-primary" onclick="requestMentorRole()">
-                            Envoyer une demande de mentorat
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📅 Derniers Événements</h3>
+                        </div>
+                        <div id="events-preview-list">
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Chargement des événements...</p>
+                        </div>
+                        <button class="btn btn-secondary btn-small mt-2" onclick="showAlumniView('events')">Voir
+                            tout</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: var(--spacing-lg);">
+                    <div class="flex" style="align-items: center; gap: var(--spacing-lg); flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <h3 class="card-title">🌟 Le Mentorat</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                                Devenez un mentor et guidez les futurs diplômés d'Ibn Sina. Partagez votre parcours,
+                                donnez des conseils de carrière et aidez-les à s'insérer dans le monde professionnel.
+                            </p>
+                            <button id="btn-mentor-request" class="btn btn-primary" onclick="requestMentorRole()">
+                                Envoyer une demande de mentorat
+                            </button>
+                        </div>
+                        <div style="font-size: 5rem; opacity: 0.1; display: none;" class="show-desktop">🎓</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Événements -->
+            <div id="events-view" class="tab-content hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <h3 class="card-title">Calendrier des événements</h3>
+                    <p class="card-subtitle">Rencontres, webinaires et conférences.</p>
+                </div>
+                <div id="events-list" class="grid grid-2">
+                    <!-- Injecté par JS -->
+                </div>
+            </div>
+
+            <!-- Vue Mentor (Standard Lauréat) -->
+            <div id="mentor-view" class="tab-content hidden">
+                <div id="mentor-request-section">
+                    <div class="card" style="max-width: 700px; margin: 0 auto; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">🤝</div>
+                        <h2 class="card-title">Programme de Mentorat</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                            Pour devenir mentor officiel, nous avons besoin de valider votre profil professionnel.
+                            Une fois approuvé, les étudiants pourront solliciter vos conseils via la plateforme.
+                        </p>
+                        <div id="mentor-status-box" class="card"
+                            style="background: var(--bg-tertiary); margin-bottom: 20px; border: none; box-shadow: none;">
+                            <p id="mentor-status-text" style="font-weight: 600;">Statut : Non demandée</p>
+                        </div>
+                        <button id="btn-mentor-action" class="btn btn-primary"
+                            style="width: 100%; justify-content: center;" onclick="requestMentorRole()">
+                            Postuler pour devenir Mentor
                         </button>
                     </div>
-                    <div style="font-size: 5rem; opacity: 0.1; display: none;" class="show-desktop">🎓</div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Vue Événements -->
-        <div id="events-view" class="tab-content hidden">
-            <div class="card" style="margin-bottom: var(--spacing-md);">
-                <h3 class="card-title">Calendrier des événements</h3>
-                <p class="card-subtitle">Rencontres, webinaires et conférences.</p>
-            </div>
-            <div id="events-list" class="grid grid-2">
-                <!-- Injecté par JS -->
-            </div>
-        </div>
+                <!-- Dashboard Mentor (Visible seulement si role == mentor) -->
+                <div id="mentor-active-dashboard" class="hidden">
+                    <div class="grid grid-3" style="align-items: start;">
+                        <!-- Main Column: Requests & Mentees -->
+                        <div style="grid-column: span 2;">
+                            <!-- Section 1: Demandes en attente -->
+                            <div class="card"
+                                style="margin-bottom: var(--spacing-md); border-left: 4px solid var(--accent-color);">
+                                <div class="flex"
+                                    style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h3 class="card-title">📩 Demandes de Mentorat</h3>
+                                    <span class="badge" id="mentor-requests-count">0 en attente</span>
+                                </div>
+                                <div id="mentor-requests-list">
+                                    <p style="color: var(--text-secondary); font-style: italic;">Aucune nouvelle demande
+                                        pour le moment.</p>
+                                </div>
+                            </div>
 
-        <!-- Vue Mentor -->
-        <div id="mentor-view" class="tab-content hidden">
-            <div class="card" style="max-width: 700px; margin: 0 auto; text-align: center;">
-                <div style="font-size: 3rem; margin-bottom: 20px;">🤝</div>
-                <h2 class="card-title">Programme de Mentorat</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 25px;">
-                    Pour devenir mentor officiel, nous avons besoin de valider votre profil professionnel.
-                    Une fois approuvé, les étudiants pourront solliciter vos conseils via la plateforme.
-                </p>
-                <div id="mentor-status-box" class="card"
-                    style="background: var(--bg-tertiary); margin-bottom: 20px; border: none; box-shadow: none;">
-                    <p id="mentor-status-text" style="font-weight: 600;">Statut : Non demandée</p>
-                </div>
-                <button id="btn-mentor-action" class="btn btn-primary" style="width: 100%; justify-content: center;"
-                    onclick="requestMentorRole()">
-                    Postuler pour devenir Mentor
-                </button>
-            </div>
-        </div>
+                            <!-- Section 2: Mes Mentorés -->
+                            <div class="card">
+                                <h3 class="card-title" style="margin-bottom: 15px;">👥 Mes Étudiants Mentorés</h3>
+                                <div id="my-mentees-list" class="grid grid-2" style="gap: 15px;">
+                                    <div class="card bg-alt text-center" style="grid-column: span 2;">
+                                        <p style="color: var(--text-secondary);">Vous n'avez pas encore de mentorés
+                                            actifs.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        <!-- Vue Profil -->
-        <div id="profile-view" class="tab-content hidden">
-            <div class="card" style="max-width: 600px; margin: 0 auto;">
-                <h3 class="card-title">Mon Profil Lauréat</h3>
-                <div class="form-group">
-                    <label class="form-label">Nom Complet</label>
-                    <input type="text" id="profile-name" class="form-input">
+                        <!-- Side Column: Stats & Settings -->
+                        <div>
+                            <!-- Availability Toggle -->
+                            <div class="card" style="margin-bottom: 15px;">
+                                <h4 style="font-weight: 600; margin-bottom: 10px;">Statut Mentor</h4>
+                                <div class="flex items-center justify-between">
+                                    <span style="font-size: 0.9rem; color: var(--text-secondary);">Accepter nouveaux
+                                        ?</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="mentor-availability-toggle" checked
+                                            onchange="toggleMentorAvailability()">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <p id="mentor-availability-text"
+                                    style="font-size: 0.75rem; margin-top: 5px; color: var(--success-color);">
+                                    Actif : Visible dans l'annuaire
+                                </p>
+                            </div>
+
+                            <!-- Quick Stats -->
+                            <div class="card" style="margin-bottom: 15px;">
+                                <h4 style="font-weight: 600; margin-bottom: 10px;">📊 Impact</h4>
+                                <div class="flex gap-1">
+                                    <div style="flex: 1; text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);"
+                                            id="total-mentees-count">0</div>
+                                        <div style="font-size: 0.7rem;">Étudiants</div>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-color);">5
+                                        </div>
+                                        <div style="font-size: 0.7rem;">Étoiles</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Guide -->
+                            <div class="card bg-alt">
+                                <h4 style="font-weight: 600; margin-bottom: 10px;">💡 Astuces Mentor</h4>
+                                <ul
+                                    style="padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                                    <li>Répondez sous 48h.</li>
+                                    <li>Partagez votre CV comme modèle.</li>
+                                    <li>Proposez des visios de 20min.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <!-- Email reste en lecture seule -->
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="text" id="profile-email" class="form-input" readonly disabled
-                        style="opacity: 0.7; cursor: not-allowed;">
-                </div>
-                <div class="grid grid-2">
+            </div>
+
+
+            <!-- Vue Profil -->
+            <div id="profile-view" class="tab-content hidden">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <h3 class="card-title">Mon Profil Lauréat</h3>
                     <div class="form-group">
-                        <label class="form-label">Promotion (Année)</label>
-                        <input type="number" id="profile-promo" class="form-input" placeholder="Ex: 2023">
+                        <label class="form-label">Nom Complet</label>
+                        <input type="text" id="profile-name" class="form-input">
                     </div>
+                    <!-- Email reste en lecture seule -->
                     <div class="form-group">
-                        <label class="form-label">Filière</label>
-                        <select id="profile-filiere" class="form-select">
-                            <option value="">-- Sélectionner --</option>
-                            <option value="STE">STE - Sc. et Tech. Électriques</option>
-                            <option value="STM">STM - Sc. et Tech. Mécaniques</option>
-                            <option value="AA">AA - Arts Appliqués</option>
-                            <option value="ECO">ECO - Économie</option>
-                            <option value="BTS">BTS - Brevet Tec. Supérieur</option>
-                        </select>
+                        <label class="form-label">Email</label>
+                        <input type="text" id="profile-email" class="form-input" readonly disabled
+                            style="opacity: 0.7; cursor: not-allowed;">
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Promotion (Année)</label>
+                            <input type="number" id="profile-promo" class="form-input" placeholder="Ex: 2023">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Filière</label>
+                            <select id="profile-filiere" class="form-select">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="STE">STE - Sc. et Tech. Électriques</option>
+                                <option value="STM">STM - Sc. et Tech. Mécaniques</option>
+                                <option value="AA">AA - Arts Appliqués</option>
+                                <option value="ECO">ECO - Économie</option>
+                                <option value="BTS">BTS - Brevet Tec. Supérieur</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Téléphone</label>
+                            <input type="tel" id="profile-phone" class="form-input" placeholder="+212 6...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp (optionnel)</label>
+                            <input type="tel" id="profile-whatsapp" class="form-input"
+                                placeholder="+212 6... (pour contact direct)">
+                        </div>
                     </div>
                 </div>
-                <div class="grid grid-2">
+
+                <div class="card" style="max-width: 600px; margin: var(--spacing-md) auto;">
                     <div class="form-group">
-                        <label class="form-label">Téléphone</label>
-                        <input type="tel" id="profile-phone" class="form-input" placeholder="+212 6...">
+                        <label class="form-label">Compte LinkedIn</label>
+                        <input type="url" id="profile-linkedin" class="form-input"
+                            placeholder="https://linkedin.com/in/...">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">WhatsApp (optionnel)</label>
-                        <input type="tel" id="profile-whatsapp" class="form-input"
-                            placeholder="+212 6... (pour contact direct)">
+                        <label class="form-label">Poste Actuel / Situation</label>
+                        <input type="text" id="profile-job" class="form-input"
+                            placeholder="Ex: Étudiant Ingénieur ou Consultant Junior">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Mon Parcours (Détails)</label>
+                        <textarea id="profile-bio" class="form-textarea scrollable-text" rows="6"
+                            placeholder="Racontez votre parcours après le bac, vos expériences, vos conseils..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
+                        onclick="saveAlumniProfile()">Enregistrer les modifications</button>
                 </div>
             </div>
 
-            <div class="card" style="max-width: 600px; margin: var(--spacing-md) auto;">
-                <div class="form-group">
-                    <label class="form-label">Compte LinkedIn</label>
-                    <input type="url" id="profile-linkedin" class="form-input"
-                        placeholder="https://linkedin.com/in/...">
+            <!-- Vue Annuaire [NEW] -->
+            <div id="directory-view" class="tab-content hidden">
+                <!-- Reusing same structure as student dashboard -->
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <div class="flex"
+                        style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="font-weight: 600;">📂 Annuaire des Anciens</h3>
+                            <p style="color: var(--text-secondary);">Retrouvez vos camarades</p>
+                        </div>
+                        <!-- Search Controls -->
+                        <div class="flex gap-1" style="flex: 1; min-width: 250px; justify-content: flex-end;">
+                            <input type="text" id="dir-search" class="form-input"
+                                placeholder="🔍 Nom, École, Entreprise..." oninput="handleDirectorySearch()"
+                                style="max-width: 200px;">
+                            <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
+                                style="max-width: 150px;">
+                                <option value="all">Toutes Filières</option>
+                                <option value="STE">STE - Sciences et Technologies Électriques</option>
+                                <option value="STM">STM - Sciences et Technologies Mécaniques</option>
+                                <option value="AA">AA - Arts Appliqués</option>
+                                <option value="ECO">ECO - Économie</option>
+                                <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Poste Actuel / Situation</label>
-                    <input type="text" id="profile-job" class="form-input"
-                        placeholder="Ex: Étudiant Ingénieur ou Consultant Junior">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Mon Parcours (Détails)</label>
-                    <textarea id="profile-bio" class="form-textarea scrollable-text" rows="6"
-                        placeholder="Racontez votre parcours après le bac, vos expériences, vos conseils..."></textarea>
-                </div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;"
-                    onclick="saveAlumniProfile()">Enregistrer les modifications</button>
-            </div>
-        </div>
 
-        <!-- Vue Annuaire [NEW] -->
-        <div id="directory-view" class="tab-content hidden">
-            <!-- Reusing same structure as student dashboard -->
-            <div class="card" style="margin-bottom: var(--spacing-md);">
-                <div class="flex"
-                    style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <h3 style="font-weight: 600;">📂 Annuaire des Anciens</h3>
-                        <p style="color: var(--text-secondary);">Retrouvez vos camarades</p>
-                    </div>
-                    <!-- Search Controls -->
-                    <div class="flex gap-1" style="flex: 1; min-width: 250px; justify-content: flex-end;">
-                        <input type="text" id="dir-search" class="form-input" placeholder="🔍 Nom, École, Entreprise..."
-                            oninput="handleDirectorySearch()" style="max-width: 200px;">
-                        <select id="dir-filiere" class="form-select" onchange="handleDirectorySearch()"
-                            style="max-width: 150px;">
-                            <option value="all">Toutes Filières</option>
-                            <option value="STE">STE - Sciences et Technologies Électriques</option>
-                            <option value="STM">STM - Sciences et Technologies Mécaniques</option>
-                            <option value="AA">AA - Arts Appliqués</option>
-                            <option value="ECO">ECO - Économie</option>
-                            <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
-                        </select>
-                    </div>
+                <div id="directory-grid" class="grid grid-2" style="gap: 15px;">
+                    <!-- Loaded by JS -->
                 </div>
             </div>
 
-            <div id="directory-grid" class="grid grid-2" style="gap: 15px;">
-                <!-- Loaded by JS -->
+            <!-- Vue Notifications -->
+            <div id="notifications-view" class="tab-content hidden">
+                <div class="card" style="margin-bottom: var(--spacing-md);">
+                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">🔔 Centre de Notifications</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Historique de vos alertes et messages.
+                    </p>
+                </div>
+
+                <div id="notifications-feed">
+                    <div class="card text-center">
+                        <p style="color: var(--text-secondary);">Chargement...</p>
+                    </div>
+                </div>
             </div>
-        </div>
     </div>
 
 
@@ -324,6 +514,11 @@
         </div>
     </div>
 
+    <!-- Duplicate notification view removed -->
+
+    </main>
+    </div> <!-- End Dashboard Layout -->
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -334,25 +529,14 @@
     <script src="js/auth.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/events.js"></script>
+    <script src="js/notifications.js?v=1.1"></script>
+    <script src="js/ui-core.js"></script>
     <script src="js/alumni.js"></script>
     <script src="js/directory.js?v=2026"></script>
     <script src="js/chatbot-ui.js"></script>
 
-    <script>
-
-
-        // Thème
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        }
-
-        // Initialiser le thème au chargement
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    </script>
+    <!-- Theme logic is handled in the header script to prevent FOUC -->
+    <script src="js/dev-switcher.js"></script>
 </body>
 
 </html>

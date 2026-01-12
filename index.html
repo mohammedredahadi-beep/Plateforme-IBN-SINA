@@ -6,130 +6,673 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ibn Sina - Plateforme de Gestion des Groupes</title>
   <link rel="stylesheet" href="css/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Modern Auth Screen Styles */
+    .modern-auth-container {
+      min-height: 100vh;
+      display: flex;
+      background: var(--bg-);
+    }
+
+    /* Left Panel - Branding */
+    .auth-branding {
+      flex: 1;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-branding::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      top: -250px;
+      right: -250px;
+    }
+
+    .auth-branding::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      bottom: -150px;
+      left: -150px;
+    }
+
+    .brand-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 500px;
+    }
+
+    .brand-logo {
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin: 0 auto 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    .brand-content h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .brand-content p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .brand-features {
+      margin-top: 3rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 1rem 1.5rem;
+      border-radius: 15px;
+      transition: all 0.3s;
+    }
+
+    .feature-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateX(10px);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+    }
+
+    .feature-text {
+      text-align: left;
+    }
+
+    .feature-text strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .feature-text span {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* Right Panel - Auth Form */
+    .auth-panel {
+      flex: 1;
+      padding: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+    }
+
+    .auth-form-container {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .auth-form-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .auth-form-header h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-form-header p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .modern-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 0.5rem;
+      background: var(--bg-alt);
+      border-radius: var(--rad-md);
+    }
+
+    .modern-tab {
+      flex: 1;
+      padding: 0.875rem 1.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: var(--rad-sm);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .modern-tab.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .modern-tab.active {
+      background: var(--bg-card);
+    }
+
+    .form-container {
+      display: none;
+    }
+
+    .form-container.active {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group label {
+      display: block;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon input,
+    .input-with-icon select {
+      padding-left: 3rem;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2rem;
+      color: var(--text-muted);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: 1rem;
+    }
+
+    .success-screen {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, var(--success), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      font-size: 3rem;
+      animation: scaleIn 0.5s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+      }
+
+      to {
+        transform: scale(1);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+      .modern-auth-container {
+        flex-direction: column;
+      }
+
+      .auth-branding {
+        min-height: 40vh;
+        padding: 2rem;
+      }
+
+      .brand-logo {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5rem;
+      }
+
+      .brand-content h1 {
+        font-size: 2rem;
+      }
+
+      .brand-features {
+        display: none;
+      }
+
+      .auth-panel {
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.5rem;
+      transition: all 0.3s;
+      z-index: 1000;
+      box-shadow: var(--shadow-md);
+    }
+
+    .theme-toggle-btn:hover {
+      transform: rotate(30deg) scale(1.1);
+    }
+
+    /* Forgot Password Link */
+    .forgot-password-link {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .forgot-password-link:hover {
+      text-decoration: underline;
+      color: var(--primary-dark, #4f46e5);
+    }
+
+    /* Reset Password Modal */
+    .reset-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .reset-modal.active {
+      display: flex;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .reset-modal-content {
+      background: var(--bg-card);
+      padding: 2.5rem;
+      border-radius: var(--rad-lg);
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .reset-modal-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .reset-modal-header h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .reset-modal-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .modal-actions button {
+      flex: 1;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="auth-container">
-    <div class="card auth-card fade-in">
-      <div class="auth-header">
-        <div class="logo-icon" style="width: 64px; height: 64px; font-size: 2rem; margin: 0 auto var(--spacing-md);">IS
-        </div>
+  <!-- Theme Toggle -->
+  <button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer le thème">
+    🌓
+  </button>
+
+  <div class="modern-auth-container">
+    <!-- Left Branding Panel -->
+    <div class="auth-branding">
+      <div class="brand-content">
+        <div class="brand-logo">IS</div>
         <h1>Ibn Sina</h1>
-        <p class="card-subtitle">Plateforme de Gestion des Groupes WhatsApp</p>
+        <p>Plateforme de Gestion des Groupes WhatsApp pour étudiants et lauréats</p>
+
+        <div class="brand-features">
+          <div class="feature-item">
+            <div class="feature-icon">📚</div>
+            <div class="feature-text">
+              <strong>Gestion des Filières</strong>
+              <span>Accédez à tous vos groupes WhatsApp</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🎓</div>
+            <div class="feature-text">
+              <strong>Réseau Alumni</strong>
+              <span>Connectez-vous avec les lauréats</span>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📅</div>
+            <div class="feature-text">
+              <strong>Événements</strong>
+              <span>Restez informé des actualités</span>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <!-- Onglets -->
-      <div id="auth-tabs-container" class="auth-tabs">
-        <button class="auth-tab active" onclick="switchTab('login')">Connexion</button>
-        <button class="auth-tab" onclick="switchTab('signup')">Inscription</button>
-      </div>
-
-      <!-- Messages -->
-      <div id="auth-message" class="hidden"></div>
-
-      <!-- Formulaire de connexion -->
-      <form id="login-form" class="auth-form active">
-        <div class="form-group">
-          <label class="form-label" for="login-email">Email</label>
-          <input type="email" id="login-email" class="form-input" placeholder="votre.email@example.com" required>
+    <!-- Right Auth Panel -->
+    <div class="auth-panel">
+      <div class="auth-form-container">
+        <div class="auth-form-header">
+          <h2 id="form-title">Bienvenue !</h2>
+          <p id="form-subtitle">Connectez-vous pour accéder à votre espace</p>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="login-password">Mot de passe</label>
-          <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+        <!-- Modern Tabs -->
+        <div class="modern-tabs">
+          <button class="modern-tab active" onclick="switchModernTab('login')">Connexion</button>
+          <button class="modern-tab" onclick="switchModernTab('signup')">Inscription</button>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          <span id="login-btn-text">Se connecter</span>
-          <span id="login-loading" class="loading hidden"></span>
-        </button>
+        <!-- Messages -->
+        <div id="auth-message" class="hidden" style="margin-bottom: 1.5rem;"></div>
+
+        <!-- Login Form -->
+        <div id="login-container" class="form-container active">
+          <form id="login-form">
+            <div class="input-group">
+              <label for="login-email">Email</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📧</span>
+                <input type="email" id="login-email" class="form-input" placeholder="votre.email@example.com" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="login-password">Mot de passe</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary submit-btn">
+              <span id="login-btn-text">Se connecter</span>
+              <span id="login-loading" class="loading-small hidden"></span>
+            </button>
+
+            <a href="#" class="forgot-password-link" onclick="openResetModal(); return false;">
+              🔑 Mot de passe oublié ?
+            </a>
+          </form>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-container" class="form-container">
+          <form id="signup-form">
+            <div class="input-group">
+              <label for="signup-name">Nom complet</label>
+              <div class="input-with-icon">
+                <span class="input-icon">👤</span>
+                <input type="text" id="signup-name" class="form-input" placeholder="Prénom Nom" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="signup-phone">Téléphone</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📱</span>
+                <input type="tel" id="signup-phone" class="form-input" placeholder="+212 6XX XXX XXX" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="signup-niveau">Niveau / Statut</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🎓</span>
+                <select id="signup-niveau" class="form-select" required onchange="togglePromoField(this.value)">
+                  <option value="">-- Sélectionnez --</option>
+                  <option value="TC">Tronc Commun (TC)</option>
+                  <option value="1BAC">1ère Année Bac (1BAC)</option>
+                  <option value="2BAC">2ème Année Bac (2BAC)</option>
+                  <option value="Lauréat">Lauréat (Diplômé)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="signup-filiere">Filière</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📚</span>
+                <select id="signup-filiere" class="form-select" required>
+                  <option value="">-- Sélectionnez --</option>
+                  <option value="STE">STE - Sciences et Technologies Électriques</option>
+                  <option value="STM">STM - Sciences et Technologies Mécaniques</option>
+                  <option value="AA">AA - Arts Appliqués</option>
+                  <option value="ECO">ECO - Économie</option>
+                  <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="promo-group" class="input-group hidden">
+              <label for="signup-promo">Année de Promotion</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📅</span>
+                <input type="number" id="signup-promo" class="form-input" placeholder="2024" min="1990" max="2030">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="signup-email">Email</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📧</span>
+                <input type="email" id="signup-email" class="form-input" placeholder="votre.email@example.com" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="signup-password">Mot de passe</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="signup-password" class="form-input" placeholder="Minimum 6 caractères"
+                  required minlength="6">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="signup-confirm">Confirmer le mot de passe</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="signup-confirm" class="form-input" placeholder="••••••••" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary submit-btn">
+              <span id="signup-btn-text">S'inscrire</span>
+              <span id="signup-loading" class="loading-small hidden"></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="signup-success" class="success-screen hidden">
+          <div class="success-icon">✓</div>
+          <h3 style="font-weight: 700; margin-bottom: 1rem; color: var(--success); font-size: 1.6rem;">
+            Inscription réussie !
+          </h3>
+          <p id="success-msg-content" style="color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">
+            <!-- Message dynamique -->
+          </p>
+
+          <div
+            style="background: var(--bg-alt); border-left: 4px solid var(--warning); padding: 1.25rem; border-radius: var(--rad-md); margin-bottom: 2rem; text-align: left;">
+            <strong style="display: block; margin-bottom: 0.5rem; color: var(--warning);">⚠️ Vérifiez vos spams
+              !</strong>
+            Si vous ne trouvez pas l'email, consultez votre dossier <strong>Courrier indésirable</strong>.
+          </div>
+
+          <button class="btn btn-secondary" onclick="location.reload()" style="width: 100%;">
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div id="reset-modal" class="reset-modal">
+    <div class="reset-modal-content">
+      <div class="reset-modal-header">
+        <h3>🔐 Réinitialiser le mot de passe</h3>
+        <p>Entrez votre adresse email pour recevoir un lien de réinitialisation</p>
+      </div>
+
+      <div id="reset-message" class="hidden" style="margin-bottom: 1.5rem;"></div>
+
+      <form id="reset-form">
+        <div class="input-group">
+          <label for="reset-email">Email</label>
+          <div class="input-with-icon">
+            <span class="input-icon">📧</span>
+            <input type="email" id="reset-email" class="form-input" placeholder="votre.email@example.com" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeResetModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <span id="reset-btn-text">Envoyer</span>
+            <span id="reset-loading" class="loading-small hidden"></span>
+          </button>
+        </div>
       </form>
-
-      <!-- Formulaire d'inscription -->
-      <form id="signup-form" class="auth-form">
-        <div class="form-group">
-          <label class="form-label" for="signup-name">Nom complet</label>
-          <input type="text" id="signup-name" class="form-input" placeholder="Prénom Nom" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-phone">Numéro de téléphone</label>
-          <input type="tel" id="signup-phone" class="form-input" placeholder="+212 6XX XXX XXX" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-niveau">Niveau / Statut</label>
-          <select id="signup-niveau" class="form-select" required onchange="togglePromoField(this.value)">
-            <option value="">-- Sélectionnez --</option>
-            <option value="TC">Tronc Commun (TC)</option>
-            <option value="1BAC">1ère Année Bac (1BAC)</option>
-            <option value="2BAC">2ème Année Bac (2BAC)</option>
-            <option value="Lauréat">Lauréat (Diplômé)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-filiere">Filière</label>
-          <select id="signup-filiere" class="form-select" required>
-            <option value="">-- Sélectionnez --</option>
-            <option value="STE">STE - Sciences et Technologies Électriques</option>
-            <option value="STM">STM - Sciences et Technologies Mécaniques</option>
-            <option value="AA">AA - Arts Appliqués</option>
-            <option value="ECO">ECO - Économie</option>
-            <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
-          </select>
-        </div>
-
-        <div id="promo-group" class="form-group hidden">
-          <label class="form-label" for="signup-promo">Année de Promotion (ex: 2022)</label>
-          <input type="number" id="signup-promo" class="form-input" placeholder="2024" min="1990" max="2030">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-email">Email</label>
-          <input type="email" id="signup-email" class="form-input" placeholder="votre.email@example.com" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="signup-password">Mot de passe (min 6 car.)</label>
-          <input type="password" id="signup-password" class="form-input" placeholder="••••••••" required minlength="6">
-        </div>
-
-        <div class="form-group" style="margin-bottom: var(--spacing-lg);">
-          <label class="form-label" for="signup-confirm">Confirmer le mot de passe</label>
-          <input type="password" id="signup-confirm" class="form-input" placeholder="••••••••" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          <span id="signup-btn-text">S'inscrire</span>
-          <span id="signup-loading" class="loading hidden"></span>
-        </button>
-      </form>
-
-      <!-- Message de succès après inscription -->
-      <div id="signup-success" class="hidden text-center" style="padding: 10px 0;">
-        <div style="font-size: 3.5rem; margin-bottom: 20px;">📧</div>
-        <h3 style="font-weight: 700; margin-bottom: 15px; color: var(--success-color); font-size: 1.4rem;">Vérifiez
-          votre boîte mail</h3>
-        <p id="success-msg-content"
-          style="color: var(--text-primary); line-height: 1.6; margin-bottom: 25px; font-weight: 500;">
-          <!-- Message dynamique -->
-        </p>
-
-        <div
-          style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--accent-color); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 25px; text-align: left; font-size: 0.9rem;">
-          <strong style="display: block; margin-bottom: 5px; color: var(--accent-color);">⚠️ Action requise :</strong>
-          Pas de mail ? Vérifiez votre dossier <strong>Courrier indésirable (SPAM)</strong>. <br><br>
-          Si vous le trouvez là-bas, cliquez sur <strong>"Non-spam"</strong> pour pouvoir cliquer sur le lien de
-          validation et recevoir nos futurs messages.
-        </div>
-
-        <button class="btn btn-secondary" onclick="location.reload()"
-          style="width: 100%; border: 1px solid var(--border-color);">
-          Retour à la connexion
-        </button>
-      </div>
     </div>
   </div>
 
@@ -138,35 +681,94 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <!-- Scripts personnalisés -->
+  <!-- Scripts -->
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
 
   <script>
-    // Basculer entre les onglets
-    function switchTab(tab) {
-      const loginTab = document.querySelector('.auth-tab:first-child');
-      const signupTab = document.querySelector('.auth-tab:last-child');
-      const loginForm = document.getElementById('login-form');
-      const signupForm = document.getElementById('signup-form');
+    // Theme toggle
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    // Init theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // Reset password modal functions
+    function openResetModal() {
+      document.getElementById('reset-modal').classList.add('active');
+      document.getElementById('reset-email').value = '';
+      document.getElementById('reset-message').classList.add('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('reset-modal').classList.remove('active');
+    }
+
+    // Close modal on outside click
+    document.getElementById('reset-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'reset-modal') {
+        closeResetModal();
+      }
+    });
+
+    // Reset password form handler
+    document.getElementById('reset-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('reset-email').value;
+
+      document.getElementById('reset-btn-text').classList.add('hidden');
+      document.getElementById('reset-loading').classList.remove('hidden');
+
+      const result = await resetPassword(email);
+
+      document.getElementById('reset-btn-text').classList.remove('hidden');
+      document.getElementById('reset-loading').classList.add('hidden');
+
+      if (result.success) {
+        showSuccess('reset-message', result.message);
+        setTimeout(() => {
+          closeResetModal();
+        }, 3000);
+      } else {
+        showError('reset-message', formatFirebaseError(result.error));
+      }
+    });
+
+    // Switch tabs
+    function switchModernTab(tab) {
+      const loginTab = document.querySelector('.modern-tab:first-child');
+      const signupTab = document.querySelector('.modern-tab:last-child');
+      const loginContainer = document.getElementById('login-container');
+      const signupContainer = document.getElementById('signup-container');
+      const formTitle = document.getElementById('form-title');
+      const formSubtitle = document.getElementById('form-subtitle');
+
+      document.getElementById('auth-message').classList.add('hidden');
 
       if (tab === 'login') {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
-        loginForm.classList.add('active');
-        signupForm.classList.remove('active');
+        loginContainer.classList.add('active');
+        signupContainer.classList.remove('active');
+        formTitle.textContent = 'Bienvenue !';
+        formSubtitle.textContent = 'Connectez-vous pour accéder à votre espace';
       } else {
         signupTab.classList.add('active');
         loginTab.classList.remove('active');
-        signupForm.classList.add('active');
-        loginForm.classList.remove('active');
+        signupContainer.classList.add('active');
+        loginContainer.classList.remove('active');
+        formTitle.textContent = 'Créer un compte';
+        formSubtitle.textContent = 'Rejoignez la communauté Ibn Sina';
       }
-
-      // Effacer les messages
-      document.getElementById('auth-message').classList.add('hidden');
     }
 
-    // Basculer l'affichage du champ Promo
+    // Toggle promo field
     function togglePromoField(val) {
       const promoGroup = document.getElementById('promo-group');
       if (val === 'Lauréat') {
@@ -178,15 +780,14 @@
       }
     }
 
-    // Vérifier si l'utilisateur est déjà connecté
+    // Auth state
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         const profile = await getCurrentUserProfile();
         if (profile) {
-          // Bloquer la redirection si lauréat non approuvé
           if (profile.role === 'alumni' && !profile.isApproved) {
             await auth.signOut();
-            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
+            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation.');
             return;
           }
           redirectByRole(profile.role);
@@ -194,33 +795,30 @@
       }
     });
 
-    // Afficher les erreurs passées en URL (ex: après redirection forcée de auth.js)
+    // URL error handling
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const error = urlParams.get('error');
       if (error === 'unverified') {
-        showError('auth-message', 'Votre email n\'est pas encore vérifié. Veuillez consulter vos spams.');
+        showError('auth-message', 'Votre email n\'est pas encore vérifié. Consultez vos spams.');
       } else if (error === 'suspended') {
-        showError('auth-message', 'Désolé, votre compte a été suspendu par l\'administrateur.');
+        showError('auth-message', 'Votre compte a été suspendu.');
       } else if (error === 'unapproved') {
-        showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
+        showError('auth-message', 'Votre compte est en attente d\'approbation.');
       }
     });
 
-    // Gérer la soumission du formulaire de connexion
+    // Login form
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
 
-      // Afficher le loading
       document.getElementById('login-btn-text').classList.add('hidden');
       document.getElementById('login-loading').classList.remove('hidden');
 
       const result = await login(email, password);
 
-      // Masquer le loading
       document.getElementById('login-btn-text').classList.remove('hidden');
       document.getElementById('login-loading').classList.add('hidden');
 
@@ -228,9 +826,8 @@
         showSuccess('auth-message', 'Connexion réussie ! Redirection...');
         const profile = await getCurrentUserProfile();
         if (profile) {
-          // Vérification spécifique pour les lauréats
           if (profile.role === 'alumni' && !profile.isApproved) {
-            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation par l\'administrateur.');
+            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation.');
             await auth.signOut();
             return;
           }
@@ -245,7 +842,7 @@
       }
     });
 
-    // Gérer la soumission du formulaire d'inscription
+    // Signup form
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -256,45 +853,39 @@
       const email = document.getElementById('signup-email').value;
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
+      const filiere = document.getElementById('signup-filiere').value;
 
-      // Validation
       if (password !== confirm) {
         showError('auth-message', 'Les mots de passe ne correspondent pas.');
         return;
       }
 
-      // Afficher le loading
       document.getElementById('signup-btn-text').classList.add('hidden');
       document.getElementById('signup-loading').classList.remove('hidden');
 
-      const filiere = document.getElementById('signup-filiere').value;
-
-      // Passer l'objet avec le niveau et la promo à la fonction signup
       const result = await signup(email, password, name, phone, 'student', niveau, promo, filiere);
 
-      // Masquer le loading
       document.getElementById('signup-btn-text').classList.remove('hidden');
       document.getElementById('signup-loading').classList.add('hidden');
 
       if (result.success) {
-        // Masquer les onglets et le formulaire
-        document.getElementById('auth-tabs-container').classList.add('hidden');
-        document.getElementById('signup-form').classList.remove('active');
+        document.querySelector('.modern-tabs').classList.add('hidden');
+        document.getElementById('signup-container').classList.remove('active');
         document.getElementById('auth-message').classList.add('hidden');
 
-        // Afficher l'écran de succès
-        let msg = result.message || 'Votre compte a été créé avec succès !';
+        let msg = 'Un email de vérification a été envoyé à votre adresse.';
         if (niveau === 'Lauréat') {
-          msg += " <br><br><strong>Note importante :</strong> En tant que Lauréat, votre accès sera activé après validation manuelle de l'administrateur.";
+          msg += " En tant que Lauréat, votre accès sera activé après validation par l'administrateur.";
         }
 
-        document.getElementById('success-msg-content').innerHTML = msg;
+        document.getElementById('success-msg-content').textContent = msg;
         document.getElementById('signup-success').classList.remove('hidden');
       } else {
         showError('auth-message', formatFirebaseError(result.error));
       }
     });
   </script>
+  <script src="js/dev-switcher.js"></script>
 </body>
 
 </html>

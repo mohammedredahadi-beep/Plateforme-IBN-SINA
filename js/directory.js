@@ -10,11 +10,15 @@ async function initDirectory() {
 }
 
 /**
- * Load alumni directory with optional filters
+ * Load alumni/directory with RBAC filters
  */
 async function loadDirectory(filiereFilter = 'all', searchTerm = '') {
     const container = document.getElementById('directory-grid');
     if (!container) return;
+
+    // Get current user profile for RBAC
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) return;
 
     container.innerHTML = `
         <div class="card text-center" style="grid-column: span 3; padding: 40px;">
@@ -24,7 +28,30 @@ async function loadDirectory(filiereFilter = 'all', searchTerm = '') {
     `;
 
     try {
-        let query = directoryRef.where('role', '==', 'alumni');
+        let query = directoryRef;
+
+        // RBAC: Apply base filters depending on role
+        // RBAC: Apply base filters depending on role
+        if (currentUser.role === 'student') {
+            // Students can only see people from their own class (filiere)
+            query = query.where('filiere', '==', currentUser.filiere);
+        } else if (currentUser.role === 'alumni') {
+            // LOGIQUE LAUREAT
+            if (currentUser.mentorStatus === 'approved') {
+                // Mentors: Voient Etudiants ET Lauréats
+                query = query.where('role', 'in', ['student', 'alumni']);
+            } else {
+                // Lauréats standards: Voient UNIQUEMENT les Lauréats
+                query = query.where('role', '==', 'alumni');
+            }
+        } else if (currentUser.role === 'admin') {
+            // Admins can see everyone (Students + Alumni)
+            // No filter or explicit check
+            query = query.where('role', 'in', ['student', 'alumni']);
+        } else {
+            // Default fallback
+            query = query.where('role', '==', 'alumni');
+        }
 
         const snapshot = await query.get();
 
