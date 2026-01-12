@@ -19,11 +19,8 @@ async function initStudentDashboard() {
     // Afficher les informations de l'utilisateur
     displayUserInfo();
 
-    // Charger les filières
-    await loadFilieres();
-
-    // Charger les demandes de l'utilisateur
-    await loadUserRequests();
+    // Afficher le lien WhatsApp
+    await displayWhatsAppAccess();
 
     // Affichage automatique de l'espace lauréat si le profil le confirme
     if (currentUser.niveau === 'Lauréat') {
@@ -31,7 +28,6 @@ async function initStudentDashboard() {
         loadPromoNetwork();
     }
 
-    // Initialiser les notifications
     // Initialiser les notifications
     if (typeof initNotificationSystem === 'function') {
         initNotificationSystem();

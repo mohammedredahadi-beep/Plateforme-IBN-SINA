@@ -33,6 +33,9 @@ async function initDelegateDashboard() {
     if (typeof initNotificationSystem === 'function') {
         initNotificationSystem();
     }
+
+    // Charger le badge de validations
+    loadValidationsBadge();
 }
 
 /**
@@ -275,6 +278,8 @@ function showView(view) {
     document.getElementById('history-view').classList.add('hidden');
     document.getElementById('settings-view').classList.add('hidden');
     document.getElementById('announcements-view').classList.add('hidden');
+    const validationsView = document.getElementById('validations-view');
+    if (validationsView) validationsView.classList.add('hidden');
 
     // Gérer l'en-tête global des demandes (Stats + Recherche)
     // Visible uniquement pour 'pending' et 'history'
@@ -298,6 +303,12 @@ function showView(view) {
     } else if (view === 'announcements') {
         document.getElementById('announcements-view').classList.remove('hidden');
         if (typeof loadDelegateHistory === 'function') loadDelegateHistory();
+    } else if (view === 'validations') {
+        const validationsView = document.getElementById('validations-view');
+        if (validationsView) {
+            validationsView.classList.remove('hidden');
+            displayDelegateValidations();
+        }
     }
 }
 
@@ -479,5 +490,147 @@ async function runAIAnalysis(requestId, motivation, containerId) {
         console.error("Erreur d'analyse IA pour requestId:", requestId, error);
         const container = document.getElementById(containerId);
         if (container) container.innerHTML = '';
+    }
+}
+
+// --- FONCTIONS DE VALIDATION DÉCENTRALISÉE ---
+
+// Charger le badge de validations
+async function loadValidationsBadge() {
+    if (!currentUser || !currentUser.filiere) return;
+
+    try {
+        const snapshot = await usersRef
+            .where('role', '==', 'student')
+            .where('filiere', '==', currentUser.filiere)
+            .where('isApproved', '==', false)
+            .get();
+
+        const count = snapshot.size;
+        const badge = document.getElementById('sidebar-badge-validations');
+        if (badge) {
+            badge.textContent = count;
+            if (count > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    } catch (error) {
+        console.error('Erreur chargement badge validations:', error);
+    }
+}
+
+// Afficher les étudiants en attente de validation
+async function displayDelegateValidations() {
+    const container = document.getElementById('validation-list');
+
+    if (!currentUser || !currentUser.filiere) {
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Erreur: Filière non définie</p></div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Chargement...</p></div>';
+
+    try {
+        const snapshot = await usersRef
+            .where('role', '==', 'student')
+            .where('filiere', '==', currentUser.filiere)
+            .where('isApproved', '==', false)
+            .get();
+
+        if (snapshot.empty) {
+            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">✅ Aucune inscription en attente</p></div>';
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const student = doc.data();
+            const createdDate = student.createdAt ? new Date(student.createdAt.toDate()).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }) : 'Date inconnue';
+
+            html += `
+                <div class="card">
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-xs);">${student.fullName}</h3>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <p>📧 ${student.email}</p>
+                            <p>📱 ${student.phone || 'Non renseigné'}</p>
+                            <p>📚 Niveau: ${student.niveau || 'Non spécifié'}</p>
+                            <p>🗂️ Filière: ${student.filiere}</p>
+                            <p>🕒 Inscription: ${createdDate}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-1">
+                        <button class="btn btn-success" onclick="delegateApproveStudent('${student.uid}')" style="flex: 1;">
+                            ✓ Valider
+                        </button>
+                        <button class="btn btn-danger" onclick="delegateRejectStudent('${student.uid}')" style="flex: 1;">
+                            ✗ Refuser
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Erreur chargement validations:', error);
+        container.innerHTML = '<div class="card text-center"><p style="color: var(--text-error);">Erreur de chargement</p></div>';
+    }
+}
+
+// Approuver un étudiant par le délégué
+async function delegateApproveStudent(userId) {
+    if (!confirm('Confirmer la validation de cet étudiant ?')) return;
+
+    try {
+        await usersRef.doc(userId).update({
+            isApproved: true,
+            approvedBy: auth.currentUser.uid,
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('delegate-message', 'Étudiant validé avec succès ! Il peut maintenant accéder à la plateforme.');
+
+        // Rafraîchir
+        displayDelegateValidations();
+        loadValidationsBadge();
+
+    } catch (error) {
+        console.error('Erreur validation:', error);
+        showError('delegate-message', 'Erreur lors de la validation: ' + error.message);
+    }
+}
+
+// Refuser un étudiant (suspension)
+async function delegateRejectStudent(userId) {
+    const reason = prompt('Raison du refus (optionnel):');
+    if (reason === null) return; // Annulation
+
+    try {
+        await usersRef.doc(userId).update({
+            isSuspended: true,
+            suspensionReason: reason || 'Refusé par le délégué',
+            suspendedBy: auth.currentUser.uid,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showSuccess('delegate-message', 'Inscription refusée.');
+
+        // Rafraîchir
+        displayDelegateValidations();
+        loadValidationsBadge();
+
+    } catch (error) {
+        console.error('Erreur refus:', error);
+        showError('delegate-message', 'Erreur lors du refus: ' + error.message);
     }
 }

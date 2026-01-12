@@ -826,8 +826,8 @@
         showSuccess('auth-message', 'Connexion réussie ! Redirection...');
         const profile = await getCurrentUserProfile();
         if (profile) {
-          if (profile.role === 'alumni' && !profile.isApproved) {
-            showError('auth-message', 'Votre compte Lauréat est en attente d\'approbation.');
+          if (!profile.isApproved) {
+            showError('auth-message', 'Votre compte est en attente de validation par l\'administration ou votre délégué.');
             await auth.signOut();
             return;
           }

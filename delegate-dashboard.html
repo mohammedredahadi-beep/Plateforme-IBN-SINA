@@ -22,7 +22,11 @@
 
             <nav class="sidebar-nav">
                 <a href="#" class="sidebar-link active" data-view="pending" onclick="handleDelegateView('pending')">
-                    📋 <span class="nav-label">Demandes</span>
+                    📋 <span class="nav-label">Groupe WP</span>
+                </a>
+                <a href="#" class="sidebar-link" data-view="validations" onclick="handleDelegateView('validations')">
+                    🛡️ <span class="nav-label">Validations</span>
+                    <span id="sidebar-badge-validations" class="badge badge-error hidden">0</span>
                 </a>
                 <a href="#" class="sidebar-link" data-view="announcements"
                     onclick="handleDelegateView('announcements')">
@@ -161,126 +165,147 @@
                         <p style="color: var(--text-secondary);">Chargement...</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Vue des paramètres -->
-            <div id="settings-view" class="hidden">
-                <div class="card" style="margin-bottom: var(--spacing-md);">
-                    <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Paramètres de la filière</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Configurez les informations d'accès pour
-                        les
-                        étudiants</p>
-                </div>
-
-                <div class="card">
-                    <form id="settings-form" onsubmit="updateFiliereSettings(event)">
-                        <div class="form-group">
-                            <label class="form-label" for="setting-whatsapp">Lien du groupe WhatsApp</label>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">
-                                C'est le lien que les étudiants recevront par l'IA une fois leur PIN vérifié.
-                            </p>
-                            <input type="url" id="setting-whatsapp" class="form-input"
-                                placeholder="https://chat.whatsapp.com/..." required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Vue des Communications / Messages [UPDATED] -->
-            <div id="announcements-view" class="hidden">
-                <div class="card" style="margin-bottom: var(--spacing-md);">
-                    <div class="flex" style="justify-content: space-between; align-items: center;">
-                        <div>
-                            <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">📢 Communication avec les
-                                Étudiants
-                            </h3>
-                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Envoyez des messages à votre
-                                filière
-                            </p>
-                        </div>
+                <!-- Vue Validations [NEW] -->
+                <div id="validations-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">🛡️ Validation des Inscriptions
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Vous devez valider les étudiants de votre filière pour qu'ils puissent accéder à la
+                            plateforme.
+                        </p>
                     </div>
-                </div>
 
-                <!-- Message Form -->
-                <div class="card" style="margin-bottom: var(--spacing-md);">
-                    <h4 style="margin-bottom: 15px;">Nouveau Message</h4>
-                    <form id="delegate-message-form" onsubmit="sendDelegateMessage(event)">
-
-
-                        <!-- Title -->
-                        <div class="form-group">
-                            <label class="form-label">Titre</label>
-                            <input type="text" id="delegate-msg-title" class="form-input"
-                                placeholder="Ex: Changement d'emploi du temps" required>
-                        </div>
-
-                        <!-- Content -->
-                        <div class="form-group">
-                            <label class="form-label">Message</label>
-                            <textarea id="delegate-msg-content" class="form-textarea" rows="5"
-                                placeholder="Écrivez votre message ici..." required></textarea>
-                        </div>
-
-                        <!-- Priority -->
-                        <div class="form-group">
-                            <label class="form-label">Priorité</label>
-                            <select id="delegate-msg-priority" class="form-select">
-                                <option value="communicative">📢 Communicatif</option>
-                                <option value="warning">⚠️ Avertissement</option>
-                                <option value="urgent">🚨 Urgent</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">Envoyer le message</button>
-                    </form>
-                </div>
-
-                <!-- Message History -->
-                <div class="card" style="margin-bottom: var(--spacing-md);">
-                    <h4 style="margin-bottom: 15px;">📋 Historique de mes messages</h4>
-                    <div id="my-announcements-list">
-                        <!-- Loaded by JS -->
+                    <div id="validation-list" class="grid grid-2">
                         <div class="card text-center">
-                            <p>Chargement...</p>
+                            <p style="color: var(--text-secondary);">Chargement des inscriptions en attente...</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Guide -->
-                <div class="card" style="margin-top: var(--spacing-xl);">
-                    <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Guide du délégué</h4>
-                    <ul style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
-                        <li style="margin-bottom: var(--spacing-xs);"><strong>Approuver:</strong> Vous pourrez fournir
-                            un lien
-                            WhatsApp ou ajouter manuellement l'étudiant au groupe</li>
-                        <li style="margin-bottom: var(--spacing-xs);"><strong>Rejeter:</strong> Expliquez brièvement la
-                            raison
-                            du rejet à l'étudiant</li>
-                        <li style="margin-bottom: var(--spacing-xs);"><strong>Notifications:</strong> Les étudiants
-                            voient les
-                            mises à jour en temps réel</li>
-                        <li>Les coordonnées des étudiants (email, téléphone) sont disponibles pour faciliter la
-                            communication
-                        </li>
-                    </ul>
-                </div>
+                <!-- Vue des paramètres -->
+                <div id="settings-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Paramètres de la filière</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Configurez les informations d'accès
+                            pour
+                            les
+                            étudiants</p>
+                    </div>
 
-            </div>
-
-            <!-- Vue Notifications -->
-            <div id="notifications-view" class="tab-content hidden">
-                <div class="card" style="margin-bottom: var(--spacing-md);">
-                    <h3 style="font-weight: 600;">🔔 Notifications</h3>
-                    <p style="color: var(--text-secondary);">Vos messages et alertes</p>
-                </div>
-
-                <div id="notifications-feed">
-                    <div class="card text-center">
-                        <p style="color: var(--text-secondary);">Chargement...</p>
+                    <div class="card">
+                        <form id="settings-form" onsubmit="updateFiliereSettings(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="setting-whatsapp">Lien du groupe WhatsApp</label>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px;">
+                                    C'est le lien que les étudiants recevront par l'IA une fois leur PIN vérifié.
+                                </p>
+                                <input type="url" id="setting-whatsapp" class="form-input"
+                                    placeholder="https://chat.whatsapp.com/..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        </form>
                     </div>
                 </div>
-            </div>
+
+                <!-- Vue des Communications / Messages [UPDATED] -->
+                <div id="announcements-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <div class="flex" style="justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">📢 Communication avec
+                                    les
+                                    Étudiants
+                                </h3>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem;">Envoyez des messages à votre
+                                    filière
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Form -->
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h4 style="margin-bottom: 15px;">Nouveau Message</h4>
+                        <form id="delegate-message-form" onsubmit="sendDelegateMessage(event)">
+
+
+                            <!-- Title -->
+                            <div class="form-group">
+                                <label class="form-label">Titre</label>
+                                <input type="text" id="delegate-msg-title" class="form-input"
+                                    placeholder="Ex: Changement d'emploi du temps" required>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="form-group">
+                                <label class="form-label">Message</label>
+                                <textarea id="delegate-msg-content" class="form-textarea" rows="5"
+                                    placeholder="Écrivez votre message ici..." required></textarea>
+                            </div>
+
+                            <!-- Priority -->
+                            <div class="form-group">
+                                <label class="form-label">Priorité</label>
+                                <select id="delegate-msg-priority" class="form-select">
+                                    <option value="communicative">📢 Communicatif</option>
+                                    <option value="warning">⚠️ Avertissement</option>
+                                    <option value="urgent">🚨 Urgent</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Envoyer le
+                                message</button>
+                        </form>
+                    </div>
+
+                    <!-- Message History -->
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h4 style="margin-bottom: 15px;">📋 Historique de mes messages</h4>
+                        <div id="my-announcements-list">
+                            <!-- Loaded by JS -->
+                            <div class="card text-center">
+                                <p>Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guide -->
+                    <div class="card" style="margin-top: var(--spacing-xl);">
+                        <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Guide du délégué</h4>
+                        <ul style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
+                            <li style="margin-bottom: var(--spacing-xs);"><strong>Approuver:</strong> Vous pourrez
+                                fournir
+                                un lien
+                                WhatsApp ou ajouter manuellement l'étudiant au groupe</li>
+                            <li style="margin-bottom: var(--spacing-xs);"><strong>Rejeter:</strong> Expliquez brièvement
+                                la
+                                raison
+                                du rejet à l'étudiant</li>
+                            <li style="margin-bottom: var(--spacing-xs);"><strong>Notifications:</strong> Les étudiants
+                                voient les
+                                mises à jour en temps réel</li>
+                            <li>Les coordonnées des étudiants (email, téléphone) sont disponibles pour faciliter la
+                                communication
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- Vue Notifications -->
+                <div id="notifications-view" class="tab-content hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600;">🔔 Notifications</h3>
+                        <p style="color: var(--text-secondary);">Vos messages et alertes</p>
+                    </div>
+
+                    <div id="notifications-feed">
+                        <div class="card text-center">
+                            <p style="color: var(--text-secondary);">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
         </main>
     </div> <!-- End Dashboard Layout -->
 

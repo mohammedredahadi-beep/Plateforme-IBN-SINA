@@ -69,9 +69,9 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         // Envoyer l'email de vérification
         await user.sendEmailVerification();
 
-        // Par défaut, un étudiant est "approuvé" immédiatement pour accéder au dashboard
-        // Mais un LAURÉAT doit attendre l'approbation de l'admin
-        const isApproved = (niveau === 'Lauréat') ? false : true;
+        // Initialisation de la sécurité : Personne n'est approuvé par défaut
+        // L'Administration ou le Délégué doit valider l'inscription
+        const isApproved = false;
         const finalRole = (niveau === 'Lauréat') ? 'alumni' : role;
 
         // Créer le profil utilisateur dans Firestore
@@ -92,10 +92,8 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         // Déconnexion immédiate après inscription pour forcer la vérification
         await auth.signOut();
 
-        let message = "Un email de vérification a été envoyé. Veuillez vérifier votre boîte de réception avant de vous connecter.";
-        if (niveau === 'Lauréat') {
-            message += " En tant que Lauréat, votre compte devra aussi être validé par un administrateur.";
-        }
+        let message = "Un email de vérification a été envoyé.";
+        message += " Votre compte est actuellement en attente de validation par l'administration ou votre délégué.";
 
         return { success: true, user: user, message: message };
     } catch (error) {
@@ -203,8 +201,8 @@ async function checkAuthAndRedirect() {
                 return;
             }
 
-            // Si c'est un lauréat non approuvé
-            if (profile && profile.role === 'alumni' && !profile.isApproved) {
+            // Si le compte n'est pas approuvé (valable pour TOUS les rôles)
+            if (profile && !profile.isApproved) {
                 await auth.signOut();
                 window.location.href = 'index.html?error=unapproved';
                 resolve(null);

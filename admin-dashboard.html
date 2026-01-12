@@ -46,6 +46,10 @@
                     🎓 <span class="nav-label">Lauréats</span>
                     <span id="sidebar-badge-alumni" class="badge badge-warning hidden">0</span>
                 </a>
+                <a href="#" class="sidebar-link" data-view="validations" onclick="showAdminView('validations')">
+                    🛡️ <span class="nav-label">Validations</span>
+                    <span id="sidebar-badge-validations" class="badge badge-danger hidden">0</span>
+                </a>
                 <a href="#" class="sidebar-link" data-view="marketing" onclick="showAdminView('marketing')">
                     📢 <span class="nav-label">Communication</span>
                 </a>
@@ -208,6 +212,9 @@
                             </button>
                             <button class="btn btn-warning" onclick="showAdminView('requests')">
                                 📋 Voir Demandes
+                            </button>
+                            <button class="btn btn-danger" onclick="showAdminView('validations')">
+                                🛡️ Validations
                             </button>
                         </div>
                     </div>
@@ -386,6 +393,38 @@
                     <div id="alumni-pending-list">
                         <div class="card text-center">
                             <p style="color: var(--text-secondary);">Chargement des lauréats en attente...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vue Validation Centralisée [NEW] -->
+                <div id="validations-view" class="hidden">
+                    <div class="card" style="margin-bottom: var(--spacing-md);">
+                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">🛡️ Centre de Validation</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Validez les nouveaux comptes.
+                            <br>
+                            <strong style="color: var(--primary);">Note :</strong> Les Délégués et Lauréats doivent être
+                            validés par l'ADMIN. Les étudiants sont normalement validés par leur Délégué (mais l'Admin a
+                            le contrôle total).
+                        </p>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <!-- Colonne Prioritaire : Délégués et Alumni -->
+                        <div>
+                            <h4 style="margin-bottom: 15px;">🚨 Prioritaire (Admin Requis)</h4>
+                            <div id="validation-priority-list">
+                                <p class="text-center" style="color: var(--text-secondary);">Chargement...</p>
+                            </div>
+                        </div>
+
+                        <!-- Colonne Secondaire : Étudiants -->
+                        <div>
+                            <h4 style="margin-bottom: 15px;">🎓 Étudiants (Responsabilité Délégué)</h4>
+                            <div id="validation-students-list">
+                                <p class="text-center" style="color: var(--text-secondary);">Chargement...</p>
+                            </div>
                         </div>
                     </div>
                 </div>

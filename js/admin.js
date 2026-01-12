@@ -653,6 +653,15 @@ function displayStats() {
         else sidebarAlumniBadge.classList.add('hidden');
     }
 
+    // Badge VALIDATIONS
+    const pendingValidations = allUsers.filter(u => !u.isApproved).length;
+    const sidebarValBadge = document.getElementById('sidebar-badge-validations');
+    if (sidebarValBadge) {
+        sidebarValBadge.textContent = pendingValidations;
+        if (pendingValidations > 0) sidebarValBadge.classList.remove('hidden');
+        else sidebarValBadge.classList.add('hidden');
+    }
+
     // 4. Mise à jour des graphiques si disponibles
     if (typeof updateAllCharts === 'function' && chartsInitialized) {
         try {
@@ -719,7 +728,7 @@ function showAdminView(viewId) {
     // Liste explicite de toutes les vues pour garantir qu'elles sont cachées
     const views = [
         'dashboard', 'filieres', 'users', 'events', 'requests',
-        'alumni', 'logs', 'support', 'backup', 'marketing', 'diagnostics', 'notifications'
+        'alumni', 'logs', 'support', 'backup', 'marketing', 'diagnostics', 'notifications', 'validations'
     ];
 
     // Masquer toutes les vues
@@ -765,7 +774,12 @@ function showAdminView(viewId) {
             if (headerSubtitle) headerSubtitle.textContent = 'Envoyer des messages aux utilisateurs';
         } else if (viewId === 'notifications') {
             headerTitle.textContent = 'Notifications';
+        } else if (viewId === 'notifications') {
+            headerTitle.textContent = 'Notifications';
             if (headerSubtitle) headerSubtitle.textContent = 'Gérer les notifications push';
+        } else if (viewId === 'validations') {
+            headerTitle.textContent = 'Validations';
+            if (headerSubtitle) headerSubtitle.textContent = 'Valider les nouveaux inscrits';
         }
     }
 
@@ -786,6 +800,8 @@ function showAdminView(viewId) {
     if (viewId === 'support') loadSupportAlerts();
     if (viewId === 'events') loadAdminEvents();
     if (viewId === 'events') loadAdminEvents();
+    if (viewId === 'events') loadAdminEvents();
+    if (viewId === 'validations') displayValidations();
     if (viewId === 'notifications' && typeof initAdminNotificationsView === 'function') initAdminNotificationsView();
 }
 
@@ -1729,4 +1745,94 @@ async function importData() {
     };
 
     reader.readAsText(file);
+}
+// --- FONCTIONS DE VALIDATION DECENTRALISEE ---
+
+// Afficher les utilisateurs en attente de validation
+function displayValidations() {
+    const priorityContainer = document.getElementById('validation-priority-list');
+    const studentsContainer = document.getElementById('validation-students-list');
+
+    // Filtrer les utilisateurs non approuvés
+    const unapproved = allUsers.filter(u => !u.isApproved);
+
+    // Séparer en deux groupes
+    // Priorité : Délégués et Lauréats
+    const priorityUsers = unapproved.filter(u => u.role === 'delegate' || u.role === 'alumni' || u.niveau === 'Lauréat');
+
+    // Étudiants (normalement gérés par Délégués, mais Admin voit tout)
+    const studentUsers = unapproved.filter(u => !priorityUsers.includes(u));
+
+    // Render Priority List
+    if (priorityUsers.length === 0) {
+        priorityContainer.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucune demande prioritaire.</p></div>';
+    } else {
+        let html = '';
+        priorityUsers.forEach(user => {
+            const roleBadge = user.role === 'delegate'
+                ? '<span class="badge badge-pending">Délégué</span>'
+                : '<span class="badge badge-warning">Lauréat</span>';
+
+            html += `
+                <div class="card flex" style="justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="font-weight: 600;">${user.fullName}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">${user.email} • ${roleBadge}</div>
+                        <div style="font-size: 0.8rem;">${user.niveau || ''} ${user.filiere || ''}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="btn btn-success btn-small" onclick="approveUser('${user.uid}')">Valider</button>
+                        <button class="btn btn-danger btn-small" onclick="suspendUser('${user.uid}')">Rejeter</button>
+                    </div>
+                </div>
+            `;
+        });
+        priorityContainer.innerHTML = html;
+    }
+
+    // Render Student List
+    if (studentUsers.length === 0) {
+        studentsContainer.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Aucun étudiant en attente.</p></div>';
+    } else {
+        let html = '';
+        studentUsers.forEach(user => {
+            html += `
+                <div class="card flex" style="justify-content: space-between; align-items: center; margin-bottom: 10px; background: var(--bg-tertiary);">
+                    <div>
+                        <div style="font-weight: 600;">${user.fullName}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">${user.email} • ${user.niveau}</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="btn btn-success btn-small" onclick="approveUser('${user.uid}')">Valider</button>
+                        <button class="btn btn-secondary btn-small" onclick="suspendUser('${user.uid}')">Refuser</button>
+                    </div>
+                </div>
+            `;
+        });
+        studentsContainer.innerHTML = html;
+    }
+}
+
+// Valider un utilisateur (Générique)
+async function approveUser(userId) {
+    if (!confirm("Confirmer la validation de cet utilisateur ?")) return;
+
+    try {
+        await usersRef.doc(userId).update({
+            isApproved: true,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await logAction('APPROVE_USER', userId);
+        showSuccess('admin-message', 'Utilisateur validé avec succès.');
+
+        // Rafraîchir
+        await loadAllUsers();
+        displayValidations();
+        displayStats();
+
+    } catch (error) {
+        console.error("Erreur approval:", error);
+        showError('admin-message', "Erreur lors de la validation: " + error.message);
+    }
 }
