@@ -20,7 +20,10 @@
             </div>
 
             <nav class="sidebar-nav">
-                <button class="sidebar-link active" data-tab="whatsapp">
+                <button class="sidebar-link active" data-tab="home">
+                    🏠 <span class="nav-label">Accueil</span>
+                </button>
+                <button class="sidebar-link" data-tab="whatsapp">
                     📋 <span class="nav-label">Groupe WhatsApp</span>
                 </button>
                 <button class="sidebar-link" data-tab="validations">
@@ -75,15 +78,84 @@
                 <div id="delegate-message" class="hidden"></div>
             </header>
 
+            <!-- Home / Overview View -->
+            <div id="home-view" class="tab-view">
+                <div class="grid grid-3 mb-2 reveal-anim">
+                    <div class="card premium-card glass-premium" style="border-left: 4px solid var(--primary);">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span style="font-size: 1.5rem;">🛡️</span>
+                            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);">En
+                                attente</span>
+                        </div>
+                        <div id="stat-pending" style="font-size: 2rem; font-weight: 800; color: var(--text-main);">0
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">Inscriptions à valider
+                        </div>
+                    </div>
+
+                    <div class="card premium-card glass-premium" style="border-left: 4px solid var(--secondary);">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span style="font-size: 1.5rem;">👥</span>
+                            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);">Ma
+                                Classe</span>
+                        </div>
+                        <div id="stat-total" style="font-size: 2rem; font-weight: 800; color: var(--text-main);">0</div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">Étudiants membres</div>
+                    </div>
+
+                    <div class="card premium-card glass-premium" style="border-left: 4px solid var(--accent);">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span style="font-size: 1.5rem;">✅</span>
+                            <span
+                                style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);">Approuvés</span>
+                        </div>
+                        <div id="stat-approved" style="font-size: 2rem; font-weight: 800; color: var(--text-main);">0
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 5px;">Depuis le début</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2 gap-2 reveal-anim" style="animation-delay: 0.1s;">
+                    <!-- Recent Announcements Preview -->
+                    <div class="card glass-premium">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 style="font-weight: 700; font-size: 1.1rem;">📢 Annonces Récentes</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="switchTab('announcements')">Voir
+                                tout</button>
+                        </div>
+                        <div id="recent-announcements-list" style="margin-top: 1rem;">
+                            <p style="color: var(--text-dim); font-size: 0.9rem; text-align: center;">Chargement...</p>
+                        </div>
+                    </div>
+
+                    <!-- Setup Quick Action -->
+                    <div class="card glass-premium flex flex-col justify-center items-center text-center p-2">
+                        <div
+                            style="width: 60px; height: 60px; background: rgba(99, 102, 241, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                            <span style="font-size: 1.8rem;">🔗</span>
+                        </div>
+                        <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Groupe WhatsApp</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                            Assurez-vous que le lien d'invitation est à jour pour vos nouveaux camarades.
+                        </p>
+                        <button class="btn btn-primary" onclick="switchTab('whatsapp')"
+                            style="width: 100%; border: none; background: var(--grad-premium);">
+                            Configurer le lien
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- WhatsApp View -->
-            <div id="whatsapp-view" class="tab-view">
-                <div class="card" style="margin-bottom: var(--spacing-md);">
+            <div id="whatsapp-view" class="tab-view" style="display: none;">
+                <div class="card glass-premium mb-2">
                     <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">💬 Lien du Groupe WhatsApp</h3>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">
                         Configurez le lien WhatsApp de votre classe. Les étudiants validés y auront accès
                         automatiquement.
                     </p>
                 </div>
+                <!-- ... remains same ... -->
 
                 <div class="card premium-card glass-premium reveal-on-scroll">
                     <form id="whatsapp-link-form" onsubmit="updateFiliereSettings(event)">
@@ -286,6 +358,7 @@
 
             // Update subtitle
             const subtitles = {
+                'home': 'Ma Classe en un coup d\'œil',
                 'whatsapp': 'Gérez les accès WhatsApp pour votre classe',
                 'validations': 'Validez les nouveaux étudiants',
                 'announcements': 'Communiquez avec votre classe',
@@ -296,7 +369,11 @@
             document.getElementById('current-view-subtitle').textContent = subtitles[tabName] || '';
 
             // Load view data
-            if (tabName === 'validations') {
+            if (tabName === 'home') {
+                if (typeof loadDashboardOverview === 'function') {
+                    loadDashboardOverview();
+                }
+            } else if (tabName === 'validations') {
                 if (typeof displayDelegateValidations === 'function') {
                     displayDelegateValidations();
                 }
@@ -331,7 +408,7 @@
         window.addEventListener('DOMContentLoaded', async function () {
             await initDelegateDashboard();
             // Show default tab
-            switchTab('whatsapp');
+            switchTab('home');
         });
     </script>
 

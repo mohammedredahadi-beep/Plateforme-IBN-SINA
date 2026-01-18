@@ -913,6 +913,44 @@
         </div>
     </div>
 
+    <!-- Modal Modification Filière -->
+    <div id="edit-filiere-modal" class="modal hidden">
+        <div class="modal-content glass-premium fade-in">
+            <div class="flex"
+                style="justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600;">Modifier la Filière / Classe</h3>
+                <button class="btn btn-secondary btn-small" onclick="closeEditFiliereModal()">✕</button>
+            </div>
+            <form id="edit-filiere-form" onsubmit="updateFiliere(event)">
+                <input type="hidden" id="edit-filiere-id">
+
+                <div class="form-group">
+                    <label class="form-label">Nom de la classe (Lecture seule)</label>
+                    <input type="text" id="edit-filiere-name" class="form-input" disabled style="opacity: 0.7;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit-filiere-delegate">Délégué responsable</label>
+                    <select id="edit-filiere-delegate" class="form-select">
+                        <option value="">-- Sélectionner --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit-filiere-whatsapp">Lien WhatsApp</label>
+                    <input type="url" id="edit-filiere-whatsapp" class="form-input"
+                        placeholder="https://chat.whatsapp.com/...">
+                </div>
+
+                <div class="flex gap-1" style="margin-top: var(--spacing-md);">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;"
+                        onclick="closeEditFiliereModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
 
 

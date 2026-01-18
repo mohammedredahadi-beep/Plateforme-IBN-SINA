@@ -1132,6 +1132,7 @@ async function displayFilieres() {
                 }
 
                 const dropdownActions = [
+                    { label: 'Modifier', icon: '📝', onclick: `openEditFiliereModal('${filiere.id}')` },
                     { label: 'Supprimer', icon: '🗑️', class: 'danger', onclick: `deleteFiliere('${filiere.id}')` }
                 ];
 
@@ -2590,46 +2591,92 @@ async function addFiliere(e) {
 
 // Modifier une filière
 
-async function editFiliere(filiereId) {
+// --- Edit Filiere Logic with Modal ---
 
+function openEditFiliereModal(filiereId) {
     const filiere = allFilieres.find(f => f.id === filiereId);
-
     if (!filiere) return;
 
+    document.getElementById('edit-filiere-id').value = filiereId;
+    document.getElementById('edit-filiere-name').value = filiere.name || 'Filière';
+    document.getElementById('edit-filiere-whatsapp').value = filiere.whatsappLink || '';
 
+    // Populate Delegates Dropdown in Modal
+    const delegateSelect = document.getElementById('edit-filiere-delegate');
+    delegateSelect.innerHTML = '<option value="">-- Aucun délégué --</option>';
 
-    const newName = prompt('Nouveau nom de la filière:', filiere.name);
+    // Filter logic: Only users with role 'delegate'
+    const adminModeDelegates = allUsers.filter(u => u.role === 'delegate');
 
-    if (!newName) return;
+    adminModeDelegates.forEach(del => {
+        const option = document.createElement('option');
+        option.value = del.uid;
+        option.textContent = del.fullName + (del.filiere ? ` (${del.filiere})` : '');
+        if (del.uid === filiere.delegateId) option.selected = true;
+        delegateSelect.appendChild(option);
+    });
 
+    document.getElementById('edit-filiere-modal').classList.remove('hidden');
+}
 
+function closeEditFiliereModal() {
+    document.getElementById('edit-filiere-modal').classList.add('hidden');
+}
+
+async function updateFiliere(e) {
+    e.preventDefault();
+    const filiereId = document.getElementById('edit-filiere-id').value;
+    const delegateId = document.getElementById('edit-filiere-delegate').value;
+    const whatsappLink = document.getElementById('edit-filiere-whatsapp').value;
+
+    const filiere = allFilieres.find(f => f.id === filiereId);
+    if (!filiere) return;
 
     try {
+        const batch = db.batch(); // Utiliser un batch pour garantir la cohérence
+        const filiereRef = filieresRef.doc(filiereId);
 
-        await filieresRef.doc(filiereId).update({
-
-            name: newName,
-
+        // 1. Mettre à jour la filière
+        batch.update(filiereRef, {
+            delegateId: delegateId || null,
+            whatsappLink: whatsappLink || null,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-
         });
 
+        // 2. Si un délégué est sélectionné, mettre à jour son profil utilisateur
+        if (delegateId) {
+            const userRef = usersRef.doc(delegateId);
+            batch.update(userRef, {
+                filiere: filiere.major, // ex: 'MPSI'
+                niveau: filiere.level,  // ex: 'CPGE'
+                classe: filiere.class   // ex: '1'
+            });
+            console.log(`Préparation mise à jour profil pour ${delegateId}:`, { major: filiere.major, level: filiere.level, class: filiere.class });
+        }
 
+        // 3. Optionnel : Si l'ancien délégué est différent et existe, on pourrait nettoyer son profil, 
+        // mais c'est risqué sans savoir s'il est réassigné ailleurs. On laisse tel quel pour l'instant.
 
-        await logAction('EDIT_FILIERE', filiereId, { oldName: filiere.name, newName: newName });
+        await batch.commit(); // Exécuter toutes les mises à jour
 
-        showSuccess('admin-message', 'Filière modifiée avec succès !');
+        // Determine delegate name for logs
+        const delegateUser = allUsers.find(u => u.uid === delegateId);
+        const delegateName = delegateUser ? delegateUser.fullName : 'Aucun';
 
+        await logAction('EDIT_FILIERE', filiereId, {
+            name: filiere.name,
+            newDelegate: delegateName,
+            whatsapp: whatsappLink
+        });
+
+        showSuccess('admin-message', 'Filière et profil délégué mis à jour avec succès !');
+        closeEditFiliereModal();
         await loadAllFilieres();
 
     } catch (error) {
-
         console.error('Erreur lors de la modification:', error);
-
-        showError('admin-message', 'Erreur lors de la modification de la filière.');
-
+        showError('admin-message', 'Erreur lors de la modification: ' + error.message);
     }
-
 }
 
 

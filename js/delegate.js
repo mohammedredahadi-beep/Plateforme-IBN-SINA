@@ -78,43 +78,93 @@ function displayUserInfo() {
 // Charger la filière assignée au délégué
 async function loadDelegateFiliere() {
     try {
-        // En mode strict, on se base sur le profil du délégué
-        if (currentUser.filiere && currentUser.niveau) {
-            delegateNiveau = currentUser.niveau;
-            // On peut garder delegateFiliereId pour la compatibilité si nécessaire, 
-            // mais on va surtout utiliser les infos du profil.
-            // On essaie de trouver le doc filière correspondant pour le nom complet
-            const snapshot = await filieresRef.where('code', '==', currentUser.filiere).limit(1).get();
+        // Utiliser currentUser.uid pour compatibilité avec le mode dev
+        const userId = currentUser.uid;
+        console.log("🔍 Chargement filière pour délégué:", userId);
 
-            let filiereName = currentUser.filiere;
-            if (!snapshot.empty) {
-                const doc = snapshot.docs[0];
-                delegateFiliereId = doc.id; // Pour compatibilité legacy
-                filiereName = doc.data().name;
-            }
+        // 1. Priorité ABSOLUE : Vérifier si l'admin a explicitement assigné ce délégué dans la collection 'filieres'
+        const snapshot = await filieresRef.where('delegateId', '==', userId).get();
 
-            let label = `${filiereName} (${delegateNiveau})`;
-            if (currentUser.classe) {
-                label += ` - Classe ${currentUser.classe}`;
-            }
-            document.getElementById('delegate-filiere').textContent = label;
+        if (!snapshot.empty) {
+            console.log("✅ Filière assignée trouvée !");
+            const doc = snapshot.docs[0];
+            const data = doc.data();
+
+            delegateFiliereId = doc.id;
+
+            // IMPORTANT : Mettre à jour l'objet currentUser en mémoire pour que les requêtes suivantes (validations, ma classe)
+            // ciblent la bonne filière/classe, même si le profil utilisateur n'est pas encore à jour.
+            currentUser.filiere = data.major; // Ex: 'PC'
+            currentUser.niveau = data.level;  // Ex: 'BAC2'
+            currentUser.classe = data.class;  // Ex: 1
+
+            // Mise à jour de l'UI
+            const filiereName = data.name || `${data.major} ${data.class}`;
+            document.getElementById('delegate-filiere').textContent = filiereName;
+
             return;
         }
 
-        // Fallback: Legacy logic
-        const snapshot = await filieresRef.where('delegateId', '==', auth.currentUser.uid).get();
+        console.log("⚠️ Aucune assignation explicite trouvée. Tentative via profil utilisateur...");
 
-        if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
-            delegateFiliereId = doc.id;
-            const filiere = doc.data();
-            delegateNiveau = filiere.niveau;
-            document.getElementById('delegate-filiere').textContent = `${filiere.name} (${delegateNiveau || 'Tous'})`;
-        } else {
-            document.getElementById('delegate-filiere').textContent = 'Profil incomplet';
+        // 2. Fallback : Utiliser les infos du profil utilisateur (Ancienne méthode)
+        if (currentUser.filiere && currentUser.niveau) {
+            delegateNiveau = currentUser.niveau;
+
+            // On essaie de trouver le doc filière correspondant pour avoir son ID (utile pour les paramètres WhatsApp)
+            // Note: Ceci est approximatif si plusieurs classes ont la même majeure
+            let query = filieresRef
+                .where('major', '==', currentUser.filiere)
+                .where('level', '==', currentUser.niveau);
+
+            if (currentUser.classe) {
+                query = query.where('class', '==', currentUser.classe);
+            }
+
+            const profileSnapshot = await query.limit(1).get();
+
+            let displayLabel = `${currentUser.filiere} (${currentUser.niveau})`;
+            if (currentUser.classe) displayLabel += ` - Classe ${currentUser.classe}`;
+
+            if (!profileSnapshot.empty) {
+                delegateFiliereId = profileSnapshot.docs[0].id;
+                const d = profileSnapshot.docs[0].data();
+                if (d.name) displayLabel = d.name;
+            } else {
+                console.warn("Pas de document filière correspondant au profil.");
+            }
+
+            document.getElementById('delegate-filiere').textContent = displayLabel;
+            return;
         }
+
+        // 3. Échec - Afficher un message d'aide avec l'ID de l'utilisateur
+        console.error("❌ Aucune filière trouvée pour ce délégué");
+        document.getElementById('delegate-filiere').textContent = 'Profil incomplet - Contactez l\'admin';
+
+        // Message d'aide détaillé
+        const helpMessage = `
+            <div class="card text-center" style="border: 1px solid var(--warning-color); background: rgba(245, 158, 11, 0.1); padding: 20px;">
+                <p style="color: var(--text-main); font-weight: 600; margin-bottom: 10px;">⚠️ Aucune classe assignée</p>
+                <p style="font-size: 0.9rem; margin-bottom: 15px;">Demandez à l'administrateur de vous assigner via l'onglet "Gérer Filières".</p>
+                <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.85rem;">
+                    <strong>Votre ID utilisateur :</strong><br>
+                    <code style="color: var(--primary); font-weight: 600;">${currentUser.uid}</code>
+                </div>
+                <p style="font-size: 0.8rem; margin-top: 10px; color: var(--text-secondary);">
+                    L'admin doit sélectionner votre nom dans la liste "Délégué responsable" lors de la modification d'une classe.
+                </p>
+            </div>
+        `;
+
+        const requestsList = document.getElementById('requests-list');
+        if (requestsList) {
+            requestsList.innerHTML = helpMessage;
+        }
+
     } catch (error) {
-        console.error('Erreur lors du chargement de la filière:', error);
+        console.error('❌ Erreur lors du chargement de la filière:', error);
+        document.getElementById('delegate-filiere').textContent = 'Erreur chargement';
     }
 }
 
@@ -130,7 +180,6 @@ async function loadPendingRequests() {
     }
 
     try {
-        // Écouter les changements en temps réel
         // Écouter les changements en temps réel
         // Nouvelle logique: Filtrer par Filière (nom/code), Niveau, et Classe
         let query = requestsRef
@@ -160,6 +209,93 @@ async function loadPendingRequests() {
         });
     } catch (error) {
         console.error('Erreur lors du chargement des demandes:', error);
+    }
+}
+
+/**
+ * Charge les données de la vue d'ensemble (Home)
+ */
+async function loadDashboardOverview() {
+    console.log("📊 Chargement de la vue d'ensemble...");
+
+    try {
+        // 1. Charger les statistiques (KPIs)
+        await loadStats();
+
+        // Les stats des étudiants validés (Ma Classe) sont chargées via un query direct
+        const filiereName = currentUser.filiere;
+
+        // Nombre d'étudiants approuvés
+        const approvedSnapshot = await usersRef
+            .where('role', '==', 'student')
+            .where('filiere', '==', filiereName)
+            .where('niveau', '==', currentUser.niveau)
+            .where('isApproved', '==', true)
+            .get();
+
+        const approvedCount = approvedSnapshot.size;
+        document.getElementById('stat-total').textContent = approvedCount;
+
+        // Nombre d'étudiants en attente (Validations)
+        const pendingSnapshot = await usersRef
+            .where('role', '==', 'student')
+            .where('filiere', '==', filiereName)
+            .where('niveau', '==', currentUser.niveau)
+            .where('isApproved', '==', false)
+            .get();
+
+        const pendingCount = pendingSnapshot.size;
+        document.getElementById('stat-pending').textContent = pendingCount;
+
+        // Badge sidebar
+        const badge = document.getElementById('sidebar-badge-validations');
+        if (badge) {
+            badge.textContent = pendingCount;
+            if (pendingCount > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+
+        // 2. Charger les annonces récentes
+        const announcementsContainer = document.getElementById('recent-announcements-list');
+        if (announcementsContainer) {
+            const annSnapshot = await db.collection('announcements')
+                .where('authorId', '==', auth.currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .limit(3)
+                .get();
+
+            if (annSnapshot.empty) {
+                announcementsContainer.innerHTML = `
+                    <p style="color: var(--text-dim); font-size: 0.9rem; text-align: center; padding: 1rem;">
+                        Aucune annonce publiée récemment.
+                    </p>
+                `;
+            } else {
+                let html = '';
+                annSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
+                    const typeClass = data.type === 'Urgent' ? 'badge-rejected' : (data.type === 'Warning' ? 'badge-pending' : 'badge-approved');
+
+                    html += `
+                        <div class="flex flex-col gap-1 p-1 mb-1" style="background: rgba(255,255,255,0.03); border-radius: 8px;">
+                            <div class="flex justify-between items-center">
+                                <span class="badge ${typeClass}" style="zoom: 0.8;">${data.type}</span>
+                                <small style="color: var(--text-dim);">${date}</small>
+                            </div>
+                            <strong style="font-size: 0.95rem;">${data.title}</strong>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                ${data.content}
+                            </p>
+                        </div>
+                    `;
+                });
+                announcementsContainer.innerHTML = html;
+            }
+        }
+
+    } catch (error) {
+        console.error("Erreur chargement overview:", error);
     }
 }
 
@@ -593,45 +729,52 @@ async function displayDelegateValidations() {
             return;
         }
 
-        let html = '<div class="student-grid">';
+        let html = '<div class="student-grid reveal-anim">';
         snapshot.forEach(doc => {
             const student = doc.data();
-            const photoUrl = student.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.fullName) + '&background=random&color=fff';
+            const photoUrl = student.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&background=6366f1&color=fff&size=128`;
             const createdDate = student.createdAt ? new Date(student.createdAt.toDate()).toLocaleDateString('fr-FR', {
                 day: 'numeric',
                 month: 'long'
             }) : 'Récemment';
 
             html += `
-                <div class="student-card">
-                    <span class="status-badge status-pending">En attente</span>
-                    <div class="student-header">
-                        <img src="${photoUrl}" alt="${student.fullName}" class="student-avatar">
-                        <div class="student-info">
-                            <h4>${student.fullName}</h4>
-                            <p>📧 ${student.email}</p>
-                            <p>📱 ${student.phone || 'Non renseigné'}</p>
+                <div class="card premium-card glass-premium student-card-fancy">
+                    <div class="student-card-overlay"></div>
+                    <div class="student-card-content">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="student-avatar-wrapper">
+                                <img src="${photoUrl}" alt="${student.fullName}" class="student-avatar-large shadow-glow">
+                                <div class="status-indicator status-pending-pulse"></div>
+                            </div>
+                            <span class="badge badge-pending">En attente</span>
                         </div>
-                    </div>
-                    
-                    <div class="student-details">
-                        <div class="detail-item">
-                            Niveau
-                            <span>${student.niveau || 'N/A'}</span>
+                        
+                        <div class="student-main-info">
+                            <h4 class="student-name-premium">${student.fullName}</h4>
+                            <p class="student-meta-item">📧 ${student.email}</p>
+                            <p class="student-meta-item">📱 ${student.phone || 'Non renseigné'}</p>
                         </div>
-                        <div class="detail-item">
-                            Demandé le
-                            <span>${createdDate}</span>
+                        
+                        <div class="student-details-grid">
+                            <div class="detail-pill">
+                                <span class="detail-label">Niveau</span>
+                                <span class="detail-value text-primary">${student.niveau || 'N/A'}</span>
+                            </div>
+                            <div class="detail-pill">
+                                <span class="detail-label">Depuis</span>
+                                <span class="detail-value">${createdDate}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="student-actions">
-                        <button class="btn btn-success btn-sm" onclick="delegateApproveStudent('${student.uid}')">
-                            ✓ Valider
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="delegateRejectStudent('${student.uid}')">
-                            ✗ Refuser
-                        </button>
+                        <div class="flex gap-1 mt-1">
+                            <button class="btn btn-success flex-1 shadow-success" onclick="delegateApproveStudent('${student.uid}')">
+                                ✓ Valider
+                            </button>
+                            <button class="btn btn-outline-danger flex-1" onclick="delegateRejectStudent('${student.uid}')">
+                                ✗ Refuser
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -726,31 +869,43 @@ async function loadMyClass() {
             return;
         }
 
-        let html = '<div class="student-grid">';
+        let html = '<div class="student-grid reveal-anim">';
         snapshot.forEach(doc => {
             const student = doc.data();
-            const photoUrl = student.photoUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(student.fullName) + '&background=random&color=fff';
+            const photoUrl = student.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&background=10b981&color=fff&size=128`;
 
             html += `
-                <div class="student-card">
-                    <span class="status-badge status-approved">Inscrit</span>
-                    <div class="student-header">
-                        <img src="${photoUrl}" alt="${student.fullName}" class="student-avatar">
-                        <div class="student-info">
-                            <h4>${student.fullName}</h4>
-                            <p>📧 ${student.email}</p>
-                            <p>📱 ${student.phone || 'Non renseigné'}</p>
+                <div class="card premium-card glass-premium student-card-fancy">
+                    <div class="student-card-overlay profile-overlay-success"></div>
+                    <div class="student-card-content">
+                        <div class="flex justify-between items-start mb-1">
+                            <div class="student-avatar-wrapper">
+                                <img src="${photoUrl}" alt="${student.fullName}" class="student-avatar-large shadow-glow-success">
+                                <div class="status-indicator status-online"></div>
+                            </div>
+                            <span class="badge badge-approved">Inscrit</span>
                         </div>
-                    </div>
-                    
-                    <div class="student-details">
-                         <div class="detail-item">
-                            Niveau
-                            <span>${student.niveau || 'N/A'}</span>
+                        
+                        <div class="student-main-info">
+                            <h4 class="student-name-premium">${student.fullName}</h4>
+                            <p class="student-meta-item">📧 ${student.email}</p>
+                            <p class="student-meta-item">📱 ${student.phone || 'Non renseigné'}</p>
                         </div>
-                        <div class="detail-item">
-                            Statut
-                            <span>Actif</span>
+                        
+                        <div class="student-details-grid">
+                            <div class="detail-pill">
+                                <span class="detail-label">Niveau</span>
+                                <span class="detail-value text-success">${student.niveau || 'N/A'}</span>
+                            </div>
+                            <div class="detail-pill">
+                                <span class="detail-label">Statut</span>
+                                <span class="detail-value text-success">Actif</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-1 mt-1">
+                            <a href="mailto:${student.email}" class="btn btn-secondary flex-1 btn-sm">Message</a>
+                            <button class="btn btn-outline-secondary btn-icon-only btn-sm" onclick="alert('Profil détaillé bientôt disponible')">👤</button>
                         </div>
                     </div>
                 </div>
