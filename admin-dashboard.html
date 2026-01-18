@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord Administrateur - Ibn Sina</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-premium-filiere.css?v=1.1">
+    <link rel="stylesheet" href="css/admin-premium-users.css?v=1.0">
 </head>
 
 <body>
@@ -133,15 +135,15 @@
             </header>
 
             <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
+            <div class="auto-scroll-container reveal-on-scroll">
+                <div class="stat-card premium-card stat-card-premium">
                     <div class="stat-icon">👥</div>
                     <div class="stat-info">
                         <span class="stat-value" id="stat-users">0</span>
                         <span class="stat-label">Utilisateurs</span>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card premium-card stat-card-premium">
                     <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary);">📚
                     </div>
                     <div class="stat-info">
@@ -149,14 +151,14 @@
                         <span class="stat-label">Filières</span>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card premium-card stat-card-premium">
                     <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">📋</div>
                     <div class="stat-info">
                         <span class="stat-value" id="stat-requests">0</span>
                         <span class="stat-label">Demandes</span>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card premium-card stat-card-premium">
                     <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">⏳</div>
                     <div class="stat-info">
                         <span class="stat-value" id="stat-pending">0</span>
@@ -198,23 +200,22 @@
                     </div>
 
                     <!-- Quick Actions -->
-                    <div class="card">
-                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-md);">Actions rapides</h3>
+                    <div class="card glass-premium reveal-on-scroll" style="margin-top: var(--sp-xl);">
+                        <h3 style="font-weight: 700; margin-bottom: var(--spacing-md); color: var(--primary);">✨ Actions
+                            rapides</h3>
                         <div class="grid grid-4">
-                            <button class="btn btn-primary" onclick="showAdminView('filieres')">
+                            <button class="btn btn-primary hover-scale" onclick="showAdminView('filieres')"
+                                style="background: var(--grad-premium); border: none;">
                                 📚 Gérer Filières
                             </button>
-                            <button class="btn btn-info" onclick="showAdminView('users')">
+                            <button class="btn btn-info hover-scale" onclick="showAdminView('users')">
                                 👥 Gérer Utilisateurs
                             </button>
-                            <button class="btn btn-success" onclick="showAdminView('events')">
+                            <button class="btn btn-success hover-scale" onclick="showAdminView('events')">
                                 📅 Créer Événement
                             </button>
-                            <button class="btn btn-warning" onclick="showAdminView('requests')">
+                            <button class="btn btn-warning hover-scale" onclick="showAdminView('requests')">
                                 📋 Voir Demandes
-                            </button>
-                            <button class="btn btn-danger" onclick="showAdminView('validations')">
-                                🛡️ Validations
                             </button>
                         </div>
                     </div>
@@ -222,28 +223,66 @@
 
                 <!-- Vue Gestion des filières -->
                 <div id="filieres-view" class="hidden">
+                    <div class="header-action-row" style="margin-bottom: 25px;">
+                        <div>
+                            <h2 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -1px;">📚 Gestion des
+                                Filières</h2>
+                            <p style="color: var(--text-muted);">Configurez la structure hiérarchique : Niveau > Branche
+                                > Classe</p>
+                        </div>
+                    </div>
+
                     <!-- Formulaire d'ajout de filière -->
-                    <div class="card" style="margin-bottom: var(--spacing-md);">
-                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-md);">Ajouter une nouvelle filière
+                    <div class="card" style="margin-bottom: var(--spacing-md); border-top: 4px solid var(--primary);">
+                        <h3
+                            style="font-weight: 700; margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: 10px;">
+                            <span style="background: var(--bg-alt); padding: 5px; border-radius: 8px;">➕</span>
+                            Création d'une nouvelle classe
                         </h3>
                         <form id="filiere-form" onsubmit="addFiliere(event)">
+                            <!-- Definition de la Classe (Premium Triple Logic) -->
+                            <div class="premium-glass gradient-border-box" style="padding: 25px; margin-bottom: 25px;">
+                                <h4
+                                    style="margin-bottom: 20px; font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                                    ✨ Définition de la Classe
+                                </h4>
+                                <div class="grid grid-3" style="column-gap: 2rem;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="premium-label" for="filiere-level">1. Niveau</label>
+                                        <select id="filiere-level" class="form-select premium-input"
+                                            onchange="handleAdminLevelChange(this.value)" required>
+                                            <option value="">-- Choisir Niveau --</option>
+                                            <option value="TC">Tronc Commun</option>
+                                            <option value="BAC1">1ère Année Bac</option>
+                                            <option value="BAC2">2ème Année Bac</option>
+                                            <option value="BTS1">BTS 1ère Année</option>
+                                            <option value="BTS2">BTS 2ème Année</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="premium-label" for="filiere-major">2. Branche</label>
+                                        <select id="filiere-major" class="form-select premium-input"
+                                            onchange="handleAdminMajorChange(this.value)" disabled required>
+                                            <option value="">-- D'abord Niveau --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="premium-label" for="filiere-class">3. Classe N°</label>
+                                        <input type="number" id="filiere-class" class="form-input premium-input" min="1"
+                                            max="20" placeholder="Ex: 1" disabled required>
+                                        <small id="admin-class-hint"
+                                            style="color: rgba(255,255,255,0.4); font-size: 0.7rem;"></small>
+                                    </div>
+                                </div>
+                                <div id="filiere-preview"
+                                    style="margin-top: 30px; font-weight: 800; color: #10b981; text-align: center; font-size: 1.4rem; min-height: 40px; letter-spacing: -0.5px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                                    <!-- La prévisualisation apparaîtra ici -->
+                                </div>
+                            </div>
+
                             <div class="grid grid-2">
-                                <div class="form-group">
-                                    <label class="form-label" for="filiere-name">Nom de la filière *</label>
-                                    <input type="text" id="filiere-name" class="form-input"
-                                        placeholder="Ex: Sciences de l'Ingénieur" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="filiere-niveau">Niveau géré *</label>
-                                    <select id="filiere-niveau" class="form-select" required>
-                                        <option value="TC">Tronc Commun (TC)</option>
-                                        <option value="1BAC">1ère Année Bac (1BAC)</option>
-                                        <option value="2BAC">2ème Année Bac (2BAC)</option>
-                                        <option value="Lauréat">Lauréat</option>
-                                    </select>
-                                </div>
-
                                 <div class="form-group">
                                     <label class="form-label" for="filiere-delegate">Délégué assigné</label>
                                     <select id="filiere-delegate" class="form-select">
@@ -256,6 +295,7 @@
                                         placeholder="https://chat.whatsapp.com/...">
                                 </div>
                             </div>
+
 
                             <div class="form-group">
                                 <label class="form-label" for="filiere-description">Description</label>
@@ -334,21 +374,30 @@
 
                 <!-- Vue Gestion des utilisateurs -->
                 <div id="users-view" class="hidden">
-                    <div class="card" style="margin-bottom: var(--spacing-md);">
-                        <h3 style="font-weight: 600; margin-bottom: var(--spacing-xs);">Liste des utilisateurs</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Gérez les rôles et permissions</p>
+                    <div class="header-action-row" style="margin-bottom: 25px;">
+                        <div>
+                            <h2 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -1px;">👥 Gestion des
+                                Utilisateurs</h2>
+                            <p style="color: var(--text-muted);">Pilotez la communauté : Rôles, Niveaux et Accès</p>
+                        </div>
+                    </div>
+
+                    <!-- Barre de Recherche Premium -->
+                    <div class="premium-search-container" style="margin-bottom: 30px;">
+                        <span class="search-icon-anim">🔍</span>
+                        <input type="text" id="user-search" placeholder="Rechercher par nom, email, classe ou statut..."
+                            oninput="displayUsers()"
+                            style="flex: 1; border: none; background: transparent; font-size: 1.1rem; outline: none; font-family: 'Inter', sans-serif; font-weight: 500; color: var(--text-main);">
                         <div
-                            style="margin-top: var(--spacing-md); display: flex; gap: 10px; align-items: center; background: var(--bg-tertiary); padding: 10px; border-radius: 8px;">
-                            <span style="font-size: 1.1rem;">🔍</span>
-                            <input type="text" id="user-search" class="form-input"
-                                placeholder="Rechercher par nom, email ou classe (ex: 2BAC)..." oninput="displayUsers()"
-                                style="margin-bottom: 0; flex: 1; border: none; background: transparent;">
+                            style="font-size: 0.8rem; background: var(--bg-alt); padding: 5px 12px; border-radius: 8px; color: var(--text-dim); font-weight: 600;">
+                            Live Search
                         </div>
                     </div>
 
                     <div id="users-list">
+                        <!-- Les cartes utilisateurs seront générées ici par JS -->
                         <div class="card text-center">
-                            <p style="color: var(--text-secondary);">Chargement...</p>
+                            <p style="color: var(--text-secondary);">Initialisation des membres...</p>
                         </div>
                     </div>
                 </div>
@@ -491,7 +540,24 @@
                                 <textarea id="msg-content" class="form-textarea" placeholder="Votre message..."
                                     required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">📨 Envoyer</button>
+                            <div class="grid grid-2">
+                                <!-- Durée de vie du message -->
+                                <div class="form-group">
+                                    <label class="form-label">Durée d'affichage (Heures)</label>
+                                    <input type="number" id="msg-duration" class="form-input" value="24" min="1"
+                                        max="168" required>
+                                    <small style="color: var(--text-secondary); font-size: 0.75rem;">Disparaît auto
+                                        après X heures</small>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                    <button type="button" class="btn btn-danger w-full" onclick="deleteAllMessages()"
+                                        style="margin-bottom: 3px;">
+                                        🗑️ Supprimer TOUT
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">📨 Envoyer</button>
                         </form>
                     </div>
                 </div>
@@ -635,15 +701,18 @@
 
     <!-- Scripts personnalisés -->
     <script src="js/config.js"></script>
+    <script src="js/school-structure.js?v=1.3"></script>
     <script src="js/auth.js"></script>
     <script src="js/ui-core.js"></script>
+    <script src="js/validations.js"></script>
     <!-- Core JS -->
     <script src="js/admin.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/diagnostics.js"></script>
     <script src="js/ai.js"></script>
-    <script src="js/notifications.js?v=1.1"></script>
+    <script src="js/notifications.js?v=1.3"></script>
     <script src="js/chatbot-ui.js"></script>
+    <script src="js/premium-ui.js"></script>
 
     <!-- Modal d'édition d'utilisateur -->
     <div id="edit-user-modal" class="modal hidden">
@@ -690,16 +759,28 @@
                     </div>
                 </div>
 
-                <div class="grid grid-2">
+                <div class="grid grid-4">
                     <div class="form-group">
                         <label class="form-label" for="edit-user-niveau">Niveau / Statut</label>
                         <select id="edit-user-niveau" class="form-select" required
-                            onchange="toggleEditPromoField(this.value)">
-                            <option value="TC">TC</option>
-                            <option value="1BAC">1BAC</option>
-                            <option value="2BAC">2BAC</option>
+                            onchange="window.handleEditLevelChange(this.value)">
+                            <option value="TC">Tronc Commun</option>
+                            <option value="BAC1">1ère Année Bac</option>
+                            <option value="BAC2">2ème Année Bac</option>
+                            <option value="BTS1">BTS 1ère Année</option>
+                            <option value="BTS2">BTS 2ème Année</option>
                             <option value="Lauréat">Lauréat</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="edit-major-group">
+                        <label class="form-label" for="edit-user-major">Filière</label>
+                        <select id="edit-user-major" class="form-select">
+                            <option value="">-- Branche --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-classe-group">
+                        <label class="form-label" for="edit-user-classe">Classe N°</label>
+                        <input type="number" id="edit-user-classe" class="form-input" placeholder="Ex: 1">
                     </div>
                     <div id="edit-promo-group" class="form-group hidden">
                         <label class="form-label" for="edit-user-promo">Promotion</label>
@@ -740,6 +821,98 @@
         </div>
     </div>
 
+    <!-- Modal d'édition d'événement -->
+    <div id="edit-event-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="flex"
+                style="justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600;">Modifier l'événement</h3>
+                <button class="btn btn-secondary btn-small" onclick="closeEditEventModal()">✕</button>
+            </div>
+            <form id="edit-event-form" onsubmit="updateEvent(event)">
+                <input type="hidden" id="edit-event-id">
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-event-title">Titre</label>
+                        <input type="text" id="edit-event-title" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-event-date">Date</label>
+                        <input type="datetime-local" id="edit-event-date" class="form-input" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-event-type">Type</label>
+                        <select id="edit-event-type" class="form-select">
+                            <option value="Conférence">Conférence</option>
+                            <option value="Atelier">Atelier</option>
+                            <option value="Webinaire">Webinaire</option>
+                            <option value="Networking">Networking</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-event-link">Lien</label>
+                        <input type="url" id="edit-event-link" class="form-input" placeholder="https://...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit-event-desc">Description</label>
+                    <textarea id="edit-event-desc" class="form-input" rows="3"></textarea>
+                </div>
+
+                <div class="flex gap-1" style="margin-top: var(--spacing-md);">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;"
+                        onclick="closeEditEventModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal d'édition de notification -->
+    <div id="edit-notification-modal" class="modal hidden">
+        <div class="modal-content card">
+            <div class="flex"
+                style="justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <h3 style="font-weight: 600;">Modifier la notification</h3>
+                <button class="btn btn-secondary btn-small" onclick="closeEditNotificationModal()">✕</button>
+            </div>
+            <form id="edit-notification-form" onsubmit="updateNotification(event)">
+                <input type="hidden" id="edit-notif-id">
+
+                <div class="form-group">
+                    <label class="form-label" for="edit-notif-title">Titre</label>
+                    <input type="text" id="edit-notif-title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit-notif-priority">Priorité</label>
+                    <select id="edit-notif-priority" class="form-select">
+                        <option value="communicative">📢 Communicatif (Info)</option>
+                        <option value="important">⚠️ Important</option>
+                        <option value="urgent">🚨 Urgent</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="edit-notif-content">Message</label>
+                    <textarea id="edit-notif-content" class="form-input" rows="4" required></textarea>
+                </div>
+
+                <div class="flex gap-1" style="margin-top: var(--spacing-md);">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;"
+                        onclick="closeEditNotificationModal()">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
 
 
@@ -763,6 +936,7 @@
 
 
     </script>
+
     <script src="js/dev-switcher.js"></script>
 </body>
 

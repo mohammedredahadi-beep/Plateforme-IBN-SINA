@@ -112,7 +112,12 @@ function isMessageExpired(data, userId) {
         const now = new Date().getTime();
         const hoursSinceRead = (now - readTimestamp) / (1000 * 60 * 60);
 
-        if (hoursSinceRead > window.SYSTEM_CONFIG.messageDuration) {
+        // Use message-specific duration if available, otherwise global config
+        const maxDuration = (data.durationHours !== undefined) ?
+            Number(data.durationHours) :
+            window.SYSTEM_CONFIG.messageDuration;
+
+        if (hoursSinceRead > maxDuration) {
             return true; // Expired
         }
     }
@@ -183,6 +188,9 @@ function renderNotificationsFeed(messages, userId) {
         return;
     }
 
+    const isAdmin = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') ||
+        (auth.currentUser && typeof allUsers !== 'undefined' && allUsers.some(u => u.uid === auth.currentUser.uid && u.role === 'admin'));
+
     let html = '';
     messages.forEach(msg => {
         // Calculate style based on Read status
@@ -196,11 +204,27 @@ function renderNotificationsFeed(messages, userId) {
         // Priority
         const priorityIcon = msg.priority === 'urgent' ? '🚨 ' : (msg.priority === 'important' ? '⚠️ ' : '');
 
+        // Admin Actions
+        let adminActions = '';
+        if (isAdmin) {
+            adminActions = `
+                <div class="flex gap-1" style="margin-left: 10px;">
+                    <button class="btn btn-small btn-secondary" style="padding: 2px 8px;" onclick="openEditNotificationModal('${msg.id}'); event.stopPropagation();">✏️</button>
+                    <button class="btn btn-small btn-danger" style="padding: 2px 8px;" onclick="deleteNotification('${msg.id}'); event.stopPropagation();">🗑️</button>
+                </div>
+            `;
+        }
+
         html += `
         <div class="card fade-in" style="${style} margin-bottom: 10px; cursor: pointer; transition: 0.2s;" onclick="markAsRead('${msg.id}')">
-            <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <h4 style="margin:0; font-size:1rem; font-weight:600;">${priorityIcon}${msg.title} ${badge}</h4>
-                <small style="color:var(--text-secondary);">${dateStr}</small>
+            <div class="flex" style="justify-content: space-between; align-items: start; margin-bottom: 5px;">
+                <div class="flex" style="align-items: center; flex: 1;">
+                    <h4 style="margin:0; font-size:1rem; font-weight:600;">${priorityIcon}${msg.title} ${badge}</h4>
+                </div>
+                <div class="flex" style="align-items: center;">
+                    <small style="color:var(--text-secondary); white-space: nowrap;">${dateStr}</small>
+                    ${adminActions}
+                </div>
             </div>
             <p style="margin: 5px 0; color:var(--text-primary); font-size: 0.95rem;">${msg.content}</p>
             <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">
@@ -210,6 +234,85 @@ function renderNotificationsFeed(messages, userId) {
     });
 
     container.innerHTML = html;
+}
+
+// --- Admin Notification Actions ---
+
+async function deleteNotification(id) {
+    if (!confirm("Voulez-vous vraiment supprimer cette notification ?")) return;
+    try {
+        await db.collection('messages').doc(id).delete();
+        showSuccess ? showSuccess('admin-message', 'Notification supprimée.') : alert('Notification supprimée.');
+        // UI updates automatically via listener
+    } catch (e) {
+        console.error("Error deleting notification:", e);
+        showError ? showError('admin-message', 'Erreur lors de la suppression.') : alert('Erreur suppression.');
+    }
+}
+
+let currentEditingNotifId = null;
+
+async function openEditNotificationModal(id) {
+    if (!id) return;
+    currentEditingNotifId = id;
+
+    const modal = document.getElementById('edit-notification-modal');
+    if (!modal) return; // Only exists in admin dashboard
+    const form = document.getElementById('edit-notification-form');
+
+    form.reset();
+
+    try {
+        const doc = await db.collection('messages').doc(id).get();
+        if (!doc.exists) {
+            alert("La notification n'existe plus.");
+            return;
+        }
+
+        const data = doc.data();
+
+        document.getElementById('edit-notif-id').value = id;
+        document.getElementById('edit-notif-title').value = data.title || '';
+        document.getElementById('edit-notif-priority').value = data.priority || 'communicative';
+        document.getElementById('edit-notif-content').value = data.content || '';
+
+        modal.classList.remove('hidden');
+
+    } catch (e) {
+        console.error("Error fetching notification details:", e);
+        alert("Erreur lors du chargement.");
+    }
+}
+
+function closeEditNotificationModal() {
+    const modal = document.getElementById('edit-notification-modal');
+    if (modal) modal.classList.add('hidden');
+    currentEditingNotifId = null;
+}
+
+async function updateNotification(e) {
+    e.preventDefault();
+    if (!currentEditingNotifId) return;
+
+    const title = document.getElementById('edit-notif-title').value;
+    const priority = document.getElementById('edit-notif-priority').value;
+    const content = document.getElementById('edit-notif-content').value;
+
+    try {
+        await db.collection('messages').doc(currentEditingNotifId).update({
+            title,
+            priority,
+            content,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        closeEditNotificationModal();
+        if (typeof showSuccess !== 'undefined') showSuccess('admin-message', 'Notification mise à jour !');
+
+    } catch (error) {
+        console.error("Error updating notification:", error);
+        if (typeof showError !== 'undefined') showError('admin-message', 'Erreur lors de la mise à jour.');
+    }
 }
 
 async function markAsRead(id) {
@@ -229,3 +332,7 @@ async function markAsRead(id) {
 window.initNotificationsView = initNotificationsView;
 window.initNotificationSystem = initNotificationSystem;
 window.markAsRead = markAsRead;
+window.deleteNotification = deleteNotification;
+window.openEditNotificationModal = openEditNotificationModal;
+window.closeEditNotificationModal = closeEditNotificationModal;
+window.updateNotification = updateNotification;

@@ -1,0 +1,119 @@
+/* =========================================
+   PREMIUM FILIERE TAB STYLES
+   ========================================= */
+
+/* Glassmorphism Container */
+.premium-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient Border Effect */
+.gradient-border-box {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    z-index: 1;
+}
+
+.gradient-border-box::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+    border-radius: inherit;
+    opacity: 0.6;
+}
+
+/* Premium Inputs */
+.premium-input {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 2px solid var(--primary) !important;
+    border-radius: 8px !important;
+    padding: 12px 18px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    color: #ffffff !important;
+    font-size: 1.1rem;
+    appearance: none;
+}
+
+.premium-input option {
+    background: #0f172a;
+    color: white;
+    padding: 10px;
+}
+
+.premium-input:focus {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border-color: var(--secondary) !important;
+    border-bottom-color: var(--secondary) !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2) !important;
+    transform: translateY(-2px);
+}
+
+.premium-input:disabled {
+    opacity: 0.3;
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    cursor: not-allowed;
+}
+
+::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Floating Labelish Header */
+.premium-label {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    color: #a5b4fc;
+    /* Light indigo */
+    font-weight: 800;
+    margin-bottom: 10px;
+    display: block;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Premium Card (List) */
+.filiere-card-premium {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.filiere-card-premium:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.15);
+    border-color: var(--primary);
+}
+
+.filiere-card-premium::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary), var(--accent));
+    opacity: 0.8;
+}
+
+/* Badge Neon */
+.badge-neon {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.1);
+    font-weight: 600;
+}

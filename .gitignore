@@ -4,6 +4,7 @@ RESTORE_*.md
 *.tmp
 *.temp
 *.log
+firebase-debug.log
 
 # Fichiers système et IDE
 .DS_Store
@@ -16,6 +17,8 @@ Thumbs.db
 node_modules/
 dist/
 build/
+.venv/
+.firebase/
 
 # Fichiers de configuration locale (si présents)
 .env

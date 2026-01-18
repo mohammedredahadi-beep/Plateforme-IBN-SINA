@@ -370,3 +370,31 @@ async function loadPromoNetwork() {
 
 // --- Notifications System ---
 // La gestion des notifications est centralisée dans js/notifications.js
+
+// Basculer entre les vues (Refactored for UICore)
+function showStudentView(viewId) {
+    const allViews = ['dashboard', 'events', 'mentorship', 'directory', 'notifications'];
+
+    // Map views to elements IDs if they differ (here they seem to match: dashboard -> dashboard-view)
+    // Actually in HTML: dashboard-view, laureat-view, mentorship-view, directory-view, events-view, notifications-view
+    // logic in HTML handled 'laureat' view inside dashboard view logic
+
+    // Let's replicate HTML logic
+    ui.showView(viewId, allViews, () => {
+        if (viewId === 'dashboard') {
+            // Check Laureat logic
+            const laureatView = document.getElementById('laureat-view');
+            if (laureatView && currentUser && currentUser.niveau === 'Lauréat') {
+                laureatView.classList.remove('hidden');
+            }
+        }
+
+        if (viewId === 'events' && typeof loadEvents === 'function') loadEvents('events-feed');
+        if (viewId === 'mentorship' && typeof initMentorship === 'function') initMentorship();
+        if (viewId === 'directory' && typeof initDirectory === 'function') initDirectory();
+        if (viewId === 'notifications' && typeof initNotificationsView === 'function') initNotificationsView();
+    });
+
+    // Update sidebar active state handled by UICore but we might need to ensure nav-tab class compatibility
+    // UICore uses .sidebar-link. In student html, links have class "sidebar-link nav-tab". So it works.
+}

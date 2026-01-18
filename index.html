@@ -554,11 +554,13 @@
               <label for="signup-niveau">Niveau / Statut</label>
               <div class="input-with-icon">
                 <span class="input-icon">🎓</span>
-                <select id="signup-niveau" class="form-select" required onchange="togglePromoField(this.value)">
+                <select id="signup-niveau" class="form-select" required onchange="handleNiveauChange(this.value)">
                   <option value="">-- Sélectionnez --</option>
-                  <option value="TC">Tronc Commun (TC)</option>
-                  <option value="1BAC">1ère Année Bac (1BAC)</option>
-                  <option value="2BAC">2ème Année Bac (2BAC)</option>
+                  <option value="TC">Tronc Commun</option>
+                  <option value="BAC1">1ère Année Bac</option>
+                  <option value="BAC2">2ème Année Bac</option>
+                  <option value="BTS1">BTS 1ère Année</option>
+                  <option value="BTS2">BTS 2ème Année</option>
                   <option value="Lauréat">Lauréat (Diplômé)</option>
                 </select>
               </div>
@@ -568,15 +570,20 @@
               <label for="signup-filiere">Filière</label>
               <div class="input-with-icon">
                 <span class="input-icon">📚</span>
-                <select id="signup-filiere" class="form-select" required>
-                  <option value="">-- Sélectionnez --</option>
-                  <option value="STE">STE - Sciences et Technologies Électriques</option>
-                  <option value="STM">STM - Sciences et Technologies Mécaniques</option>
-                  <option value="AA">AA - Arts Appliqués</option>
-                  <option value="ECO">ECO - Économie</option>
-                  <option value="BTS">BTS - Brevet de Technicien Supérieur</option>
+                <select id="signup-filiere" class="form-select" required disabled>
+                  <option value="">-- Sélectionnez d'abord un niveau --</option>
                 </select>
               </div>
+            </div>
+
+            <div class="input-group" id="class-group">
+              <label for="signup-classe">Classe</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🏫</span>
+                <input type="number" id="signup-classe" class="form-input" placeholder="N°" min="1" max="6" required>
+              </div>
+              <small class="text-muted" style="display:block; margin-top:0.25rem; font-size:0.8rem;"
+                id="class-hint"></small>
             </div>
 
             <div id="promo-group" class="input-group hidden">
@@ -683,6 +690,8 @@
 
   <!-- Scripts -->
   <script src="js/config.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/school-structure.js"></script>
   <script src="js/auth.js"></script>
 
   <script>
@@ -842,7 +851,98 @@
       }
     });
 
-    // Signup form
+    // --- LOGIQUE SCOLAIRE (Validation & Dynamisme) ---
+
+    function handleNiveauChange(niveau) {
+      // Gérer l'affichage Promo pour Lauréat (Legacy logic support)
+      if (typeof togglePromoField === 'function') {
+        togglePromoField(niveau);
+      }
+
+      const filiereSelect = document.getElementById('signup-filiere');
+      const classeInput = document.getElementById('signup-classe');
+      const classeGroup = document.getElementById('class-group');
+      const classHint = document.getElementById('class-hint');
+
+      // Reset
+      filiereSelect.innerHTML = '<option value="">-- Sélectionnez --</option>';
+      filiereSelect.disabled = true;
+      classeInput.disabled = true;
+      classHint.textContent = '';
+
+      if (!niveau) return;
+
+      if (niveau === 'Lauréat') {
+        // Cas spécial Lauréat : On cache la classe
+        if (classeGroup) classeGroup.classList.add('hidden');
+        document.getElementById('signup-classe').required = false;
+
+        // Filières pour lauréats : toutes les options possibles
+        filiereSelect.disabled = false;
+        const allMajors = [...new Set([...SchoolStructure.Majors.TC, ...SchoolStructure.Majors.BAC, ...SchoolStructure.Majors.BTS])];
+        allMajors.forEach(code => {
+          const opt = document.createElement('option');
+          opt.value = code;
+          opt.textContent = `${code} - ${SchoolStructure.MajorLabels[code] || code}`;
+          filiereSelect.appendChild(opt);
+        });
+        return;
+      }
+
+      // Afficher le champ classe
+      if (classeGroup) classeGroup.classList.remove('hidden');
+      document.getElementById('signup-classe').required = true;
+
+      // Récupérer les filières valides
+      const validMajors = SchoolStructure.getMajorsForLevel(niveau);
+
+      if (validMajors && validMajors.length > 0) {
+        filiereSelect.disabled = false;
+        validMajors.forEach(code => {
+          const opt = document.createElement('option');
+          opt.value = code;
+          const label = SchoolStructure.MajorLabels[code] || code;
+          opt.textContent = `${code} - ${label}`;
+          filiereSelect.appendChild(opt);
+        });
+
+        // Auto-select si unique
+        if (validMajors.length === 1) {
+          filiereSelect.value = validMajors[0];
+          updateClassHint(niveau, validMajors[0]);
+        }
+      }
+
+      classeInput.disabled = false;
+    }
+
+    // Mise à jour de l'indice pour la classe quand on change de filière
+    document.getElementById('signup-filiere').addEventListener('change', (e) => {
+      const niveau = document.getElementById('signup-niveau').value;
+      updateClassHint(niveau, e.target.value);
+    });
+
+    function updateClassHint(niveau, filiere) {
+      if (!niveau || !filiere) return;
+      const hintEl = document.getElementById('class-hint');
+      const classeInput = document.getElementById('signup-classe');
+
+      if (filiere === 'TCT') {
+        hintEl.textContent = "Entre 1 et 6";
+        classeInput.max = 6;
+      } else if (['STE', 'STM', 'AA', 'ECO'].includes(filiere)) {
+        hintEl.textContent = "1 ou 2";
+        classeInput.max = 2;
+      } else if (['EII', 'ELT', 'DAI', 'CPI', 'MI', 'PME_PMI'].includes(filiere)) {
+        hintEl.textContent = "Toujours 1";
+        classeInput.value = 1;
+        classeInput.max = 1;
+      } else {
+        hintEl.textContent = "";
+      }
+    }
+
+    // Signup form (Updated with Validation)
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -854,16 +954,27 @@
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
       const filiere = document.getElementById('signup-filiere').value;
+      const classe = document.getElementById('signup-classe').value;
 
       if (password !== confirm) {
         showError('auth-message', 'Les mots de passe ne correspondent pas.');
         return;
       }
 
+      // Strict Validation using SchoolStructure
+      if (niveau !== 'Lauréat') {
+        const validation = SchoolStructure.validate(niveau, filiere, classe);
+        if (!validation.isValid) {
+          showError('auth-message', validation.error);
+          return;
+        }
+      }
+
       document.getElementById('signup-btn-text').classList.add('hidden');
       document.getElementById('signup-loading').classList.remove('hidden');
 
-      const result = await signup(email, password, name, phone, 'student', niveau, promo, filiere);
+      // Call signup with new 'classe' parameter
+      const result = await signup(email, password, name, phone, 'student', niveau, promo, filiere, classe);
 
       document.getElementById('signup-btn-text').classList.remove('hidden');
       document.getElementById('signup-loading').classList.add('hidden');
@@ -876,6 +987,8 @@
         let msg = 'Un email de vérification a été envoyé à votre adresse.';
         if (niveau === 'Lauréat') {
           msg += " En tant que Lauréat, votre accès sera activé après validation par l'administrateur.";
+        } else {
+          msg += " Votre inscription en tant que " + filiere + " (" + classe + ") est en attente.";
         }
 
         document.getElementById('success-msg-content').textContent = msg;

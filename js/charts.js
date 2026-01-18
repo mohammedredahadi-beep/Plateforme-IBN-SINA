@@ -36,15 +36,17 @@ async function initDashboardCharts() {
  */
 function getChartColors() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const style = getComputedStyle(document.documentElement);
 
     return {
-        primary: '#6366f1',
-        secondary: '#10b981',
-        warning: '#f59e0b',
-        danger: '#ef4444',
-        info: '#3b82f6',
-        gridColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-        textColor: isDark ? '#f8fafc' : '#0f172a'
+        primary: style.getPropertyValue('--primary').trim() || '#6366f1',
+        secondary: style.getPropertyValue('--secondary').trim() || '#10b981',
+        warning: style.getPropertyValue('--warning').trim() || '#f59e0b',
+        danger: style.getPropertyValue('--danger').trim() || '#ef4444',
+        info: style.getPropertyValue('--info').trim() || '#3b82f6',
+        accent: style.getPropertyValue('--accent').trim() || '#8b5cf6',
+        gridColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+        textColor: isDark ? '#94a3b8' : '#64748b'
     };
 }
 
@@ -100,12 +102,16 @@ function renderUserStatsChart() {
                     }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    backdropFilter: 'blur(8px)',
                     padding: 12,
                     titleColor: '#fff',
-                    bodyColor: '#fff',
-                    borderColor: colors.primary,
-                    borderWidth: 1
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    cornerRadius: 12,
+                    displayColors: true,
+                    usePointStyle: true
                 }
             },
             scales: {

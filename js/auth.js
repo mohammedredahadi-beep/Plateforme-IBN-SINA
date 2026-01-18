@@ -60,7 +60,7 @@ if (canUseDevMode && localStorage.getItem('dev_mode_enabled') === 'true') {
 // -----------------------------------------------
 
 // Fonction d'inscription
-async function signup(email, password, fullName, phone, role = 'student', niveau = null, promo = null, filiere = null) {
+async function signup(email, password, fullName, phone, role = 'student', niveau = null, promo = null, filiere = null, classe = null) {
     try {
         // Créer l'utilisateur avec Firebase Auth
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
@@ -75,7 +75,7 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
         const finalRole = (niveau === 'Lauréat') ? 'alumni' : role;
 
         // Créer le profil utilisateur dans Firestore
-        await usersRef.doc(user.uid).set({
+        const userData = {
             uid: user.uid,
             email: email,
             fullName: fullName,
@@ -87,7 +87,14 @@ async function signup(email, password, fullName, phone, role = 'student', niveau
             isApproved: isApproved, // Flag d'approbation
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        };
+
+        // Ajouter la classe si elle existe (pas pour les lauréats par ex)
+        if (classe) {
+            userData.classe = parseInt(classe);
+        }
+
+        await usersRef.doc(user.uid).set(userData);
 
         // Déconnexion immédiate après inscription pour forcer la vérification
         await auth.signOut();

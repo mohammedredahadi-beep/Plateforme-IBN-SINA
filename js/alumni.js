@@ -76,6 +76,25 @@ async function saveAlumniProfile() {
     const job = document.getElementById('profile-job').value;
     const bio = document.getElementById('profile-bio').value;
 
+    // DEV MODE HANDLING
+    if (currentUser.uid.startsWith('mock-')) {
+        console.log("Dev Mode: Simulating profile update for", currentUser.uid);
+        currentUser.fullName = name;
+        currentUser.promo = promo;
+        currentUser.filiere = filiere;
+        currentUser.phone = phone;
+        currentUser.whatsapp = whatsapp;
+        currentUser.linkedin = linkedin;
+        currentUser.currentJob = job;
+        currentUser.bio = bio;
+
+        document.getElementById('welcome-name').textContent = `Bonjour, ${currentUser.fullName}`;
+        if (document.getElementById('user-display-name')) document.getElementById('user-display-name').textContent = currentUser.fullName;
+
+        showSuccess('alumni-message', '[DEV] Profil mis à jour (Simulation) !');
+        return;
+    }
+
     try {
         await usersRef.doc(currentUser.uid).update({
             // Ensure role is preserved just in case
@@ -291,6 +310,15 @@ function updateMentorStatusDisplay() {
 // Envoyer une demande pour devenir mentor
 async function requestMentorRole() {
     if (currentUser.mentorStatus === 'pending' || currentUser.mentorStatus === 'approved') return;
+
+    // DEV MODE HANDLING
+    if (currentUser.uid.startsWith('mock-')) {
+        console.log("Dev Mode: Simulating mentor request for", currentUser.uid);
+        currentUser.mentorStatus = 'pending';
+        updateMentorStatusDisplay();
+        showSuccess('alumni-message', '[DEV] Votre demande de mentorat a été simulée avec succès !');
+        return;
+    }
 
     try {
         await usersRef.doc(currentUser.uid).update({

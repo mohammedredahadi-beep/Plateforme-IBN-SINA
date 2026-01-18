@@ -124,14 +124,16 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="flex justify-between items-center mb-2">
+            <header class="flex justify-between items-center mb-2 reveal-anim">
                 <div>
-                    <h1 id="welcome-name" style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Bonjour,
-                        Lauréat</h1>
-                    <p style="color: var(--text-muted);">Bienvenue dans votre réseau Ibn Sina</p>
+                    <h1 id="welcome-name"
+                        style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; background: var(--grad-premium); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                        Bonjour, Lauréat</h1>
+                    <p style="color: var(--text-muted); font-weight: 500;">Bienvenue dans votre réseau Ibn Sina</p>
                 </div>
                 <div id="alumni-status-badge">
-                    <span class="badge badge-approved">Compte Validé ✅</span>
+                    <span class="badge badge-approved"
+                        style="background: var(--grad-glow); border: none; color: white;">Compte Validé ✅</span>
                 </div>
                 <script>
                     function toggleTheme() {
@@ -180,23 +182,24 @@
             <!-- Vue Tableau de Bord -->
             <div id="dashboard-view" class="tab-content">
                 <div class="grid grid-2">
-                    <div class="card">
+                    <div class="card premium-card glass-premium reveal-on-scroll">
                         <div class="card-header">
-                            <h3 class="card-title">✨ Félicitations !</h3>
+                            <h3 class="card-title" style="color: var(--primary);">✨ Félicitations !</h3>
                         </div>
                         <p style="color: var(--text-secondary); line-height: 1.6;">
                             Votre compte Lauréat a été approuvé. Vous faites désormais partie du réseau professionnel
                             Ibn Sina. Votre expérience est précieuse pour nos étudiants actuels.
                         </p>
                     </div>
-                    <div class="card">
+                    <div class="card premium-card glass-premium reveal-on-scroll">
                         <div class="card-header">
-                            <h3 class="card-title">📅 Derniers Événements</h3>
+                            <h3 class="card-title" style="color: var(--accent);">📅 Derniers Événements</h3>
                         </div>
                         <div id="events-preview-list">
                             <p style="color: var(--text-light); font-size: 0.9rem;">Chargement des événements...</p>
                         </div>
-                        <button class="btn btn-secondary btn-small mt-2" onclick="showAlumniView('events')">Voir
+                        <button class="btn btn-secondary btn-small mt-2 hover-scale"
+                            onclick="showAlumniView('events')">Voir
                             tout</button>
                     </div>
                 </div>
@@ -534,6 +537,7 @@
     <script src="js/alumni.js"></script>
     <script src="js/directory.js?v=2026"></script>
     <script src="js/chatbot-ui.js"></script>
+    <script src="js/premium-ui.js"></script>
 
     <!-- Theme logic is handled in the header script to prevent FOUC -->
     <script src="js/dev-switcher.js"></script>

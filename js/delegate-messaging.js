@@ -33,9 +33,12 @@ async function sendDelegateMessage(e) {
             title: title,
             content: content,
             priority: priority,
-            // Target only students in this delegate's filière
-            target: 'filiere',
-            targetFiliereId: delegateFiliereId,
+            // Target only students in this delegate's filière/niveau/classe
+            target: 'class_match',
+            targetFiliere: currentUser.filiere,
+            targetNiveau: currentUser.niveau,
+            targetClasse: currentUser.classe || null,
+
             senderId: auth.currentUser.uid,
             senderName: currentUser.fullName,
             senderRole: 'delegate',

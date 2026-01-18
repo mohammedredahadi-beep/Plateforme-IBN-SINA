@@ -67,22 +67,13 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="flex justify-between items-center mb-2">
+            <header class="flex justify-between items-center mb-1 reveal-anim">
                 <div>
-                    <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">Bonjour ! 👋</h1>
-                    <p id="user-email" style="color: var(--text-muted);">Chargement...</p>
+                    <h1
+                        style="font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: var(--sp-xs); background: var(--grad-premium); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                        Bonjour, Étudiant</h1>
+                    <p id="user-email" style="color: var(--text-muted); font-weight: 500;">Chargement...</p>
                 </div>
-                <script>
-                    function toggleTheme() {
-                        const currentTheme = document.documentElement.getAttribute('data-theme');
-                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                        document.documentElement.setAttribute('data-theme', newTheme);
-                        localStorage.setItem('theme', newTheme);
-                    }
-                    // Init theme
-                    const savedTheme = localStorage.getItem('theme') || 'light';
-                    document.documentElement.setAttribute('data-theme', savedTheme);
-                </script>
             </header>
 
             <!-- Dashboard View -->
@@ -96,11 +87,16 @@
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card premium-card glass-premium reveal-on-scroll">
                     <!-- Lien WhatsApp Direct -->
                     <div id="whatsapp-access-card">
                         <div class="card-header">
-                            <h3 class="card-title">💬 Votre Groupe WhatsApp</h3>
+                            <h3 class="card-title"
+                                style="color: var(--secondary); display: flex; align-items: center; gap: 10px;">
+                                <span>💬 Votre Groupe WhatsApp</span>
+                                <span class="pulse"
+                                    style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span>
+                            </h3>
                             <p class="card-subtitle">Accédez au groupe de votre classe</p>
                         </div>
 
@@ -178,17 +174,35 @@
                 </div>
 
                 <!-- Aide -->
-                <div class="card" style="margin-top: var(--spacing-lg);">
-                    <h4 style="font-weight: 600; margin-bottom: var(--spacing-sm);">ℹ️ Comment ça marche ?</h4>
-                    <ol style="padding-left: var(--spacing-lg); color: var(--text-secondary);">
-                        <li style="margin-bottom: var(--spacing-xs);">Votre inscription est validée par votre délégué de
-                            classe</li>
-                        <li style="margin-bottom: var(--spacing-xs);">Une fois votre compte approuvé, le lien du groupe
-                            WhatsApp s'affiche automatiquement</li>
-                        <li style="margin-bottom: var(--spacing-xs);">Cliquez sur le lien pour rejoindre directement
-                            votre groupe</li>
-                        <li>Restez connecté pour recevoir les annonces et actualités</li>
-                    </ol>
+                <div class="reveal-on-scroll" style="margin-top: var(--spacing-lg);">
+                    <h4 style="font-weight: 700; margin-bottom: var(--spacing-md); color: var(--primary);">✨ Comment ça
+                        marche ?</h4>
+                    <div class="auto-scroll-container">
+                        <div class="card premium-card" style="flex: 1; min-width: 250px;">
+                            <div style="font-size: 1.5rem; margin-bottom: 1rem;">🛡️</div>
+                            <h5 style="margin-bottom: 0.5rem; font-weight: 700;">Étape 1</h5>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">Votre inscription est validée par
+                                votre délégué de classe.</p>
+                        </div>
+                        <div class="card premium-card" style="flex: 1; min-width: 250px;">
+                            <div style="font-size: 1.5rem; margin-bottom: 1rem;">🔓</div>
+                            <h5 style="margin-bottom: 0.5rem; font-weight: 700;">Étape 2</h5>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">Une fois approuvé, le lien WhatsApp
+                                s'affiche automatiquement.</p>
+                        </div>
+                        <div class="card premium-card" style="flex: 1; min-width: 250px;">
+                            <div style="font-size: 1.5rem; margin-bottom: 1rem;">🤝</div>
+                            <h5 style="margin-bottom: 0.5rem; font-weight: 700;">Étape 3</h5>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">Cliquez sur le lien pour rejoindre
+                                directement votre groupe.</p>
+                        </div>
+                        <div class="card premium-card" style="flex: 1; min-width: 250px;">
+                            <div style="font-size: 1.5rem; margin-bottom: 1rem;">🚀</div>
+                            <h5 style="margin-bottom: 0.5rem; font-weight: 700;">Étape 4</h5>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">Restez connecté pour recevoir les
+                                annonces et actualités.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -286,12 +300,13 @@
     <script src="js/chatbot-ui.js"></script>
     <script src="js/notifications.js?v=1.1"></script>
     <script src="js/ui-core.js"></script>
-    <script src="js/student-whatsapp.js"></script>
+    <script src="js/validations.js"></script>
     <script src="js/student.js"></script>
     <script src="js/mentorship.js"></script>
     <script src="js/announcements.js"></script>
     <script src="js/directory.js"></script>
     <script src="js/events.js"></script>
+    <script src="js/premium-ui.js"></script>
 
     <script>
         // Initialiser le tableau de bord au chargement de la page
@@ -299,51 +314,6 @@
             initStudentDashboard();
             if (typeof initAnnouncementsValue === 'function') initAnnouncementsValue();
         });
-
-        // Fonction pour gérer les onglets étudiants (Similaire à celle des autres dashboards)
-        function showStudentView(view) {
-            // Update UI Sidebar
-            document.querySelectorAll('.nav-tab').forEach(link => {
-                link.classList.toggle('active', link.dataset.view === view);
-            });
-
-            // Map views to elements
-            const views = {
-                dashboard: document.getElementById('dashboard-view'),
-                laureat: document.getElementById('laureat-view'),
-                mentorship: document.getElementById('mentorship-view'),
-                directory: document.getElementById('directory-view'),
-                events: document.getElementById('events-view'),
-                notifications: document.getElementById('notifications-view')
-            };
-
-            // Hide all
-            Object.values(views).forEach(el => {
-                if (el) el.classList.add('hidden');
-            });
-
-            // Show target
-            if (view === 'dashboard' || view === 'requests') {
-                if (views.dashboard) views.dashboard.classList.remove('hidden');
-                if (views.laureat && currentUser && currentUser.niveau === 'Lauréat') views.laureat.classList.remove('hidden');
-            }
-            else if (view === 'events') {
-                if (views.events) views.events.classList.remove('hidden');
-                if (typeof loadEvents === 'function') loadEvents('events-feed');
-            }
-            else if (view === 'mentorship') {
-                if (views.mentorship) views.mentorship.classList.remove('hidden');
-                if (typeof initMentorship === 'function') initMentorship();
-            }
-            else if (view === 'directory') {
-                if (views.directory) views.directory.classList.remove('hidden');
-                if (typeof initDirectory === 'function') initDirectory();
-            }
-            else if (view === 'notifications') {
-                if (views.notifications) views.notifications.classList.remove('hidden');
-                if (typeof initNotificationsView === 'function') initNotificationsView();
-            }
-        }
     </script>
 
 

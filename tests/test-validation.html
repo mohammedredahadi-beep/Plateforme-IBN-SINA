@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Validation Structure</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 2rem;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .success {
+            color: #4ade80;
+        }
+
+        .error {
+            color: #f87171;
+        }
+
+        .test-case {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Tests de Validation Structure Lycée</h2>
+    <div id="results"></div>
+
+    <script src="js/school-structure.js"></script>
+    <script>
+        const results = document.getElementById('results');
+
+        function assert(condition, message) {
+            const div = document.createElement('div');
+            div.className = 'test-case ' + (condition ? 'success' : 'error');
+            div.textContent = (condition ? '✅ PASS' : '❌ FAIL') + ' : ' + message;
+            results.appendChild(div);
+        }
+
+        function runTests() {
+            // Test 1: Valid TCT
+            const t1 = SchoolStructure.validate('TC', 'TCT', 1);
+            assert(t1.isValid, "TC - TCT - 1 devrait être valide");
+
+            // Test 2: Invalid TCT Class > 6
+            const t2 = SchoolStructure.validate('TC', 'TCT', 7);
+            assert(!t2.isValid, "TC - TCT - 7 devrait être invalide");
+
+            // Test 3: Invalid Major for Level
+            const t3 = SchoolStructure.validate('TC', 'STE', 1);
+            assert(!t3.isValid, "TC - STE - 1 devrait être invalide");
+
+            // Test 4: Valid BAC
+            const t4 = SchoolStructure.validate('BAC1', 'STE', 2);
+            assert(t4.isValid, "BAC1 - STE - 2 devrait être valide");
+
+            // Test 5: Invalid BAC Class > 2
+            const t5 = SchoolStructure.validate('BAC2', 'ECO', 3);
+            assert(!t5.isValid, "BAC2 - ECO - 3 devrait être invalide");
+
+            // Test 6: Valid BTS
+            const t6 = SchoolStructure.validate('BTS1', 'EII', 1);
+            assert(t6.isValid, "BTS1 - EII - 1 devrait être valide");
+
+            // Test 7: Invalid BTS Class > 1
+            const t7 = SchoolStructure.validate('BTS2', 'PME_PMI', 2);
+            assert(!t7.isValid, "BTS2 - PME_PMI - 2 devrait être invalide");
+
+            // Test 8: Invalid Level
+            const t8 = SchoolStructure.validate('INVALID', 'TCT', 1);
+            assert(!t8.isValid, "INVALID Level devrait être rejeté");
+
+            // Test Helper: Get Majors
+            const tcMajors = SchoolStructure.getMajorsForLevel('TC');
+            assert(tcMajors.includes('TCT') && tcMajors.length === 1, "TC devrait avoir juste TCT");
+
+            const btsMajors = SchoolStructure.getMajorsForLevel('BTS1');
+            assert(btsMajors.includes('PME_PMI'), "BTS devrait inclure PME_PMI");
+        }
+
+        runTests();
+    </script>
+</body>
+
+</html>

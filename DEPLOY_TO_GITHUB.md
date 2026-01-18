@@ -1,35 +1,60 @@
-# Guide de Mise en Ligne sur GitHub Pages
+# Guide de Déploiement GitHub
 
-Puisque vous utilisez déjà Git, voici les étapes pour mettre à jour votre dépôt et activer le site en ligne.
+Ce guide vous explique comment mettre à jour votre code sur GitHub et déployer votre plateforme.
 
-## Étape 1 : Sauvegarder les changements
+## ⚠️ Notes de Sécurité Importantes
 
-Ouvrez votre terminal dans le dossier du projet et lancez ces commandes :
+Le fichier `js/config.js` est inclus dans le dépôt car il est nécessaire pour que le site fonctionne sur GitHub Pages. Assurez-vous que vos clés API Firebase sont sécurisées :
+*   La clé `apiKey` (Firebase) est généralement publique.
+*   **Attention** aux autres clés (comme Google AI ou Gemini) si elles ne sont pas restreintes. Idéalement, utilisez un proxy backend pour les clés secrètes, mais pour ce projet statique, assurez-vous de restreindre l'usage de la clé API dans la console Google Cloud aux domaines autorisés (ex: votre-domaine.github.io).
 
-```bash
-# 1. Ajouter tous les fichiers (le .gitignore va exclure les backups automatiquement)
-git add .
+---
 
-# 2. Enregistrer les modifications avec un message
-git commit -m "feat: Redesign authentification, dashboard admin et préparation déploiement"
+## 🚀 Étape 1 : Préparer et Envoyer les Modifications
 
-# 3. Envoyer vers GitHub
-git push origin main
-```
-*(Si votre branche s'appelle `master`, remplacez `main` par `master`)*
+Ouvrez votre terminal (PowerShell ou Git Bash) dans le dossier du projet et exécutez les commandes suivantes :
 
-## Étape 2 : Activer GitHub Pages
+1.  **Vérifier le statut** (voir quels fichiers ont changé) :
+    ```bash
+    git status
+    ```
 
-1. Allez sur la page de votre dépôt sur **GitHub.com**.
-2. Cliquez sur l'onglet **Settings** (Paramètres) en haut.
-3. Dans la barre latérale gauche, cliquez sur **Pages**.
-4. Sous "Build and deployment" > **Branch** :
-   - Sélectionnez `main` (ou `master`).
-   - Laissez le dossier sur `/ (root)`.
-   - Cliquez sur **Save**.
+2.  **Ajouter tous les fichiers** :
+    ```bash
+    git add .
+    ```
 
-## Étape 3 : Voir le site
+3.  **Enregistrer la version (Commit)** :
+    ```bash
+    git commit -m "Mise à jour: Ajout fonctionnalités Admin (Durée msg, Delete All) et Alumni"
+    ```
 
-Attendez environ 1 à 2 minutes. GitHub va vous afficher un lien en haut de la page (ex: `https://votre-pseudo.github.io/votre-repo/`).
+4.  **Envoyer vers GitHub (Push)** :
+    ```bash
+    git push origin main
+    ```
+    *(Si ça ne marche pas, essayez `git push origin master`)*
 
-Cliquez dessus, votre plateforme est en ligne ! 🚀
+---
+
+## 🌐 Étape 2 : Activer/Vérifier GitHub Pages
+
+Une fois le code envoyé sur GitHub :
+
+1.  Allez sur votre dépôt GitHub.
+2.  Cliquez sur l'onglet **Settings** (Paramètres).
+3.  Dans le menu à gauche, cliquez sur **Pages**.
+4.  Sous **Build and deployment** :
+    *   **Source** : Deploy from a branch
+    *   **Branch** : `main` (ou `master`) / `/ (root)`
+    *   Cliquez sur **Save**.
+
+Votre site sera accessible via le lien affiché en haut de la page (ex: `https://votre-pseudo.github.io/Plateforme-IBN-SINA/`).
+
+## 🛠️ En cas de problème de cache
+
+Si vos changements n'apparaissent pas immédiatement :
+1.  Attendez 2-3 minutes après le push.
+2.  Forcez le rafraîchissement de votre navigateur (Ctrl + F5).
+3.  Si vous avez modifié des fichiers JS/CSS, assurez-vous que les numéros de version dans vos `<script>` (ex: `?v=1.4`) sont mis à jour si nécessaire.
+

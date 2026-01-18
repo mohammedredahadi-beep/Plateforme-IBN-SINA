@@ -78,7 +78,30 @@ function displayUserInfo() {
 // Charger la filière assignée au délégué
 async function loadDelegateFiliere() {
     try {
-        // Trouver la filière où ce délégué est assigné
+        // En mode strict, on se base sur le profil du délégué
+        if (currentUser.filiere && currentUser.niveau) {
+            delegateNiveau = currentUser.niveau;
+            // On peut garder delegateFiliereId pour la compatibilité si nécessaire, 
+            // mais on va surtout utiliser les infos du profil.
+            // On essaie de trouver le doc filière correspondant pour le nom complet
+            const snapshot = await filieresRef.where('code', '==', currentUser.filiere).limit(1).get();
+
+            let filiereName = currentUser.filiere;
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                delegateFiliereId = doc.id; // Pour compatibilité legacy
+                filiereName = doc.data().name;
+            }
+
+            let label = `${filiereName} (${delegateNiveau})`;
+            if (currentUser.classe) {
+                label += ` - Classe ${currentUser.classe}`;
+            }
+            document.getElementById('delegate-filiere').textContent = label;
+            return;
+        }
+
+        // Fallback: Legacy logic
         const snapshot = await filieresRef.where('delegateId', '==', auth.currentUser.uid).get();
 
         if (!snapshot.empty) {
@@ -88,8 +111,7 @@ async function loadDelegateFiliere() {
             delegateNiveau = filiere.niveau;
             document.getElementById('delegate-filiere').textContent = `${filiere.name} (${delegateNiveau || 'Tous'})`;
         } else {
-            document.getElementById('delegate-filiere').textContent = 'Aucune filière assignée';
-            showError('delegate-message', 'Vous n\'êtes assigné à aucune filière. Contactez l\'administrateur.');
+            document.getElementById('delegate-filiere').textContent = 'Profil incomplet';
         }
     } catch (error) {
         console.error('Erreur lors du chargement de la filière:', error);
@@ -109,11 +131,14 @@ async function loadPendingRequests() {
 
     try {
         // Écouter les changements en temps réel
-        let query = requestsRef.where('filiereId', '==', delegateFiliereId);
+        // Écouter les changements en temps réel
+        // Nouvelle logique: Filtrer par Filière (nom/code), Niveau, et Classe
+        let query = requestsRef
+            .where('filiere', '==', currentUser.filiere)
+            .where('niveau', '==', currentUser.niveau);
 
-        // Si la filière est restreinte à un niveau spécifique
-        if (delegateNiveau) {
-            query = query.where('niveau', '==', delegateNiveau);
+        if (currentUser.classe) {
+            query = query.where('classe', '==', currentUser.classe);
         }
 
         query.onSnapshot(snapshot => {
@@ -272,65 +297,36 @@ async function rejectRequest(requestId) {
 }
 
 // Basculer entre les vues
-function showView(view) {
-    console.log('showView called with:', view); // Debug
+function showView(viewId) {
+    const allViews = [
+        'dashboard', 'validation', 'announcements', 'settings', 'history', 'notifications', 'my-class',
+        // IDs utilisés dans l'HTML (avec suffixe -view)
+        'pending', 'history', 'settings', 'announcements', 'validations', 'my-class'
+    ];
+    // Normalisation pour UICore (qui attend des IDs sans suffixe "-view" correspondant aux divs)
+    // Dans delegate.js, les IDs HTML sont parfois différents (ex: pending-view au lieu de dashboard-view ?)
+    // Vérifions les IDs dans delegate.js original: 'pending-view', 'history-view', 'settings-view'
+    // 'announcements-view', 'validations-view', 'my-class-view'
 
-    // Masquer toutes les vues
-    const allViews = ['pending-view', 'history-view', 'settings-view', 'announcements-view', 'validations-view', 'my-class-view'];
-    allViews.forEach(viewId => {
-        const el = document.getElementById(viewId);
-        if (el) {
-            el.classList.add('hidden');
-            console.log('Hiding:', viewId); // Debug
-        }
+    // Mapping pour UICore
+    const viewMap = {
+        'dashboard': 'pending', // Le dashboard affichait pending-view par défaut ?
+        'validation': 'validations'
+    };
+
+    const targetId = viewMap[viewId] || viewId;
+
+    const viewIds = ['pending', 'history', 'settings', 'announcements', 'validations', 'my-class'];
+
+    ui.showView(targetId, viewIds, () => {
+        if (targetId === 'pending') { loadSettings(); displayPendingRequests(); }
+        if (targetId === 'history') displayHistory();
+        if (targetId === 'settings') loadSettings();
+        if (targetId === 'announcements' && typeof loadDelegateHistory === 'function') loadDelegateHistory();
+        if (targetId === 'validations') displayDelegateValidations();
+        if (targetId === 'my-class') loadMyClass();
     });
-
-    // Afficher la vue demandée
-    if (view === 'pending') {
-        const pendingView = document.getElementById('pending-view');
-        if (pendingView) {
-            pendingView.classList.remove('hidden');
-            console.log('Showing pending-view'); // Debug
-        }
-        loadSettings(); // Charger le lien WhatsApp existant
-    } else if (view === 'history') {
-        const historyView = document.getElementById('history-view');
-        if (historyView) {
-            historyView.classList.remove('hidden');
-            console.log('Showing history-view'); // Debug
-        }
-        displayHistory();
-    } else if (view === 'settings') {
-        const settingsView = document.getElementById('settings-view');
-        if (settingsView) {
-            settingsView.classList.remove('hidden');
-            console.log('Showing settings-view'); // Debug
-        }
-        loadSettings();
-    } else if (view === 'announcements') {
-        const announcementsView = document.getElementById('announcements-view');
-        if (announcementsView) {
-            announcementsView.classList.remove('hidden');
-            console.log('Showing announcements-view'); // Debug
-        }
-        if (typeof loadDelegateHistory === 'function') loadDelegateHistory();
-    } else if (view === 'validations') {
-        const validationsView = document.getElementById('validations-view');
-        if (validationsView) {
-            validationsView.classList.remove('hidden');
-            console.log('Showing validations-view'); // Debug
-            displayDelegateValidations();
-        }
-    } else if (view === 'my-class') {
-        const myClassView = document.getElementById('my-class-view');
-        if (myClassView) {
-            myClassView.classList.remove('hidden');
-            console.log('Showing my-class-view'); // Debug
-            if (typeof loadMyClass === 'function') loadMyClass();
-        }
-    }
 }
-
 
 // ---- ANNOUNCEMENT FUNCTIONS ----
 
@@ -540,11 +536,7 @@ async function loadValidationsBadge() {
     if (!delegateFiliereId) return;
 
     try {
-        // Récupérer le nom de la filière
-        const filiereDoc = await filieresRef.doc(delegateFiliereId).get();
-        if (!filiereDoc.exists) return;
-
-        const filiereName = filiereDoc.data().name;
+        const filiereName = currentUser.filiere;
 
         // Compter les étudiants non approuvés
         const snapshot = await usersRef
@@ -581,20 +573,20 @@ async function displayDelegateValidations() {
 
     try {
         // Récupérer le nom de la filière
-        const filiereDoc = await filieresRef.doc(delegateFiliereId).get();
-        if (!filiereDoc.exists) {
-            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">❌ Filière non trouvée</p></div>';
-            return;
-        }
+        const filiereName = currentUser.filiere;
 
-        const filiereName = filiereDoc.data().name;
-
-        // Chercher les étudiants non approuvés de cette filière
-        const snapshot = await usersRef
+        // Chercher les étudiants non approuvés de cette filière / niveau / classe
+        let query = usersRef
             .where('role', '==', 'student')
             .where('filiere', '==', filiereName)
-            .where('isApproved', '==', false)
-            .get();
+            .where('niveau', '==', currentUser.niveau)
+            .where('isApproved', '==', false);
+
+        if (currentUser.classe) {
+            query = query.where('classe', '==', currentUser.classe);
+        }
+
+        const snapshot = await query.get();
 
         if (snapshot.empty) {
             container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">✅ Aucune inscription en attente</p></div>';
@@ -656,25 +648,23 @@ async function displayDelegateValidations() {
 
 // Approuver un étudiant par le délégué
 async function delegateApproveStudent(userId) {
-    if (!confirm('Confirmer la validation de cet étudiant ?')) return;
+    if (!confirm("Confirmer l'approbation de cet étudiant ?")) return;
 
     try {
-        await usersRef.doc(userId).update({
-            isApproved: true,
-            approvedBy: auth.currentUser.uid,
-            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        await ValidationService.approveUser(userId, 'student', {
+            approvedBy: auth.currentUser.uid
         });
 
-        showSuccess('delegate-message', 'Étudiant validé avec succès ! Il peut maintenant accéder à la plateforme.');
+        ui.showSuccess('delegate-message', "Étudiant approuvé et ajouté à la classe.");
 
-        // Rafraîchir
-        displayDelegateValidations();
+        // Refresh Lists
         loadValidationsBadge();
+        displayDelegateValidations();
+        loadMyClass();
 
     } catch (error) {
-        console.error('Erreur validation:', error);
-        showError('delegate-message', 'Erreur lors de la validation: ' + error.message);
+        console.error("Erreur approbation délégué:", error);
+        ui.showError('delegate-message', "Erreur lors de l'approbation.");
     }
 }
 
@@ -715,24 +705,18 @@ async function loadMyClass() {
     container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">Chargement de la liste des étudiants...</p></div>';
 
     try {
-        // Récupérer le nom de la filière
-        const filiereDoc = await filieresRef.doc(delegateFiliereId).get();
-        if (!filiereDoc.exists) {
-            container.innerHTML = '<div class="card text-center"><p style="color: var(--text-secondary);">❌ Filière non trouvée</p></div>';
-            return;
-        }
+        const filiereName = currentUser.filiere;
 
-        const filiereName = filiereDoc.data().name;
-
-        // Chercher les étudiants approuvés de cette filière
+        // Chercher les étudiants approuvés de cette filière / classe
         let query = usersRef
             .where('role', '==', 'student')
             .where('filiere', '==', filiereName)
+            .where('niveau', '==', currentUser.niveau)
             .where('isApproved', '==', true);
 
-        // Si le délégué a un niveau spécifique, filtrer aussi par niveau
-        if (delegateNiveau) {
-            query = query.where('niveau', '==', delegateNiveau);
+        // Si la classe est définie
+        if (currentUser.classe) {
+            query = query.where('classe', '==', currentUser.classe);
         }
 
         const snapshot = await query.get();
